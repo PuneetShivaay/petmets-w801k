@@ -1,6 +1,7 @@
+
 'use client';
 
-import { useFormState, useFormStatus } from 'react-dom';
+import { useActionState, useFormStatus } from 'react'; // Changed from 'react-dom' for useFormState
 import { getSuggestedTagsAction } from '@/app/records/actions';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
@@ -13,6 +14,7 @@ import { Lightbulb, Loader2, Tags, AlertCircle } from 'lucide-react';
 const initialState = {
   message: '',
   tags: [],
+  error: undefined, // Ensure error is part of the initial state if actions.ts expects/returns it
 };
 
 function SubmitButton() {
@@ -26,7 +28,7 @@ function SubmitButton() {
 }
 
 export function SmartTaggingForm() {
-  const [state, formAction] = useFormState(getSuggestedTagsAction, initialState);
+  const [state, formAction] = useActionState(getSuggestedTagsAction, initialState);
 
   return (
     <Card className="w-full shadow-lg">
