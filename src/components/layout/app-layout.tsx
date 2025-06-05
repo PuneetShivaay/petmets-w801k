@@ -1,3 +1,4 @@
+
 "use client";
 
 import * as React from "react";
@@ -16,9 +17,70 @@ import {
   SidebarMenuItem,
   SidebarMenuButton,
   SidebarInset,
+  useSidebar, // Import useSidebar
 } from "@/components/ui/sidebar";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
+
+// Helper component for the App Logo Link
+function AppLogoLink() {
+  const { isMobile, setOpenMobile } = useSidebar();
+  const handleLogoClick = () => {
+    if (isMobile) {
+      setOpenMobile(false);
+    }
+  };
+  return (
+    <Link href="/" onClick={handleLogoClick} className="block">
+      <AppLogo />
+    </Link>
+  );
+}
+
+// Helper component for rendering sidebar navigation items
+function SidebarNavigation() {
+  const pathname = usePathname();
+  const { isMobile, setOpenMobile } = useSidebar();
+
+  const handleMenuItemClick = () => {
+    if (isMobile) {
+      setOpenMobile(false);
+    }
+  };
+
+  return (
+    <SidebarMenu className="p-4 pt-0">
+      {navItems.map((item) => (
+        <SidebarMenuItem key={item.href}>
+          <Link href={item.href} passHref legacyBehavior>
+            <SidebarMenuButton
+              asChild={item.href.startsWith("/")} 
+              className={cn(
+                "w-full justify-start",
+                pathname === item.href && "bg-sidebar-accent text-sidebar-accent-foreground",
+                item.disabled && "cursor-not-allowed opacity-80"
+              )}
+              disabled={item.disabled}
+              target={item.external ? "_blank" : undefined}
+              rel={item.external ? "noopener noreferrer" : undefined}
+              tooltip={item.title}
+            >
+              <a onClick={handleMenuItemClick}>
+                <item.icon className="mr-2 h-5 w-5" />
+                <span>{item.title}</span>
+                {item.label && (
+                  <span className="ml-auto text-xs text-muted-foreground">
+                    {item.label}
+                  </span>
+                )}
+              </a>
+            </SidebarMenuButton>
+          </Link>
+        </SidebarMenuItem>
+      ))}
+    </SidebarMenu>
+  );
+}
 
 export function AppLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -27,42 +89,11 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
     <SidebarProvider defaultOpen>
       <Sidebar className="border-r">
         <SidebarHeader className="p-4">
-          <Link href="/" className="block">
-            <AppLogo />
-          </Link>
+          <AppLogoLink />
         </SidebarHeader>
         <SidebarContent>
           <ScrollArea className="flex-grow">
-            <SidebarMenu className="p-4 pt-0">
-              {navItems.map((item) => (
-                <SidebarMenuItem key={item.href}>
-                  <Link href={item.href} passHref legacyBehavior>
-                    <SidebarMenuButton
-                      asChild={item.href.startsWith("/")} // Use asChild for internal links
-                      className={cn(
-                        "w-full justify-start",
-                        pathname === item.href && "bg-sidebar-accent text-sidebar-accent-foreground",
-                        item.disabled && "cursor-not-allowed opacity-80"
-                      )}
-                      disabled={item.disabled}
-                      target={item.external ? "_blank" : undefined}
-                      rel={item.external ? "noopener noreferrer" : undefined}
-                      tooltip={item.title}
-                    >
-                      <a>
-                        <item.icon className="mr-2 h-5 w-5" />
-                        <span>{item.title}</span>
-                        {item.label && (
-                          <span className="ml-auto text-xs text-muted-foreground">
-                            {item.label}
-                          </span>
-                        )}
-                      </a>
-                    </SidebarMenuButton>
-                  </Link>
-                </SidebarMenuItem>
-              ))}
-            </SidebarMenu>
+            <SidebarNavigation />
           </ScrollArea>
         </SidebarContent>
       </Sidebar>
