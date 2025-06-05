@@ -1,14 +1,19 @@
 
+"use client";
+
 import { PageHeader } from "@/components/page-header";
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { PawPrint, User, Edit3 } from "lucide-react";
+import { PawPrint, User, Edit3, Mail, Phone, Home } from "lucide-react";
 import Image from "next/image";
+import { useAuth } from "@/contexts/auth-context";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export default function PetProfilePage() {
+  const { user, isLoading: authLoading } = useAuth();
+
+  // Static pet data for now
   const petData = {
     name: "Buddy",
     breed: "Golden Retriever",
@@ -18,12 +23,14 @@ export default function PetProfilePage() {
     bio: "Loves long walks in the park and playing fetch. A very good boy indeed!",
   };
 
+  // Owner data will be dynamic based on auth user
   const ownerData = {
-    name: "Alex Doe",
-    email: "alex.doe@example.com",
-    phone: "555-123-4567",
-    avatar: "https://placehold.co/128x128.png",
+    name: user?.displayName || "Pet Owner", // Firebase User object might not have displayName with email/password
+    email: user?.email || "loading...",
+    phone: "555-123-4567", // Placeholder
+    avatar: "https://placehold.co/128x128.png", // Placeholder for owner avatar
     dataAiHint: "friendly person",
+    address: "123 Pet Street, Pawville, CA 90210", // Placeholder
   };
 
   return (
@@ -50,16 +57,15 @@ export default function PetProfilePage() {
           </CardHeader>
           <CardContent className="space-y-4">
             <div>
-              <Label htmlFor="petAge" className="text-sm font-medium text-muted-foreground">Age</Label>
+              <span className="text-sm font-medium text-muted-foreground">Age</span>
               <p id="petAge" className="text-lg">{petData.age}</p>
             </div>
             <div>
-              <Label htmlFor="petBio" className="text-sm font-medium text-muted-foreground">Bio</Label>
+              <span className="text-sm font-medium text-muted-foreground">Bio</span>
               <p id="petBio" className="text-md italic text-foreground">
                 {petData.bio}
               </p>
             </div>
-            {/* Placeholder for more pet details */}
             <div className="space-y-2 pt-2">
               <h4 className="text-sm font-semibold text-muted-foreground">Medical Notes (Placeholder)</h4>
               <p className="text-sm text-gray-600">No allergies known. Up to date with vaccinations.</p>
@@ -81,24 +87,31 @@ export default function PetProfilePage() {
                 <AvatarFallback><User className="h-10 w-10" /></AvatarFallback>
               </Avatar>
               <div>
-                <CardTitle className="font-headline text-3xl">{ownerData.name}</CardTitle>
+                 {authLoading ? (
+                  <Skeleton className="h-8 w-40" />
+                ) : (
+                  <CardTitle className="font-headline text-3xl">{ownerData.name}</CardTitle>
+                )}
                 <p className="text-muted-foreground">Pet Owner</p>
               </div>
             </div>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div>
-              <Label htmlFor="ownerEmail" className="text-sm font-medium text-muted-foreground">Email</Label>
-              <p id="ownerEmail" className="text-lg">{ownerData.email}</p>
+            <div className="flex items-center gap-2">
+              <Mail className="h-5 w-5 text-muted-foreground" />
+              {authLoading ? (
+                <Skeleton className="h-6 w-48" />
+              ) : (
+                <p className="text-lg">{ownerData.email}</p>
+              )}
             </div>
-            <div>
-              <Label htmlFor="ownerPhone" className="text-sm font-medium text-muted-foreground">Phone</Label>
-              <p id="ownerPhone" className="text-lg">{ownerData.phone}</p>
+            <div className="flex items-center gap-2">
+               <Phone className="h-5 w-5 text-muted-foreground" />
+              <p className="text-lg">{ownerData.phone} <span className="text-xs text-muted-foreground">(Placeholder)</span></p>
             </div>
-             {/* Placeholder for address */}
-            <div className="space-y-2 pt-2">
-              <h4 className="text-sm font-semibold text-muted-foreground">Address (Placeholder)</h4>
-              <p className="text-sm text-gray-600">123 Pet Street, Pawville, CA 90210</p>
+            <div className="flex items-start gap-2">
+              <Home className="h-5 w-5 text-muted-foreground mt-1" />
+              <p className="text-lg">{ownerData.address} <span className="text-xs text-muted-foreground">(Placeholder)</span></p>
             </div>
           </CardContent>
           <CardFooter>
@@ -113,7 +126,7 @@ export default function PetProfilePage() {
         <CardContent className="p-6">
           <h3 className="font-headline text-xl font-semibold text-primary">Keep Your Information Up-to-Date!</h3>
           <p className="mt-2 text-muted-foreground">
-            Regularly updating your pet's and your own information helps us provide the best service and ensures smooth communication for bookings and emergencies.
+            Regularly updating your pet's and your own information helps us provide the best service and ensures smooth communication for bookings and emergencies. Other details like your name, phone, and address are currently placeholders.
           </p>
         </CardContent>
       </Card>
