@@ -1,4 +1,6 @@
 
+"use client";
+
 import { PageHeader } from "@/components/page-header";
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -7,8 +9,22 @@ import { Label } from "@/components/ui/label";
 import { AppLogo } from "@/components/icons";
 import Link from "next/link";
 import { LogIn, UserPlus } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { useLoading } from "@/contexts/loading-context";
 
 export default function LoginPage() {
+  const router = useRouter();
+  const { showLoading } = useLoading();
+
+  const handleLogin = () => {
+    showLoading();
+    // Simulate API call / login process
+    setTimeout(() => {
+      router.push('/');
+      // Loading will be hidden by AppLayout's useEffect on pathname change
+    }, 1500); // Simulate 1.5 second delay
+  };
+
   return (
     <div className="flex min-h-screen flex-col items-center justify-center bg-background p-4">
       <div className="mb-8">
@@ -35,7 +51,7 @@ export default function LoginPage() {
           </div>
         </CardContent>
         <CardFooter className="flex flex-col gap-4">
-          <Button className="w-full" size="lg">
+          <Button className="w-full" size="lg" onClick={handleLogin}>
             <LogIn className="mr-2 h-5 w-5" /> Login
           </Button>
           <p className="text-center text-sm text-muted-foreground">
