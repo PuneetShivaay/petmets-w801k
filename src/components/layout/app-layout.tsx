@@ -31,7 +31,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
             <AppLogo />
           </Link>
         </SidebarHeader>
-        <SidebarContent asChild>
+        <SidebarContent>
           <ScrollArea className="flex-grow">
             <SidebarMenu className="p-4 pt-0">
               {navItems.map((item) => (
