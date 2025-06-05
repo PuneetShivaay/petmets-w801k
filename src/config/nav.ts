@@ -1,3 +1,4 @@
+
 import type { LucideIcon } from 'lucide-react';
 import {
   Home,
@@ -10,7 +11,8 @@ import {
   Hotel,
   FileText,
   CalendarDays,
-  LayoutDashboard
+  LayoutDashboard,
+  PawPrint as PetProfileIcon, // Renamed to avoid conflict if PawPrint is used elsewhere
 } from 'lucide-react';
 
 export interface NavItem {
@@ -27,6 +29,11 @@ export const navItems: NavItem[] = [
     title: 'Dashboard',
     href: '/',
     icon: LayoutDashboard,
+  },
+  {
+    title: 'Pet Profile',
+    href: '/pet-profile',
+    icon: PetProfileIcon,
   },
   {
     title: 'Match Your Pet',
