@@ -12,7 +12,9 @@ import {
   FileText,
   CalendarDays,
   LayoutDashboard,
-  PawPrint as PetProfileIcon, // Renamed to avoid conflict if PawPrint is used elsewhere
+  LogIn,
+  LogOut,
+  PawPrint as PetProfileIcon, 
 } from 'lucide-react';
 
 export interface NavItem {
@@ -22,6 +24,7 @@ export interface NavItem {
   label?: string;
   disabled?: boolean;
   external?: boolean;
+  isFooterAction?: boolean; // To distinguish logout for different placement
 }
 
 export const navItems: NavItem[] = [
@@ -80,4 +83,17 @@ export const navItems: NavItem[] = [
     href: '/bookings',
     icon: CalendarDays,
   },
+  // Authentication related links
+  {
+    title: 'Login / Sign Up',
+    href: '/login',
+    icon: LogIn,
+  },
+  // Logout is handled directly in the AppLayout footer for now
+  // {
+  //   title: 'Logout',
+  //   href: '/logout', // This would typically be an action, not a page
+  //   icon: LogOut,
+  //   isFooterAction: true,
+  // },
 ];
