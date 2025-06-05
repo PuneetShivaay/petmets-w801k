@@ -4,6 +4,7 @@ import './globals.css';
 import { AppLayout } from '@/components/layout/app-layout';
 import { Toaster } from "@/components/ui/toaster";
 import { LoadingProvider } from '@/contexts/loading-context';
+import { AuthProvider } from '@/contexts/auth-context'; // Import AuthProvider
 import { GlobalLoader } from '@/components/global-loader';
 
 export const metadata: Metadata = {
@@ -24,11 +25,13 @@ export default function RootLayout({
         <link href="https://fonts.googleapis.com/css2?family=PT+Sans:ital,wght@0,400;0,700;1,400;1,700&display=swap" rel="stylesheet" />
       </head>
       <body className="font-body antialiased">
-        <LoadingProvider>
-          <AppLayout>{children}</AppLayout>
-          <Toaster />
-          <GlobalLoader />
-        </LoadingProvider>
+        <AuthProvider> {/* Wrap with AuthProvider */}
+          <LoadingProvider>
+            <AppLayout>{children}</AppLayout>
+            <Toaster />
+            <GlobalLoader /> {/* This remains for page navigation loading */}
+          </LoadingProvider>
+        </AuthProvider>
       </body>
     </html>
   );

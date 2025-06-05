@@ -3,9 +3,9 @@
 
 import * as React from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { AppLogo } from "@/components/icons";
-import { navItems } from "@/config/nav";
+import { navItems, type NavItem } from "@/config/nav";
 import { cn } from "@/lib/utils";
 import {
   SidebarProvider, 
@@ -24,6 +24,9 @@ import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { LogOut } from "lucide-react";
 import { useLoading } from "@/contexts/loading-context";
+import { useAuth } from "@/contexts/auth-context"; // Import useAuth
+import { useToast } from "@/hooks/use-toast";
+
 
 function AppLogoLinkInternal() {
   const { isMobile, setOpenMobile } = useSidebar();
@@ -45,6 +48,7 @@ function SidebarNavigationInternal() {
   const pathname = usePathname();
   const { isMobile, setOpenMobile } = useSidebar();
   const { showLoading } = useLoading();
+  const { user } = useAuth(); // Get auth user
 
   const handleLinkClick = () => {
     showLoading();
@@ -53,12 +57,17 @@ function SidebarNavigationInternal() {
     }
   };
 
-  const mainNavItems = navItems.filter(item => item.href !== '/logout' && item.href !== '/login');
-  const loginNavItem = navItems.find(item => item.href === '/login');
+  const filteredNavItems = navItems.filter(item => {
+    if (item.href === '/login') return !user; // Show Login only if not logged in
+    if (item.href === '/pet-profile') return !!user; // Show Pet Profile only if logged in
+    // Add other conditional logic here if needed
+    return true; // Show all other items
+  });
+
 
   return (
     <SidebarMenu className="p-4 pt-0">
-      {mainNavItems.map((item) => (
+      {filteredNavItems.map((item) => (
         <SidebarMenuItem key={item.href}>
           <Link href={item.href} passHref legacyBehavior>
             <SidebarMenuButton
@@ -87,39 +96,27 @@ function SidebarNavigationInternal() {
           </Link>
         </SidebarMenuItem>
       ))}
-      {loginNavItem && (
-         <SidebarMenuItem key={loginNavItem.href} className="mt-auto pt-4 border-t border-sidebar-border">
-          <Link href={loginNavItem.href} passHref legacyBehavior>
-            <SidebarMenuButton
-              asChild
-              className={cn(
-                "w-full justify-start",
-                pathname === loginNavItem.href && "bg-sidebar-accent text-sidebar-accent-foreground"
-              )}
-              tooltip={loginNavItem.title}
-              onClick={handleLinkClick}
-            >
-              <a>
-                <loginNavItem.icon className="mr-2 h-5 w-5" />
-                <span>{loginNavItem.title}</span>
-              </a>
-            </SidebarMenuButton>
-          </Link>
-        </SidebarMenuItem>
-      )}
     </SidebarMenu>
   );
 }
 
 function HeaderContentInternal() {
     const pathname = usePathname();
+    const { user } = useAuth();
+    let title = 'PetMets';
+    if (user) {
+      title = navItems.find(item => item.href === pathname)?.title || 'PetMets Dashboard';
+    } else if (pathname === '/login') {
+      title = 'Login / Sign Up';
+    }
+    
     return (
         <>
             <div className="md:hidden">
                  <SidebarTrigger /> 
             </div>
             <h1 className="font-headline text-xl font-semibold flex-1">
-                {navItems.find(item => item.href === pathname)?.title || 'PetMets'}
+                {title}
             </h1>
         </>
     );
@@ -127,23 +124,28 @@ function HeaderContentInternal() {
 
 function LogoutButtonInternal() {
   const { isMobile, setOpenMobile } = useSidebar();
-  const { showLoading, hideLoading } = useLoading(); 
-  const handleLogoutClick = () => {
+  const { showLoading } = useLoading(); 
+  const { userSignOut, user } = useAuth();
+  const router = useRouter();
+  const { toast } = useToast();
+
+  const handleLogoutClick = async () => {
     showLoading();
-    console.log("Logout clicked");
-    // Simulate action and potential navigation or state change
-    // For a real app, this would involve an API call and likely a redirect.
-    // If it's just a client-side state change without navigation, hideLoading() should be called manually.
-    // If it navigates, the useEffect in AppLayout will handle hideLoading.
-    setTimeout(() => {
+    try {
+        await userSignOut();
+        // The AuthProvider and AppLayout useEffect will handle redirect to /login
+        // router.push('/login'); // This might be redundant if AppLayout handles it
         if (isMobile) {
           setOpenMobile(false);
         }
-        // Example: if no navigation, hide manually. If navigation, this might be redundant.
-        // hideLoading(); // Or let path change handle it.
-        // router.push('/login'); // If using Next Router for navigation
-    }, 500); // Simulate delay
+    } catch (error) {
+        console.error("Logout failed", error);
+        toast({ title: "Logout Failed", description: (error as Error).message, variant: "destructive" });
+        // showLoading will be hidden by AppLayout path change or manually if needed
+    }
   };
+
+  if (!user) return null; // Don't show logout button if no user
 
   return (
     <SidebarMenuButton
@@ -158,6 +160,8 @@ function LogoutButtonInternal() {
 }
 
 export function MainLayoutInternal({ children }: { children: React.ReactNode }) {
+  const { user } = useAuth(); // Used to decide whether to show logout
+
   return (
     <SidebarProvider defaultOpen> 
       <Sidebar className="border-r">
@@ -169,9 +173,11 @@ export function MainLayoutInternal({ children }: { children: React.ReactNode }) 
             <SidebarNavigationInternal />
           </ScrollArea>
         </SidebarContent>
-        <SidebarFooter className="p-4 border-t border-sidebar-border">
-            <LogoutButtonInternal />
-        </SidebarFooter>
+        {user && ( // Only show footer with logout if user is logged in
+          <SidebarFooter className="p-4 border-t border-sidebar-border">
+              <LogoutButtonInternal />
+          </SidebarFooter>
+        )}
       </Sidebar>
       <SidebarInset className="flex flex-col">
         <header className="sticky top-0 z-10 flex h-16 items-center gap-4 border-b bg-background px-4 md:px-6">
