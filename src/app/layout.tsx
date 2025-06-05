@@ -1,11 +1,21 @@
 
 import type { Metadata } from 'next';
+import { PT_Sans } from 'next/font/google'; // Import next/font
 import './globals.css';
 import { AppLayout } from '@/components/layout/app-layout';
 import { Toaster } from "@/components/ui/toaster";
 import { LoadingProvider } from '@/contexts/loading-context';
-import { AuthProvider } from '@/contexts/auth-context'; // Import AuthProvider
+import { AuthProvider } from '@/contexts/auth-context';
 import { GlobalLoader } from '@/components/global-loader';
+
+// Configure the font
+const ptSans = PT_Sans({
+  subsets: ['latin'],
+  weight: ['400', '700'],
+  style: ['normal', 'italic'],
+  variable: '--font-pt-sans', // Optional: if you want to use it as a CSS variable
+  display: 'swap', // Ensures text remains visible during font loading
+});
 
 export const metadata: Metadata = {
   title: 'PetMets - Your Pet Companion App',
@@ -20,18 +30,17 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        <link href="https://fonts.googleapis.com/css2?family=PT+Sans:ital,wght@0,400;0,700;1,400;1,700&display=swap" rel="stylesheet" />
+        {/* Removed old Google Font <link> tags */}
       </head>
-      <body className="font-body antialiased">
-        <AuthProvider> {/* Wrap with AuthProvider */}
-          <LoadingProvider>
+      {/* Apply the font class to the body or a specific element */}
+      <body className={`${ptSans.className} font-body antialiased`}>
+        <LoadingProvider>
+          <AuthProvider>
             <AppLayout>{children}</AppLayout>
             <Toaster />
-            <GlobalLoader /> {/* This remains for page navigation loading */}
-          </LoadingProvider>
-        </AuthProvider>
+            <GlobalLoader />
+          </AuthProvider>
+        </LoadingProvider>
       </body>
     </html>
   );
