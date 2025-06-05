@@ -1,7 +1,8 @@
 
 'use client';
 
-import { useActionState, useFormStatus } from 'react'; // Changed from 'react-dom' for useFormState
+import { useActionState } from 'react';
+import { useFormStatus } from 'react-dom';
 import { getSuggestedTagsAction } from '@/app/records/actions';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
@@ -14,7 +15,7 @@ import { Lightbulb, Loader2, Tags, AlertCircle } from 'lucide-react';
 const initialState = {
   message: '',
   tags: [],
-  error: undefined, // Ensure error is part of the initial state if actions.ts expects/returns it
+  error: undefined,
 };
 
 function SubmitButton() {
