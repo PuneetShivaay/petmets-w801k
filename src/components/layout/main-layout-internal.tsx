@@ -1,5 +1,5 @@
 
-"use client"; // This entire module is client-side
+"use client"; 
 
 import * as React from "react";
 import Link from "next/link";
@@ -8,27 +8,28 @@ import { AppLogo } from "@/components/icons";
 import { navItems } from "@/config/nav";
 import { cn } from "@/lib/utils";
 import {
-  SidebarProvider, // Provider
+  SidebarProvider, 
   Sidebar,
   SidebarHeader,
   SidebarContent,
   SidebarFooter,
-  SidebarTrigger,    // Consumes context
+  SidebarTrigger,    
   SidebarMenu,
   SidebarMenuItem,
   SidebarMenuButton,
   SidebarInset,
-  useSidebar,        // Hook to consume context
+  useSidebar,        
 } from "@/components/ui/sidebar";
-// Button is a general UI component, not necessarily context-dependent
 import { Button } from "@/components/ui/button"; 
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { LogOut } from "lucide-react";
+import { useLoading } from "@/contexts/loading-context";
 
-// Helper component for the App Logo Link - Consumes useSidebar
 function AppLogoLinkInternal() {
   const { isMobile, setOpenMobile } = useSidebar();
+  const { showLoading } = useLoading();
   const handleLogoClick = () => {
+    showLoading();
     if (isMobile) {
       setOpenMobile(false);
     }
@@ -40,12 +41,13 @@ function AppLogoLinkInternal() {
   );
 }
 
-// Helper component for rendering sidebar navigation items - Consumes useSidebar
 function SidebarNavigationInternal() {
   const pathname = usePathname();
   const { isMobile, setOpenMobile } = useSidebar();
+  const { showLoading } = useLoading();
 
-  const handleMenuItemClick = () => {
+  const handleLinkClick = () => {
+    showLoading();
     if (isMobile) {
       setOpenMobile(false);
     }
@@ -70,8 +72,9 @@ function SidebarNavigationInternal() {
               target={item.external ? "_blank" : undefined}
               rel={item.external ? "noopener noreferrer" : undefined}
               tooltip={item.title}
+              onClick={item.href.startsWith("/") ? handleLinkClick : undefined}
             >
-              <a onClick={handleMenuItemClick}>
+              <a>
                 <item.icon className="mr-2 h-5 w-5" />
                 <span>{item.title}</span>
                 {item.label && (
@@ -94,8 +97,9 @@ function SidebarNavigationInternal() {
                 pathname === loginNavItem.href && "bg-sidebar-accent text-sidebar-accent-foreground"
               )}
               tooltip={loginNavItem.title}
+              onClick={handleLinkClick}
             >
-              <a onClick={handleMenuItemClick}>
+              <a>
                 <loginNavItem.icon className="mr-2 h-5 w-5" />
                 <span>{loginNavItem.title}</span>
               </a>
@@ -107,13 +111,12 @@ function SidebarNavigationInternal() {
   );
 }
 
-// Header specific content - Consumes useSidebar via SidebarTrigger
 function HeaderContentInternal() {
     const pathname = usePathname();
     return (
         <>
             <div className="md:hidden">
-                 <SidebarTrigger /> {/* SidebarTrigger calls useSidebar */}
+                 <SidebarTrigger /> 
             </div>
             <h1 className="font-headline text-xl font-semibold flex-1">
                 {navItems.find(item => item.href === pathname)?.title || 'PetMets'}
@@ -122,15 +125,24 @@ function HeaderContentInternal() {
     );
 }
 
-// Component for the logout button logic - Consumes useSidebar
 function LogoutButtonInternal() {
   const { isMobile, setOpenMobile } = useSidebar();
+  const { showLoading, hideLoading } = useLoading(); 
   const handleLogoutClick = () => {
+    showLoading();
     console.log("Logout clicked");
-    if (isMobile) {
-      setOpenMobile(false);
-    }
-    // router.push('/login'); // Example redirect
+    // Simulate action and potential navigation or state change
+    // For a real app, this would involve an API call and likely a redirect.
+    // If it's just a client-side state change without navigation, hideLoading() should be called manually.
+    // If it navigates, the useEffect in AppLayout will handle hideLoading.
+    setTimeout(() => {
+        if (isMobile) {
+          setOpenMobile(false);
+        }
+        // Example: if no navigation, hide manually. If navigation, this might be redundant.
+        // hideLoading(); // Or let path change handle it.
+        // router.push('/login'); // If using Next Router for navigation
+    }, 500); // Simulate delay
   };
 
   return (
@@ -145,10 +157,9 @@ function LogoutButtonInternal() {
   );
 }
 
-// This component sets up the SidebarProvider and renders the actual layout
 export function MainLayoutInternal({ children }: { children: React.ReactNode }) {
   return (
-    <SidebarProvider defaultOpen> {/* PROVIDER IS HERE, at the root of this self-contained layout module */}
+    <SidebarProvider defaultOpen> 
       <Sidebar className="border-r">
         <SidebarHeader className="p-4">
           <AppLogoLinkInternal />
