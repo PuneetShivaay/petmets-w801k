@@ -28,11 +28,13 @@ const SmartTaggingOutputSchema = z.object({
 export type SmartTaggingOutput = z.infer<typeof SmartTaggingOutputSchema>;
 
 // This schema defines the output of our exported `suggestTags` function
-export const SmartTaggingFunctionOutputSchema = z.object({
+// NOT EXPORTED: This const object cannot be exported from a "use server" file.
+const SmartTaggingFunctionOutputSchema = z.object({
   tags: z.array(z.string()).describe('An array of relevant tags for the pet document.'),
   aiUsed: z.boolean().describe('Indicates if AI was used to generate the tags.'),
   errorMessage: z.string().optional().describe('Optional error message if AI tagging failed.'),
 });
+// EXPORTED TYPE: This type, inferred from the schema, is fine to export.
 export type SmartTaggingFunctionOutput = z.infer<typeof SmartTaggingFunctionOutputSchema>;
 
 
@@ -83,3 +85,4 @@ const smartTaggingFlow = ai.defineFlow(
     return output!; // output is guaranteed by schema if no error
   }
 );
+
