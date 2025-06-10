@@ -1,11 +1,16 @@
-import type { SVGProps } from 'react';
-import { PawPrint } from 'lucide-react';
+import Image from 'next/image';
 
-export function AppLogo(props: SVGProps<SVGSVGElement>) {
+export function AppLogo() {
   return (
-    <div className="flex items-center gap-2" aria-label="PetMets Logo">
-      <PawPrint className="h-8 w-8 text-primary" {...props} />
-      <span className="font-headline text-2xl font-bold text-primary">PetMets</span>
+    <div className="flex items-center gap-2 text-primary" aria-label="PetMets Logo">
+      <Image
+        src="/images/logo.svg"
+        alt="PetMets Logo"
+        width={32}
+        height={32}
+        className="h-8 w-8"
+      />
+      <span className="font-headline text-2xl font-bold">PetMets</span>
     </div>
   );
 }
