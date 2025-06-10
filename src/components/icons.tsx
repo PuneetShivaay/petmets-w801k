@@ -1,10 +1,11 @@
+
 import Image from 'next/image';
 
 export function AppLogo() {
   return (
     <div className="flex items-center gap-2 text-primary" aria-label="PetMets Logo">
       <Image
-        src="/images/logo.svg"
+        src="/images/logo.png"
         alt="PetMets Logo"
         width={32}
         height={32}
