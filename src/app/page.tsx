@@ -106,7 +106,7 @@ export default function HomePage() {
                   Welcome back,
                 </h1>
                 <p className="mt-1 text-xl text-primary truncate font-medium">{user.email}</p>
-                <p className="mt-6 text-lg leading-relaxed text-muted-foreground">
+                <p className="mt-6 text-base leading-relaxed text-muted-foreground sm:text-lg">
                   Ready to manage your pet's world? Explore services, update profiles, and much more, all in one place.
                 </p>
                 <div className="mt-10">
@@ -122,7 +122,7 @@ export default function HomePage() {
                 <h1 className="font-headline text-3xl font-bold tracking-tight text-foreground sm:text-4xl lg:text-5xl">
                   Welcome to <span className="text-primary">PetMets</span>!
                 </h1>
-                <p className="mt-6 text-lg leading-relaxed text-muted-foreground">
+                <p className="mt-6 text-base leading-relaxed text-muted-foreground sm:text-lg">
                   Your all-in-one platform for pet care. Find services, manage records, and connect with a community of pet lovers.
                 </p>
                 <div className="mt-10">
@@ -183,4 +183,3 @@ export default function HomePage() {
     </div>
   );
 }
-

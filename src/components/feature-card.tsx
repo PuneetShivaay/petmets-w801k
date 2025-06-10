@@ -1,3 +1,4 @@
+
 import Link from 'next/link';
 import type { LucideIcon } from 'lucide-react';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
@@ -17,7 +18,7 @@ export function FeatureCard({ icon: Icon, title, description, href, actionText =
     <Card className="flex h-full flex-col overflow-hidden rounded-lg shadow-lg transition-shadow hover:shadow-xl">
       <CardHeader className="flex flex-row items-center gap-4 p-6">
         <Icon className="h-10 w-10 text-primary" />
-        <CardTitle className="font-headline text-2xl">{title}</CardTitle>
+        <CardTitle className="font-headline text-xl sm:text-2xl">{title}</CardTitle>
       </CardHeader>
       <CardContent className="flex-grow p-6 pt-0">
         <CardDescription className="text-base text-muted-foreground">{description}</CardDescription>
