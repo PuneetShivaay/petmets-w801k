@@ -27,7 +27,6 @@ const petSchema = z.object({
   breed: z.string().min(2, "Breed must be at least 2 characters.").max(50),
   age: z.string().min(1, "Age is required.").max(30),
   bio: z.string().max(200, "Bio cannot exceed 200 characters.").optional(),
-  // avatar and dataAiHint are part of the full data structure, but not the form validation schema
 });
 type PetFormData = z.infer<typeof petSchema>;
 
@@ -136,11 +135,12 @@ export default function PetProfilePage() {
     setIsSubmittingPet(true);
     try {
       const petDocRef = doc(db, "users", user.uid, "pets", "main-pet");
-      await setDoc(petDocRef, data, { merge: true });
+      const dataToSave = { ...petData, ...data }; // Merge form data with existing state
       
-      const newPetData = { ...petData, ...data };
-      setPetData(newPetData);
-      resetPetForm(newPetData);
+      await setDoc(petDocRef, dataToSave, { merge: true });
+      
+      setPetData(dataToSave);
+      resetPetForm(dataToSave);
 
       toast({ title: "Success", description: "Pet details updated." });
       setIsEditingPet(false);
@@ -164,11 +164,12 @@ export default function PetProfilePage() {
       }
 
       const userDocRef = doc(db, "users", user.uid);
-      await setDoc(userDocRef, { ...data, email: user.email }, { merge: true });
+      const dataToSave = { ...ownerData, ...data, email: user.email }; // Merge form data
+
+      await setDoc(userDocRef, dataToSave, { merge: true });
       
-      const newOwnerData = { ...ownerData, ...data };
-      setOwnerData(newOwnerData);
-      resetOwnerForm(newOwnerData);
+      setOwnerData(dataToSave);
+      resetOwnerForm(dataToSave);
 
       toast({ title: "Success", description: "Your profile has been updated." });
       setIsEditingOwner(false);
@@ -194,6 +195,12 @@ export default function PetProfilePage() {
         </div>
     )
   }
+  
+  if (!user) {
+      // This state should be brief as AppLayout handles redirection.
+      return null;
+  }
+
 
   return (
     <div>
