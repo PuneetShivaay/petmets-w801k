@@ -27,6 +27,7 @@ const petSchema = z.object({
   breed: z.string().min(2, "Breed must be at least 2 characters.").max(50),
   age: z.string().min(1, "Age is required.").max(30),
   bio: z.string().max(200, "Bio cannot exceed 200 characters.").optional(),
+  // avatar and dataAiHint are part of the full data structure, but not the form validation schema
 });
 type PetFormData = z.infer<typeof petSchema>;
 
@@ -36,6 +37,15 @@ const ownerSchema = z.object({
   address: z.string().optional(),
 });
 type OwnerFormData = z.infer<typeof ownerSchema>;
+
+const defaultPetData = {
+    name: "Buddy",
+    breed: "Golden Retriever",
+    age: "3 years",
+    avatar: "https://placehold.co/128x128.png",
+    dataAiHint: "golden retriever",
+    bio: "Loves long walks in the park and playing fetch. A very good boy indeed!",
+};
 
 export default function PetProfilePage() {
   const { user, isLoading: authLoading } = useAuth();
@@ -47,15 +57,7 @@ export default function PetProfilePage() {
   const [isSubmittingPet, setIsSubmittingPet] = useState(false);
   const [isSubmittingOwner, setIsSubmittingOwner] = useState(false);
 
-  const [petData, setPetData] = useState({
-    name: "Buddy",
-    breed: "Golden Retriever",
-    age: "3 years",
-    avatar: "https://placehold.co/128x128.png",
-    dataAiHint: "golden retriever",
-    bio: "Loves long walks in the park and playing fetch. A very good boy indeed!",
-  });
-
+  const [petData, setPetData] = useState(defaultPetData);
   const [ownerData, setOwnerData] = useState({
     name: "Pet Owner",
     email: "loading...",
@@ -67,12 +69,10 @@ export default function PetProfilePage() {
 
   const { register: registerPet, handleSubmit: handlePetSubmit, reset: resetPetForm, formState: { errors: petErrors } } = useForm<PetFormData>({
     resolver: zodResolver(petSchema),
-    defaultValues: petData,
   });
 
   const { register: registerOwner, handleSubmit: handleOwnerSubmit, reset: resetOwnerForm, formState: { errors: ownerErrors } } = useForm<OwnerFormData>({
     resolver: zodResolver(ownerSchema),
-    defaultValues: { name: ownerData.name, phone: ownerData.phone, address: ownerData.address },
   });
 
   useEffect(() => {
@@ -93,7 +93,7 @@ export default function PetProfilePage() {
           getDoc(petDocRef)
         ]);
         
-        const initialOwnerData = {
+        let currentOwnerData = {
           name: user.displayName || "Pet Owner",
           email: user.email || "No email provided",
           phone: "",
@@ -104,21 +104,18 @@ export default function PetProfilePage() {
 
         if (userDocSnap.exists()) {
           const fetchedData = userDocSnap.data();
-          initialOwnerData.name = fetchedData.name || initialOwnerData.name;
-          initialOwnerData.phone = fetchedData.phone || initialOwnerData.phone;
-          initialOwnerData.address = fetchedData.address || initialOwnerData.address;
+          currentOwnerData = { ...currentOwnerData, ...fetchedData };
         }
-        setOwnerData(initialOwnerData);
-        resetOwnerForm({ name: initialOwnerData.name, phone: initialOwnerData.phone, address: initialOwnerData.address });
+        setOwnerData(currentOwnerData);
+        resetOwnerForm(currentOwnerData);
         
+        let currentPetData = defaultPetData;
         if (petDocSnap.exists()) {
-          const fetchedPetData = petDocSnap.data() as PetFormData;
-          const newPetData = { ...petData, ...fetchedPetData };
-          setPetData(newPetData);
-          resetPetForm(newPetData);
-        } else {
-          resetPetForm(petData);
+          const fetchedPetData = petDocSnap.data();
+          currentPetData = { ...defaultPetData, ...fetchedPetData };
         }
+        setPetData(currentPetData);
+        resetPetForm(currentPetData);
 
       } catch (error) {
         console.error("Error fetching profile data:", error);
@@ -168,9 +165,10 @@ export default function PetProfilePage() {
 
       const userDocRef = doc(db, "users", user.uid);
       await setDoc(userDocRef, { ...data, email: user.email }, { merge: true });
-
-      setOwnerData(prev => ({ ...prev, ...data }));
-      resetOwnerForm(data);
+      
+      const newOwnerData = { ...ownerData, ...data };
+      setOwnerData(newOwnerData);
+      resetOwnerForm(newOwnerData);
 
       toast({ title: "Success", description: "Your profile has been updated." });
       setIsEditingOwner(false);
@@ -219,11 +217,14 @@ export default function PetProfilePage() {
                   ) : (
                     <CardTitle className="font-headline text-2xl sm:text-3xl">{petData.name}</CardTitle>
                   )}
+                  {petErrors.name && <p className="text-sm text-destructive">{petErrors.name.message}</p>}
+                  
                   {isEditingPet ? (
                      <Input id="petBreed" {...registerPet("breed")} className="mt-1" />
                   ) : (
                     <p className="text-muted-foreground">{petData.breed}</p>
                   )}
+                  {petErrors.breed && <p className="text-sm text-destructive">{petErrors.breed.message}</p>}
                 </div>
               </div>
             </CardHeader>
@@ -284,9 +285,14 @@ export default function PetProfilePage() {
                   <AvatarFallback><User className="h-10 w-10" /></AvatarFallback>
                 </Avatar>
                 <div>
-                   {isEditingOwner ? <Input id="ownerName" {...registerOwner("name")} className="font-headline text-2xl sm:text-3xl p-2 h-auto" />
-                   : <CardTitle className="font-headline text-2xl sm:text-3xl">{ownerData.name}</CardTitle>
-                  }
+                   {isEditingOwner ? (
+                     <>
+                      <Input id="ownerName" {...registerOwner("name")} className="font-headline text-2xl sm:text-3xl p-2 h-auto" />
+                      {ownerErrors.name && <p className="text-sm text-destructive">{ownerErrors.name.message}</p>}
+                     </>
+                   ) : (
+                    <CardTitle className="font-headline text-2xl sm:text-3xl">{ownerData.name}</CardTitle>
+                   )}
                   <p className="text-muted-foreground">Pet Owner</p>
                 </div>
               </div>
@@ -298,13 +304,19 @@ export default function PetProfilePage() {
               </div>
               {isEditingOwner ? (
                 <>
-                  <div className="flex items-center gap-2">
-                    <Phone className="h-5 w-5 text-muted-foreground" />
-                    <Input id="ownerPhone" {...registerOwner("phone")} placeholder="555-123-4567" />
+                  <div className="space-y-1">
+                    <Label htmlFor="ownerPhone">Phone</Label>
+                    <div className="flex items-center gap-2">
+                      <Phone className="h-5 w-5 text-muted-foreground" />
+                      <Input id="ownerPhone" {...registerOwner("phone")} placeholder="555-123-4567" />
+                    </div>
                   </div>
-                  <div className="flex items-start gap-2">
-                    <Home className="h-5 w-5 text-muted-foreground mt-2" />
-                    <Input id="ownerAddress" {...registerOwner("address")} placeholder="123 Pet Street, Pawville" />
+                  <div className="space-y-1">
+                    <Label htmlFor="ownerAddress">Address</Label>
+                    <div className="flex items-start gap-2">
+                      <Home className="h-5 w-5 text-muted-foreground mt-2" />
+                      <Input id="ownerAddress" {...registerOwner("address")} placeholder="123 Pet Street, Pawville" />
+                    </div>
                   </div>
                 </>
               ) : (
@@ -312,6 +324,7 @@ export default function PetProfilePage() {
                   <div className="flex items-center gap-2">
                     <Phone className="h-5 w-5 text-muted-foreground" />
                     <p className="text-base sm:text-lg">{ownerData.phone || "Not set"}</p>
+
                   </div>
                   <div className="flex items-start gap-2">
                     <Home className="h-5 w-5 text-muted-foreground mt-1" />
@@ -327,7 +340,7 @@ export default function PetProfilePage() {
                     {isSubmittingOwner ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
                     Save
                   </Button>
-                  <Button type="button" variant="outline" onClick={() => { setIsEditingOwner(false); resetOwnerForm({name: ownerData.name, phone: ownerData.phone, address: ownerData.address }); }}>
+                  <Button type="button" variant="outline" onClick={() => { setIsEditingOwner(false); resetOwnerForm(ownerData); }}>
                     <XCircle className="mr-2 h-4 w-4" /> Cancel
                   </Button>
                 </div>
