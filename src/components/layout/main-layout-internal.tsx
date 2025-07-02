@@ -85,7 +85,7 @@ function SidebarNavigationInternal() {
             >
               <a>
                 <item.icon className="mr-2 h-5 w-5 text-primary" />
-                <span>{item.title}</span>
+                <span className="text-sidebar-foreground">{item.title}</span>
                 {item.label && (
                   <span className="ml-auto text-xs text-muted-foreground">
                     {item.label}
@@ -132,9 +132,15 @@ function HeaderContentInternal() {
             <div className="md:hidden">
                  <SidebarTrigger /> 
             </div>
-            <h1 className="flex-1 font-headline text-xl font-semibold">
-                {renderTitle(title)}
-            </h1>
+            {pathname === '/' ? (
+                <div className="flex-1">
+                    <AppLogoLinkInternal />
+                </div>
+            ) : (
+                <h1 className="flex-1 font-headline text-xl font-semibold">
+                    {renderTitle(title)}
+                </h1>
+            )}
         </>
     );
 }
@@ -171,7 +177,7 @@ function LogoutButtonInternal() {
         tooltip="Logout"
     >
         <LogOut className="mr-2 h-5 w-5 text-primary" />
-        <span>Logout</span>
+        <span className="text-sidebar-foreground">Logout</span>
     </SidebarMenuButton>
   );
 }
