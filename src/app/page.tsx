@@ -65,7 +65,7 @@ export default function HomePage() {
               <Skeleton className="h-6 w-1/2 mb-6" />
               <Skeleton className="h-5 w-full mb-2" />
               <Skeleton className="h-5 w-5/6 mb-10" />
-              <Skeleton className="h-12 w-48" />
+              <Skeleton className="h-10 w-40" />
             </div>
             <div className="relative h-64 md:h-auto">
               <Skeleton className="h-full w-full" />
@@ -102,16 +102,16 @@ export default function HomePage() {
           <div className="flex flex-col justify-center p-8 py-12 md:p-12 lg:p-16">
             {user ? (
               <>
-                <h1 className="font-headline text-3xl font-bold tracking-tight text-foreground sm:text-4xl lg:text-5xl">
+                <h1 className="font-headline text-2xl font-bold tracking-tight text-foreground sm:text-3xl lg:text-4xl">
                   Welcome back,
                 </h1>
-                <p className="mt-1 text-xl text-primary truncate font-medium">{user.email}</p>
-                <p className="mt-6 text-base leading-relaxed text-muted-foreground sm:text-lg">
+                <p className="mt-1 text-lg sm:text-xl text-primary truncate font-medium">{user.email}</p>
+                <p className="mt-6 text-sm leading-relaxed text-muted-foreground sm:text-base">
                   Ready to manage your pet's world? Explore services, update profiles, and much more, all in one place.
                 </p>
                 <div className="mt-10">
                   <Link href="/pet-profile" passHref>
-                    <Button size="lg" className="bg-primary text-primary-foreground hover:bg-primary/90 shadow-md hover:shadow-lg transition-shadow">
+                    <Button size="default" className="bg-primary text-primary-foreground hover:bg-primary/90 shadow-md hover:shadow-lg transition-shadow">
                       Go to Your Profile <ArrowRight className="ml-2 h-5 w-5" />
                     </Button>
                   </Link>
@@ -119,15 +119,15 @@ export default function HomePage() {
               </>
             ) : (
               <>
-                <h1 className="font-headline text-3xl font-bold tracking-tight text-foreground sm:text-4xl lg:text-5xl">
+                <h1 className="font-headline text-2xl font-bold tracking-tight text-foreground sm:text-3xl lg:text-4xl">
                   Welcome to <span className="text-primary">Pet</span><span className="text-accent">Mets</span>!
                 </h1>
-                <p className="mt-6 text-base leading-relaxed text-muted-foreground sm:text-lg">
+                <p className="mt-6 text-sm leading-relaxed text-muted-foreground sm:text-base">
                   Your all-in-one platform for pet care. Find services, manage records, and connect with a community of pet lovers.
                 </p>
                 <div className="mt-10">
                   <Link href="/login" passHref>
-                    <Button size="lg" className="bg-primary text-primary-foreground hover:bg-primary/90 shadow-md hover:shadow-lg transition-shadow">
+                    <Button size="default" className="bg-primary text-primary-foreground hover:bg-primary/90 shadow-md hover:shadow-lg transition-shadow">
                       Login or Sign Up <LogIn className="ml-2 h-5 w-5" />
                     </Button>
                   </Link>
