@@ -120,7 +120,7 @@ export default function HomePage() {
             ) : (
               <>
                 <h1 className="font-headline text-3xl font-bold tracking-tight text-foreground sm:text-4xl lg:text-5xl">
-                  Welcome to <span className="text-primary">PetMets</span>!
+                  Welcome to <span className="text-primary">Pet</span><span className="text-accent">Mets</span>!
                 </h1>
                 <p className="mt-6 text-base leading-relaxed text-muted-foreground sm:text-lg">
                   Your all-in-one platform for pet care. Find services, manage records, and connect with a community of pet lovers.
@@ -154,7 +154,7 @@ export default function HomePage() {
       {dashboardNavItems.length > 0 && (
         <section>
           <h2 className="mb-8 text-center font-headline text-3xl font-bold tracking-tight text-foreground sm:text-4xl">
-            Explore PetMets
+            Explore <span className="text-primary">Pet</span><span className="text-accent">Mets</span>
           </h2>
           <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3"> {/* Adjusted to 3 columns for better card size */}
             {dashboardNavItems.map((item) => (

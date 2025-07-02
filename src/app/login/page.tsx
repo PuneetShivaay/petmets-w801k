@@ -108,7 +108,7 @@ export default function LoginPage() {
             {isSignUp ? "Create Account" : "Welcome Back!"}
           </CardTitle>
           <CardDescription className="text-center">
-            {isSignUp ? "Enter your details to sign up." : "Sign in to continue to PetMets."}
+            {isSignUp ? "Enter your details to sign up." : <><span className="hidden sm:inline">Sign in to continue to </span><span className="font-semibold"><span className="text-primary">Pet</span><span className="text-accent">Mets</span></span>.</>}
           </CardDescription>
         </CardHeader>
         <form onSubmit={isSignUp ? handleSignUpSubmit(onSignUp) : handleLoginSubmit(onLogin)}>
@@ -160,7 +160,11 @@ export default function LoginPage() {
         </form>
       </Card>
       <p className="mt-8 text-center text-sm text-muted-foreground">
-        By continuing, you agree to PetMets&apos;{' '}
+        By continuing, you agree to{' '}
+        <span className="font-semibold">
+          <span className="text-primary">Pet</span><span className="text-accent">Mets</span>
+        </span>
+        &apos;s{' '}
         <Link href="#" className="underline hover:text-primary">
           Terms of Service
         </Link>{' '}

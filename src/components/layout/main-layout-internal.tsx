@@ -103,20 +103,37 @@ function SidebarNavigationInternal() {
 function HeaderContentInternal() {
     const pathname = usePathname();
     const { user } = useAuth();
-    let title = 'PetMets';
+    let title: string = 'PetMets';
     if (user) {
       title = navItems.find(item => item.href === pathname)?.title || 'PetMets Dashboard';
     } else if (pathname === '/login') {
       title = 'Login / Sign Up';
     }
     
+    const renderTitle = (text: string): React.ReactNode => {
+        if (!text.includes('PetMets')) {
+            return text;
+        }
+        const parts = text.split('PetMets');
+        return (
+            <>
+                {parts[0]}
+                <span>
+                    <span className="text-primary">Pet</span>
+                    <span className="text-accent">Mets</span>
+                </span>
+                {parts[1]}
+            </>
+        );
+      };
+
     return (
         <>
             <div className="md:hidden">
                  <SidebarTrigger /> 
             </div>
             <h1 className="font-headline text-xl font-semibold flex-1">
-                {title}
+                {renderTitle(title)}
             </h1>
         </>
     );
