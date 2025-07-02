@@ -17,7 +17,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle, CardFooter, CardDescription } from "@/components/ui/card";
-import { LogIn, UserPlus, Loader2 } from "lucide-react";
+import { LogIn, UserPlus, Loader2, Eye, EyeOff } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 
 const loginSchema = z.object({
@@ -39,12 +39,14 @@ type SignUpFormData = z.infer<typeof signUpSchema>;
 
 export default function LoginPage() {
   const router = useRouter();
-  const { user, isLoading: authIsLoading } = useAuth(); // isLoading here is auth loading
-  const { showLoading: showPageTransitionLoading } = useLoading(); // For page transitions
+  const { user, isLoading: authIsLoading } = useAuth();
+  const { showLoading: showPageTransitionLoading } = useLoading();
 
   const [isSignUp, setIsSignUp] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const { register: registerLogin, handleSubmit: handleLoginSubmit, formState: { errors: loginErrors } } = useForm<LoginFormData>({
     resolver: zodResolver(loginSchema),
@@ -65,13 +67,26 @@ export default function LoginPage() {
     setFormError(null);
     try {
       await signInWithEmailAndPassword(auth, data.email, data.password);
-      showPageTransitionLoading(); // Show loader before router.push
+      showPageTransitionLoading();
       router.push('/');
     } catch (error: any) {
-      setFormError(error.message || "Failed to login. Please check your credentials.");
+      let message = "An unexpected error occurred. Please try again.";
+      switch (error.code) {
+        case "auth/user-not-found":
+        case "auth/wrong-password":
+        case "auth/invalid-credential":
+          message = "Invalid email or password. Please check your credentials and try again.";
+          break;
+        case "auth/too-many-requests":
+          message = "Access to this account has been temporarily disabled due to too many failed login attempts. You can try again later or reset your password.";
+          break;
+        default:
+          message = "Failed to login. Please try again.";
+          console.error("Login error:", error.message);
+      }
+      setFormError(message);
       setIsSubmitting(false);
     }
-    // No need to setIsSubmitting(false) on success because of navigation
   };
 
   const onSignUp: SubmitHandler<SignUpFormData> = async (data) => {
@@ -82,13 +97,21 @@ export default function LoginPage() {
       showPageTransitionLoading();
       router.push('/');
     } catch (error: any) {
-      setFormError(error.message || "Failed to sign up. Please try again.");
+      let message = "An unexpected error occurred. Please try again.";
+      switch (error.code) {
+        case 'auth/email-already-in-use':
+          message = 'An account with this email already exists. Please login or use a different email.';
+          break;
+        default:
+          message = 'Failed to sign up. Please try again.';
+          console.error("Sign up error:", error.message);
+      }
+      setFormError(message);
       setIsSubmitting(false);
     }
   };
   
   if (authIsLoading || (!authIsLoading && user)) {
-    // Show loader if auth is loading or if user is logged in (and useEffect for redirect is about to run)
     return (
       <div className="flex min-h-screen flex-col items-center justify-center bg-background p-4">
         <Loader2 className="h-16 w-16 animate-spin text-primary" />
@@ -126,14 +149,44 @@ export default function LoginPage() {
             </div>
             <div className="space-y-1">
               <Label htmlFor="password">Password</Label>
-              <Input id="password" type="password" placeholder="••••••••" {...(isSignUp ? registerSignUp("password") : registerLogin("password"))} />
+              <div className="relative">
+                <Input 
+                  id="password" 
+                  type={showPassword ? "text" : "password"} 
+                  placeholder="••••••••" 
+                  {...(isSignUp ? registerSignUp("password") : registerLogin("password"))} 
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword((prev) => !prev)}
+                  className="absolute inset-y-0 right-0 flex items-center pr-3 text-muted-foreground hover:text-foreground"
+                  aria-label={showPassword ? "Hide password" : "Show password"}
+                >
+                  {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                </button>
+              </div>
               {isSignUp && signUpErrors.password && <p className="text-sm text-destructive">{signUpErrors.password.message}</p>}
               {!isSignUp && loginErrors.password && <p className="text-sm text-destructive">{loginErrors.password.message}</p>}
             </div>
             {isSignUp && (
               <div className="space-y-1">
                 <Label htmlFor="confirmPassword">Confirm Password</Label>
-                <Input id="confirmPassword" type="password" placeholder="••••••••" {...registerSignUp("confirmPassword")} />
+                <div className="relative">
+                  <Input 
+                    id="confirmPassword" 
+                    type={showConfirmPassword ? "text" : "password"} 
+                    placeholder="••••••••" 
+                    {...registerSignUp("confirmPassword")} 
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowConfirmPassword((prev) => !prev)}
+                    className="absolute inset-y-0 right-0 flex items-center pr-3 text-muted-foreground hover:text-foreground"
+                    aria-label={showConfirmPassword ? "Hide password" : "Show password"}
+                  >
+                    {showConfirmPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                  </button>
+                </div>
                 {signUpErrors.confirmPassword && <p className="text-sm text-destructive">{signUpErrors.confirmPassword.message}</p>}
               </div>
             )}
