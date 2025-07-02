@@ -1,3 +1,4 @@
+
 import { PageHeader } from "@/components/page-header";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -35,7 +36,7 @@ export default function MatchPetPage() {
               />
             </div>
             <CardHeader>
-              <CardTitle className="font-headline text-2xl">{pet.name}</CardTitle>
+              <CardTitle className="font-headline text-xl sm:text-2xl">{pet.name}</CardTitle>
             </CardHeader>
             <CardContent>
               <p className="text-muted-foreground">{pet.breed}</p>

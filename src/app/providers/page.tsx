@@ -23,7 +23,7 @@ export default function ServiceProvidersPage() {
         description="Browse profiles of pet walkers, groomers, trainers, and boarding facilities. View photos, read detailed service descriptions, and book appointments."
       />
       <Card className="mb-8">
-        <CardContent className="p-6">
+        <CardContent className="p-4 sm:p-6">
           <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
             <Input placeholder="Search by name or keyword..." className="md:col-span-2" />
             <Select>
@@ -58,7 +58,7 @@ export default function ServiceProvidersPage() {
               />
             </div>
             <CardHeader>
-              <CardTitle className="font-headline text-xl">{provider.name}</CardTitle>
+              <CardTitle className="font-headline text-lg sm:text-xl">{provider.name}</CardTitle>
               <p className="text-sm font-semibold text-primary">{provider.service}</p>
             </CardHeader>
             <CardContent className="flex-grow">

@@ -58,11 +58,11 @@ export default function PetProfilePage() {
           <CardContent className="space-y-4">
             <div>
               <span className="text-sm font-medium text-muted-foreground">Age</span>
-              <p id="petAge" className="text-lg">{petData.age}</p>
+              <p id="petAge" className="text-base sm:text-lg">{petData.age}</p>
             </div>
             <div>
               <span className="text-sm font-medium text-muted-foreground">Bio</span>
-              <p id="petBio" className="text-md italic text-foreground">
+              <p id="petBio" className="text-base italic text-foreground">
                 {petData.bio}
               </p>
             </div>
@@ -102,16 +102,16 @@ export default function PetProfilePage() {
               {authLoading ? (
                 <Skeleton className="h-6 w-48" />
               ) : (
-                <p className="text-lg">{ownerData.email}</p>
+                <p className="truncate text-base sm:text-lg">{ownerData.email}</p>
               )}
             </div>
             <div className="flex items-center gap-2">
                <Phone className="h-5 w-5 text-muted-foreground" />
-              <p className="text-lg">{ownerData.phone} <span className="text-xs text-muted-foreground">(Placeholder)</span></p>
+              <p className="text-base sm:text-lg">{ownerData.phone} <span className="text-xs text-muted-foreground">(Placeholder)</span></p>
             </div>
             <div className="flex items-start gap-2">
               <Home className="h-5 w-5 text-muted-foreground mt-1" />
-              <p className="text-lg">{ownerData.address} <span className="text-xs text-muted-foreground">(Placeholder)</span></p>
+              <p className="text-base sm:text-lg">{ownerData.address} <span className="text-xs text-muted-foreground">(Placeholder)</span></p>
             </div>
           </CardContent>
           <CardFooter>

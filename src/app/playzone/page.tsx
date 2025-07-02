@@ -1,3 +1,4 @@
+
 import { PageHeader } from "@/components/page-header";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import Image from "next/image";
@@ -30,7 +31,7 @@ export default function PetPlayzonePage() {
             <CardHeader>
               <div className="flex items-center gap-2">
                 <feature.icon className="h-8 w-8 text-primary" />
-                <CardTitle className="font-headline text-2xl">{feature.title}</CardTitle>
+                <CardTitle className="font-headline text-xl sm:text-2xl">{feature.title}</CardTitle>
               </div>
             </CardHeader>
             <CardContent>

@@ -16,12 +16,12 @@ export function PageHeader({ title, description, children }: PageHeaderProps) {
             {title}
           </h1>
           {description && (
-            <p className="mt-2 text-md text-muted-foreground sm:text-lg">
+            <p className="mt-2 text-base text-muted-foreground sm:text-lg">
               {typeof description === 'string' ? description : description}
             </p>
           )}
         </div>
-        {children && <div className="flex items-center gap-2">{children}</div>}
+        {children && <div className="flex flex-wrap items-center gap-2">{children}</div>}
       </div>
     </div>
   );

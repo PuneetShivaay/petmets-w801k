@@ -1,3 +1,4 @@
+
 import { PageHeader } from "@/components/page-header";
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -38,7 +39,7 @@ export default function PetGroomingPage() {
               />
             </div>
             <CardHeader>
-              <CardTitle className="font-headline text-xl">{groomer.name}</CardTitle>
+              <CardTitle className="font-headline text-lg sm:text-xl">{groomer.name}</CardTitle>
                <div className="flex items-center text-sm text-muted-foreground">
                 <ShieldCheck className="mr-1 h-4 w-4 text-green-500" /> Professional Grooming
               </div>

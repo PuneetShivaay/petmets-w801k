@@ -39,16 +39,16 @@ export default function BookingManagementPage() {
             <TabsContent value="upcoming">
               <Card>
                 <CardHeader>
-                  <CardTitle>Upcoming Appointments</CardTitle>
+                  <CardTitle className="text-lg sm:text-xl">Upcoming Appointments</CardTitle>
                 </CardHeader>
                 <CardContent>
                   {upcomingBookings.length > 0 ? (
                     <ul className="space-y-4">
                       {upcomingBookings.map((booking) => (
-                        <li key={booking.id} className="rounded-md border p-4 shadow-sm">
+                        <li key={booking.id} className="rounded-md border p-3 shadow-sm sm:p-4">
                           <h3 className="font-semibold">{booking.service}</h3>
                           <p className="text-sm text-muted-foreground">Date: {booking.date} at {booking.time}</p>
-                          <div className="mt-2">
+                          <div className="mt-2 flex flex-wrap gap-2">
                             <Button variant="outline" size="sm" className="mr-2">Reschedule</Button>
                             <Button variant="destructive" size="sm">Cancel</Button>
                           </div>
@@ -64,13 +64,13 @@ export default function BookingManagementPage() {
             <TabsContent value="past">
               <Card>
                 <CardHeader>
-                  <CardTitle>Past Appointments</CardTitle>
+                  <CardTitle className="text-lg sm:text-xl">Past Appointments</CardTitle>
                 </CardHeader>
                 <CardContent>
                 {pastBookings.length > 0 ? (
                     <ul className="space-y-4">
                       {pastBookings.map((booking) => (
-                        <li key={booking.id} className="rounded-md border p-4 shadow-sm">
+                        <li key={booking.id} className="rounded-md border p-3 shadow-sm sm:p-4">
                           <h3 className="font-semibold">{booking.service}</h3>
                           <p className="text-sm text-muted-foreground">Date: {booking.date} at {booking.time}</p>
                           <p className="text-sm text-green-600 flex items-center"><CheckCircle className="mr-1 h-4 w-4"/> {booking.status}</p>
@@ -91,7 +91,7 @@ export default function BookingManagementPage() {
         <div className="md:col-span-1">
           <Card>
             <CardHeader>
-              <CardTitle>Calendar Overview</CardTitle>
+              <CardTitle className="text-lg sm:text-xl">Calendar Overview</CardTitle>
             </CardHeader>
             <CardContent className="flex justify-center">
               <Calendar
