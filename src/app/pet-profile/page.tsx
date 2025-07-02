@@ -6,6 +6,7 @@ import { useForm, type SubmitHandler } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { updateProfile } from "firebase/auth";
+import { doc, getDoc, setDoc } from "firebase/firestore";
 
 import { PageHeader } from "@/components/page-header";
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
@@ -17,7 +18,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 
-import { auth } from "@/lib/firebase";
+import { auth, db } from "@/lib/firebase";
 import { useAuth } from "@/contexts/auth-context";
 import { useToast } from "@/hooks/use-toast";
 
@@ -40,12 +41,12 @@ export default function PetProfilePage() {
   const { user, isLoading: authLoading } = useAuth();
   const { toast } = useToast();
 
+  const [pageLoading, setPageLoading] = useState(true);
   const [isEditingPet, setIsEditingPet] = useState(false);
   const [isEditingOwner, setIsEditingOwner] = useState(false);
   const [isSubmittingPet, setIsSubmittingPet] = useState(false);
   const [isSubmittingOwner, setIsSubmittingOwner] = useState(false);
 
-  // Use state for data to allow UI updates
   const [petData, setPetData] = useState({
     name: "Buddy",
     breed: "Golden Retriever",
@@ -56,10 +57,10 @@ export default function PetProfilePage() {
   });
 
   const [ownerData, setOwnerData] = useState({
-    name: user?.displayName || "Pet Owner",
-    email: user?.email || "loading...",
-    phone: "555-123-4567",
-    address: "123 Pet Street, Pawville, CA 90210",
+    name: "Pet Owner",
+    email: "loading...",
+    phone: "",
+    address: "",
     avatar: "https://placehold.co/128x128.png",
     dataAiHint: "friendly person",
   });
@@ -74,36 +75,90 @@ export default function PetProfilePage() {
   });
 
   useEffect(() => {
-    if (user) {
-      const initialOwnerData = {
-        name: user.displayName || "Pet Owner",
-        email: user.email || "No email provided",
-        phone: ownerData.phone,
-        address: ownerData.address,
-        avatar: ownerData.avatar,
-        dataAiHint: ownerData.dataAiHint,
-      };
-      setOwnerData(initialOwnerData);
-      resetOwnerForm({ name: initialOwnerData.name, phone: initialOwnerData.phone, address: initialOwnerData.address });
+    if (authLoading) return;
+    if (!user) {
+      setPageLoading(false);
+      return;
     }
-    resetPetForm(petData);
-  }, [user, authLoading]); // Re-run when auth state is resolved
+
+    const fetchProfileData = async () => {
+      setPageLoading(true);
+      try {
+        const userDocRef = doc(db, "users", user.uid);
+        const petDocRef = doc(db, "users", user.uid, "pets", "main-pet");
+
+        const [userDocSnap, petDocSnap] = await Promise.all([
+          getDoc(userDocRef),
+          getDoc(petDocRef)
+        ]);
+        
+        // Default data structure if no doc exists yet
+        const initialOwnerData = {
+          name: user.displayName || "Pet Owner",
+          email: user.email || "No email provided",
+          phone: "",
+          address: "",
+          avatar: ownerData.avatar,
+          dataAiHint: ownerData.dataAiHint,
+        };
+
+        if (userDocSnap.exists()) {
+          const fetchedData = userDocSnap.data();
+          initialOwnerData.name = fetchedData.name || initialOwnerData.name;
+          initialOwnerData.phone = fetchedData.phone || initialOwnerData.phone;
+          initialOwnerData.address = fetchedData.address || initialOwnerData.address;
+        }
+        setOwnerData(initialOwnerData);
+        resetOwnerForm(initialOwnerData);
+        
+        if (petDocSnap.exists()) {
+          const fetchedPetData = petDocSnap.data();
+          const newPetData = { ...petData, ...fetchedPetData };
+          setPetData(newPetData);
+          resetPetForm(newPetData);
+        } else {
+          resetPetForm(petData);
+        }
+
+      } catch (error) {
+        console.error("Error fetching profile data:", error);
+        toast({ variant: "destructive", title: "Error", description: "Could not fetch profile data." });
+      } finally {
+        setPageLoading(false);
+      }
+    };
+
+    fetchProfileData();
+  }, [user, authLoading]);
 
   const onPetSubmit: SubmitHandler<PetFormData> = async (data) => {
+    if (!user) return toast({ variant: "destructive", title: "Not Authenticated" });
     setIsSubmittingPet(true);
-    await new Promise(resolve => setTimeout(resolve, 500)); // Simulate API call
-    setPetData(prev => ({ ...prev, ...data }));
-    toast({ title: "Success", description: "Pet details updated." });
-    setIsEditingPet(false);
-    setIsSubmittingPet(false);
+    try {
+      const petDocRef = doc(db, "users", user.uid, "pets", "main-pet");
+      await setDoc(petDocRef, data);
+      setPetData(prev => ({ ...prev, ...data }));
+      toast({ title: "Success", description: "Pet details updated." });
+      setIsEditingPet(false);
+    } catch (error) {
+      toast({ variant: "destructive", title: "Error", description: "Failed to update pet details." });
+    } finally {
+      setIsSubmittingPet(false);
+    }
   };
 
   const onOwnerSubmit: SubmitHandler<OwnerFormData> = async (data) => {
-    if (!user) return toast({ variant: "destructive", title: "Not Authenticated" });
+    if (!user || !auth.currentUser) return toast({ variant: "destructive", title: "Not Authenticated" });
     setIsSubmittingOwner(true);
     try {
-      await updateProfile(user, { displayName: data.name });
-      setOwnerData(prev => ({ ...prev, name: data.name || prev.name, phone: data.phone || prev.phone, address: data.address || prev.address }));
+      if (data.name !== user.displayName) {
+        await updateProfile(auth.currentUser, { displayName: data.name });
+      }
+
+      const userDocRef = doc(db, "users", user.uid);
+      await setDoc(userDocRef, { ...data, email: user.email }, { merge: true });
+
+      setOwnerData(prev => ({ ...prev, ...data }));
       toast({ title: "Success", description: "Your profile has been updated." });
       setIsEditingOwner(false);
     } catch (error) {
@@ -112,6 +167,21 @@ export default function PetProfilePage() {
       setIsSubmittingOwner(false);
     }
   };
+
+  if (pageLoading || authLoading) {
+    return (
+        <div>
+            <PageHeader
+                title="Pet & Owner Profile"
+                description="View and manage your pet's details and your account information."
+            />
+            <div className="grid grid-cols-1 gap-8 md:grid-cols-2">
+                <Card><CardHeader><Skeleton className="h-24 w-full" /></CardHeader><CardContent><Skeleton className="h-20 w-full" /></CardContent><CardFooter><Skeleton className="h-10 w-full" /></CardFooter></Card>
+                <Card><CardHeader><Skeleton className="h-24 w-full" /></CardHeader><CardContent><Skeleton className="h-20 w-full" /></CardContent><CardFooter><Skeleton className="h-10 w-full" /></CardFooter></Card>
+            </div>
+        </div>
+    )
+  }
 
   return (
     <div>
@@ -200,8 +270,7 @@ export default function PetProfilePage() {
                   <AvatarFallback><User className="h-10 w-10" /></AvatarFallback>
                 </Avatar>
                 <div>
-                  {authLoading ? <Skeleton className="h-8 w-40" /> :
-                   isEditingOwner ? <Input id="ownerName" {...registerOwner("name")} className="font-headline text-2xl sm:text-3xl p-2 h-auto" />
+                   {isEditingOwner ? <Input id="ownerName" {...registerOwner("name")} className="font-headline text-2xl sm:text-3xl p-2 h-auto" />
                    : <CardTitle className="font-headline text-2xl sm:text-3xl">{ownerData.name}</CardTitle>
                   }
                   <p className="text-muted-foreground">Pet Owner</p>
@@ -211,28 +280,28 @@ export default function PetProfilePage() {
             <CardContent className="space-y-4">
               <div className="flex items-center gap-2">
                 <Mail className="h-5 w-5 text-muted-foreground" />
-                {authLoading ? <Skeleton className="h-6 w-48" /> : <p className="truncate text-base sm:text-lg">{ownerData.email}</p>}
+                <p className="truncate text-base sm:text-lg">{ownerData.email}</p>
               </div>
               {isEditingOwner ? (
                 <>
                   <div className="flex items-center gap-2">
                     <Phone className="h-5 w-5 text-muted-foreground" />
-                    <Input id="ownerPhone" {...registerOwner("phone")} />
+                    <Input id="ownerPhone" {...registerOwner("phone")} placeholder="555-123-4567" />
                   </div>
                   <div className="flex items-start gap-2">
                     <Home className="h-5 w-5 text-muted-foreground mt-2" />
-                    <Input id="ownerAddress" {...registerOwner("address")} />
+                    <Input id="ownerAddress" {...registerOwner("address")} placeholder="123 Pet Street, Pawville" />
                   </div>
                 </>
               ) : (
                 <>
                   <div className="flex items-center gap-2">
                     <Phone className="h-5 w-5 text-muted-foreground" />
-                    <p className="text-base sm:text-lg">{ownerData.phone}</p>
+                    <p className="text-base sm:text-lg">{ownerData.phone || "Not set"}</p>
                   </div>
                   <div className="flex items-start gap-2">
                     <Home className="h-5 w-5 text-muted-foreground mt-1" />
-                    <p className="text-base sm:text-lg">{ownerData.address}</p>
+                    <p className="text-base sm:text-lg">{ownerData.address || "Not set"}</p>
                   </div>
                 </>
               )}
@@ -260,9 +329,9 @@ export default function PetProfilePage() {
 
       <Card className="mt-8 bg-primary/10">
         <CardContent className="p-6">
-          <h3 className="font-headline text-xl font-semibold text-primary">Keep Your Information Up-to-Date!</h3>
+          <h3 className="font-headline text-xl font-semibold text-primary">Your Information Hub!</h3>
           <p className="mt-2 text-muted-foreground">
-            Regularly updating your pet's and your own information helps us provide the best service and ensures smooth communication for bookings and emergencies. Other details like your phone, and address are currently placeholders but can be edited.
+            Keep your pet's and your own information up-to-date. This helps us provide the best service and ensures smooth communication for bookings and emergencies.
           </p>
         </CardContent>
       </Card>
