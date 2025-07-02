@@ -104,6 +104,7 @@ function HeaderContentInternal() {
     const pathname = usePathname();
     const { user } = useAuth();
     let title: string = 'PetMets';
+    
     if (user) {
       title = navItems.find(item => item.href === pathname)?.title || 'PetMets Dashboard';
     } else if (pathname === '/login') {
@@ -132,15 +133,9 @@ function HeaderContentInternal() {
             <div className="md:hidden">
                  <SidebarTrigger /> 
             </div>
-            {pathname === '/' ? (
-                <div className="flex-1">
-                    <AppLogoLinkInternal />
-                </div>
-            ) : (
-                <h1 className="flex-1 font-headline text-xl font-semibold">
-                    {renderTitle(title)}
-                </h1>
-            )}
+            <h1 className="flex-1 font-headline text-xl font-semibold">
+                {renderTitle(title)}
+            </h1>
         </>
     );
 }
