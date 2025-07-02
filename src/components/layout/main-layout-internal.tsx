@@ -84,7 +84,7 @@ function SidebarNavigationInternal() {
               onClick={item.href.startsWith("/") ? handleLinkClick : undefined}
             >
               <a>
-                <item.icon className="mr-2 h-5 w-5" />
+                <item.icon className="mr-2 h-5 w-5 text-primary" />
                 <span>{item.title}</span>
                 {item.label && (
                   <span className="ml-auto text-xs text-muted-foreground">
@@ -118,7 +118,7 @@ function HeaderContentInternal() {
         return (
             <>
                 {parts[0]}
-                <span>
+                <span className="font-semibold">
                     <span className="text-primary">Pet</span>
                     <span className="text-accent">Mets</span>
                 </span>
@@ -132,7 +132,7 @@ function HeaderContentInternal() {
             <div className="md:hidden">
                  <SidebarTrigger /> 
             </div>
-            <h1 className="font-headline text-xl font-semibold flex-1">
+            <h1 className="flex-1 font-headline text-xl font-semibold">
                 {renderTitle(title)}
             </h1>
         </>
@@ -170,7 +170,7 @@ function LogoutButtonInternal() {
         onClick={handleLogoutClick}
         tooltip="Logout"
     >
-        <LogOut className="mr-2 h-5 w-5" />
+        <LogOut className="mr-2 h-5 w-5 text-primary" />
         <span>Logout</span>
     </SidebarMenuButton>
   );
@@ -200,7 +200,7 @@ export function MainLayoutInternal({ children }: { children: React.ReactNode }) 
         <header className="sticky top-0 z-10 flex h-16 items-center gap-4 border-b bg-background px-4 md:px-6">
             <HeaderContentInternal />
         </header>
-        <main className="flex-1 overflow-auto p-4 md:p-6">
+        <main className="flex-1 overflow-auto p-4 md:p-6 lg:p-8">
           {children}
         </main>
       </SidebarInset>
