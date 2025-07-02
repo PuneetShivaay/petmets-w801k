@@ -3,11 +3,10 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import Link from "next/link";
 import { useForm, type SubmitHandler } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { signInWithEmailAndPassword, createUserWithEmailAndPassword } from "firebase/auth";
+import { signInWithEmailAndPassword, createUserWithEmailAndPassword, sendPasswordResetEmail } from "firebase/auth";
 import { auth } from "@/lib/firebase";
 import { useAuth } from "@/contexts/auth-context";
 import { useLoading } from "@/contexts/loading-context";
@@ -17,8 +16,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle, CardFooter, CardDescription } from "@/components/ui/card";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogTrigger } from "@/components/ui/dialog";
 import { LogIn, UserPlus, Loader2, Eye, EyeOff } from "lucide-react";
-import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 const loginSchema = z.object({
   email: z.string().email({ message: "Invalid email address" }),
@@ -36,6 +36,11 @@ const signUpSchema = z.object({
 });
 type SignUpFormData = z.infer<typeof signUpSchema>;
 
+const forgotPasswordSchema = z.object({
+    email: z.string().email({ message: "Please enter a valid email address" }),
+});
+type ForgotPasswordFormData = z.infer<typeof forgotPasswordSchema>;
+
 
 export default function LoginPage() {
   const router = useRouter();
@@ -47,6 +52,13 @@ export default function LoginPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  
+  // State for Forgot Password Dialog
+  const [isForgotPasswordDialogOpen, setIsForgotPasswordDialogOpen] = useState(false);
+  const [forgotPasswordError, setForgotPasswordError] = useState<string | null>(null);
+  const [forgotPasswordSuccess, setForgotPasswordSuccess] = useState<string | null>(null);
+  const [isForgotPasswordSubmitting, setIsForgotPasswordSubmitting] = useState(false);
+
 
   const { register: registerLogin, handleSubmit: handleLoginSubmit, formState: { errors: loginErrors } } = useForm<LoginFormData>({
     resolver: zodResolver(loginSchema),
@@ -54,6 +66,10 @@ export default function LoginPage() {
   const { register: registerSignUp, handleSubmit: handleSignUpSubmit, formState: { errors: signUpErrors } } = useForm<SignUpFormData>({
     resolver: zodResolver(signUpSchema),
   });
+  const { register: registerForgotPassword, handleSubmit: handleForgotPasswordSubmit, formState: { errors: forgotPasswordErrors }, reset: resetForgotPasswordForm } = useForm<ForgotPasswordFormData>({
+    resolver: zodResolver(forgotPasswordSchema),
+  });
+
 
   useEffect(() => {
     if (!authIsLoading && user) {
@@ -108,6 +124,23 @@ export default function LoginPage() {
       }
       setFormError(message);
       setIsSubmitting(false);
+    }
+  };
+
+  const onForgotPassword: SubmitHandler<ForgotPasswordFormData> = async (data) => {
+    setIsForgotPasswordSubmitting(true);
+    setForgotPasswordError(null);
+    setForgotPasswordSuccess(null);
+    try {
+      await sendPasswordResetEmail(auth, data.email);
+      // For security, always show a generic success message to prevent user enumeration
+      setForgotPasswordSuccess(`If an account exists for ${data.email}, a password reset link has been sent. Please check your inbox (and spam folder).`);
+      resetForgotPasswordForm();
+    } catch (error: any) {
+      console.error("Forgot password error:", error);
+      setForgotPasswordError("An unexpected error occurred. Please check your connection and try again.");
+    } finally {
+      setIsForgotPasswordSubmitting(false);
     }
   };
   
@@ -192,9 +225,61 @@ export default function LoginPage() {
             )}
             {!isSignUp && (
               <div className="flex items-center justify-end">
-                <Link href="#" className="text-sm text-primary hover:underline">
-                  Forgot password?
-                </Link>
+                <Dialog open={isForgotPasswordDialogOpen} onOpenChange={(open) => {
+                    setIsForgotPasswordDialogOpen(open);
+                    if (!open) {
+                        setForgotPasswordError(null);
+                        setForgotPasswordSuccess(null);
+                        resetForgotPasswordForm();
+                    }
+                }}>
+                    <DialogTrigger asChild>
+                        <Button variant="link" type="button" className="p-0 text-sm text-primary hover:underline h-auto">
+                            Forgot password?
+                        </Button>
+                    </DialogTrigger>
+                    <DialogContent className="sm:max-w-md">
+                        <DialogHeader>
+                            <DialogTitle>Reset Your Password</DialogTitle>
+                            <DialogDescription>
+                                Enter your email address and we'll send you a link to reset your password.
+                            </DialogDescription>
+                        </DialogHeader>
+                        <form onSubmit={handleForgotPasswordSubmit(onForgotPassword)}>
+                            <div className="grid gap-4 py-4">
+                                {forgotPasswordError && (
+                                  <Alert variant="destructive">
+                                    <AlertTitle>Error</AlertTitle>
+                                    <AlertDescription>{forgotPasswordError}</AlertDescription>
+                                  </Alert>
+                                )}
+                                {forgotPasswordSuccess && (
+                                  <Alert>
+                                    <AlertTitle>Success!</AlertTitle>
+                                    <AlertDescription>{forgotPasswordSuccess}</AlertDescription>
+                                  </Alert>
+                                )}
+
+                                {!forgotPasswordSuccess && (
+                                  <div className="space-y-1">
+                                      <Label htmlFor="forgot-email" className="text-left">Email Address</Label>
+                                      <Input id="forgot-email" type="email" placeholder="you@example.com" {...registerForgotPassword("email")} />
+                                      {forgotPasswordErrors.email && <p className="text-sm text-destructive">{forgotPasswordErrors.email.message}</p>}
+                                  </div>
+                                )}
+                            </div>
+                            <DialogFooter>
+                                <Button type="button" variant="outline" onClick={() => setIsForgotPasswordDialogOpen(false)}>Cancel</Button>
+                                {!forgotPasswordSuccess && (
+                                    <Button type="submit" disabled={isForgotPasswordSubmitting}>
+                                        {isForgotPasswordSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                                        Send Reset Link
+                                    </Button>
+                                )}
+                            </DialogFooter>
+                        </form>
+                    </DialogContent>
+                </Dialog>
               </div>
             )}
           </CardContent>
@@ -218,15 +303,17 @@ export default function LoginPage() {
           <span className="text-primary">Pet</span><span className="text-accent">Mets</span>
         </span>
         &apos;s{' '}
-        <Link href="#" className="underline hover:text-primary">
+        <a href="#" className="underline hover:text-primary">
           Terms of Service
-        </Link>{' '}
+        </a>{' '}
         and{' '}
-        <Link href="#" className="underline hover:text-primary">
+        <a href="#" className="underline hover:text-primary">
           Privacy Policy
-        </Link>
+        </a>
         .
       </p>
     </div>
   );
 }
+
+    
