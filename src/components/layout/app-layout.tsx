@@ -1,4 +1,3 @@
-
 "use client";
 
 import * as React from "react";
@@ -34,24 +33,25 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
   }, [pathname, user, authIsLoading, router, showPageTransitionLoading]);
 
   if (authIsLoading) {
-    // Show a loader full screen while determining auth state
-    // This uses the GlobalLoader, which is fine.
-    return <GlobalLoader />;
+    // The parent AuthProvider component renders a loader, so we can return null here
+    // to avoid layout shifts or rendering unauthenticated content.
+    return null;
   }
 
-  // If we are on the login page and the user is not logged in (authIsLoading is false)
-  if (pathname === '/login' && !user) {
+  // If we are on the login page and the user is not logged in
+  if (pathname === '/login') {
+    // If the user *is* logged in, the useEffect above will redirect them.
+    // In the meantime, show a loader to prevent the login form from flashing.
+    if (user) return <GlobalLoader />;
     return <main className="h-full min-h-screen">{children}</main>;
   }
   
-  // If user is not logged in and trying to access a protected route
-  // (and not already on /login, and auth check is complete)
-  // This case should be caught by the useEffect redirect, but as a fallback:
-  if (!user && pathname !== '/login') {
-     return <GlobalLoader />; // Show loader, useEffect will redirect
+  // If user is not logged in and trying to access a protected route,
+  // the useEffect will redirect. Show a loader during this process.
+  if (!user) {
+     return <GlobalLoader />;
   }
 
-  // If user is logged in, or if it's the login page and the user is not yet known (but auth not loading)
-  // then MainLayoutInternal will be shown (or login page children if !user && pathname === '/login')
+  // If we've passed all checks, the user is logged in and not on the login page.
   return <MainLayoutInternal>{children}</MainLayoutInternal>;
 }
