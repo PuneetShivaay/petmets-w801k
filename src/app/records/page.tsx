@@ -1,3 +1,4 @@
+
 import { PageHeader } from "@/components/page-header";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -24,14 +25,14 @@ export default function DigitalRecordsPage() {
         </Button>
       </PageHeader>
 
-      <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
-        <div className="lg:col-span-2">
+      <div className="grid grid-cols-1 gap-8 md:grid-cols-3">
+        <div className="md:col-span-2">
           <Card className="shadow-lg">
             <CardHeader>
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <FileText className="h-6 w-6 text-primary" />
-                  <CardTitle className="font-headline text-2xl">My Pet Documents</CardTitle>
+                  <CardTitle className="font-headline text-xl sm:text-2xl">My Pet Documents</CardTitle>
                 </div>
                 <Button variant="outline" size="sm"><FilePlus className="mr-2 h-4 w-4" /> Add Filter</Button>
               </div>
@@ -77,7 +78,7 @@ export default function DigitalRecordsPage() {
           </Card>
         </div>
 
-        <div className="lg:col-span-1">
+        <div className="md:col-span-1">
           <SmartTaggingForm />
         </div>
       </div>

@@ -104,7 +104,7 @@ export default function LoginPage() {
       </div>
       <Card className="w-full max-w-md shadow-xl">
         <CardHeader>
-          <CardTitle className="font-headline text-center text-3xl">
+          <CardTitle className="font-headline text-center text-2xl sm:text-3xl">
             {isSignUp ? "Create Account" : "Welcome Back!"}
           </CardTitle>
           <CardDescription className="text-center">

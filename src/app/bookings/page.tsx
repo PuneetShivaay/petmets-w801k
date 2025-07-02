@@ -1,3 +1,4 @@
+
 import { PageHeader } from "@/components/page-header";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -28,8 +29,8 @@ export default function BookingManagementPage() {
         </Link>
       </PageHeader>
 
-      <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
-        <div className="lg:col-span-2">
+      <div className="grid grid-cols-1 gap-8 md:grid-cols-3">
+        <div className="md:col-span-2">
           <Tabs defaultValue="upcoming">
             <TabsList className="grid w-full grid-cols-2">
               <TabsTrigger value="upcoming"><ListChecks className="mr-2 h-4 w-4 inline-block" />Upcoming</TabsTrigger>
@@ -87,7 +88,7 @@ export default function BookingManagementPage() {
             </TabsContent>
           </Tabs>
         </div>
-        <div className="lg:col-span-1">
+        <div className="md:col-span-1">
           <Card>
             <CardHeader>
               <CardTitle>Calendar Overview</CardTitle>

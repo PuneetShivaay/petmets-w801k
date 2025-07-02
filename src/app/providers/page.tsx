@@ -1,3 +1,4 @@
+
 import { PageHeader } from "@/components/page-header";
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -23,8 +24,8 @@ export default function ServiceProvidersPage() {
       />
       <Card className="mb-8">
         <CardContent className="p-6">
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-            <Input placeholder="Search by name or keyword..." className="sm:col-span-2" />
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+            <Input placeholder="Search by name or keyword..." className="md:col-span-2" />
             <Select>
               <SelectTrigger>
                 <SelectValue placeholder="Filter by service type" />
@@ -44,7 +45,7 @@ export default function ServiceProvidersPage() {
         </CardContent>
       </Card>
 
-      <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+      <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
         {providers.map((provider) => (
           <Card key={provider.id} className="flex flex-col overflow-hidden rounded-lg shadow-lg">
             <div className="relative h-52 w-full">

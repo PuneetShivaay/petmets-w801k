@@ -37,7 +37,7 @@ export function SmartTaggingForm() {
         <div className="flex items-center gap-2">
           <Tags className="h-8 w-8 text-primary" />
           <div>
-            <CardTitle className="font-headline text-2xl">Smart Document Tagging</CardTitle>
+            <CardTitle className="font-headline text-xl sm:text-2xl">Smart Document Tagging</CardTitle>
             <CardDescription>Let AI help you organize your pet's documents by suggesting relevant tags.</CardDescription>
           </div>
         </div>

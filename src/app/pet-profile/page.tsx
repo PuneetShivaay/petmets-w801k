@@ -50,7 +50,7 @@ export default function PetProfilePage() {
                 <AvatarFallback><PawPrint className="h-10 w-10" /></AvatarFallback>
               </Avatar>
               <div>
-                <CardTitle className="font-headline text-3xl">{petData.name}</CardTitle>
+                <CardTitle className="font-headline text-2xl sm:text-3xl">{petData.name}</CardTitle>
                 <p className="text-muted-foreground">{petData.breed}</p>
               </div>
             </div>
@@ -90,7 +90,7 @@ export default function PetProfilePage() {
                  {authLoading ? (
                   <Skeleton className="h-8 w-40" />
                 ) : (
-                  <CardTitle className="font-headline text-3xl">{ownerData.name}</CardTitle>
+                  <CardTitle className="font-headline text-2xl sm:text-3xl">{ownerData.name}</CardTitle>
                 )}
                 <p className="text-muted-foreground">Pet Owner</p>
               </div>
