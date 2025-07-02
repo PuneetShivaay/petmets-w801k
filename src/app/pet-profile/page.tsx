@@ -72,6 +72,7 @@ export default function PetProfilePage() {
 
   const { register: registerOwner, handleSubmit: handleOwnerSubmit, reset: resetOwnerForm, formState: { errors: ownerErrors } } = useForm<OwnerFormData>({
     resolver: zodResolver(ownerSchema),
+    defaultValues: { name: ownerData.name, phone: ownerData.phone, address: ownerData.address },
   });
 
   useEffect(() => {
@@ -92,14 +93,13 @@ export default function PetProfilePage() {
           getDoc(petDocRef)
         ]);
         
-        // Default data structure if no doc exists yet
         const initialOwnerData = {
           name: user.displayName || "Pet Owner",
           email: user.email || "No email provided",
           phone: "",
           address: "",
-          avatar: ownerData.avatar,
-          dataAiHint: ownerData.dataAiHint,
+          avatar: "https://placehold.co/128x128.png",
+          dataAiHint: "friendly person",
         };
 
         if (userDocSnap.exists()) {
@@ -109,10 +109,10 @@ export default function PetProfilePage() {
           initialOwnerData.address = fetchedData.address || initialOwnerData.address;
         }
         setOwnerData(initialOwnerData);
-        resetOwnerForm(initialOwnerData);
+        resetOwnerForm({ name: initialOwnerData.name, phone: initialOwnerData.phone, address: initialOwnerData.address });
         
         if (petDocSnap.exists()) {
-          const fetchedPetData = petDocSnap.data();
+          const fetchedPetData = petDocSnap.data() as PetFormData;
           const newPetData = { ...petData, ...fetchedPetData };
           setPetData(newPetData);
           resetPetForm(newPetData);
@@ -129,18 +129,26 @@ export default function PetProfilePage() {
     };
 
     fetchProfileData();
-  }, [user, authLoading]);
+  }, [user, authLoading, resetPetForm, resetOwnerForm, toast]);
 
   const onPetSubmit: SubmitHandler<PetFormData> = async (data) => {
-    if (!user) return toast({ variant: "destructive", title: "Not Authenticated" });
+    if (!user) {
+        toast({ variant: "destructive", title: "Not Authenticated" });
+        return;
+    }
     setIsSubmittingPet(true);
     try {
       const petDocRef = doc(db, "users", user.uid, "pets", "main-pet");
-      await setDoc(petDocRef, data);
-      setPetData(prev => ({ ...prev, ...data }));
+      await setDoc(petDocRef, data, { merge: true });
+      
+      const newPetData = { ...petData, ...data };
+      setPetData(newPetData);
+      resetPetForm(newPetData);
+
       toast({ title: "Success", description: "Pet details updated." });
       setIsEditingPet(false);
     } catch (error) {
+      console.error("Failed to update pet details:", error);
       toast({ variant: "destructive", title: "Error", description: "Failed to update pet details." });
     } finally {
       setIsSubmittingPet(false);
@@ -148,10 +156,13 @@ export default function PetProfilePage() {
   };
 
   const onOwnerSubmit: SubmitHandler<OwnerFormData> = async (data) => {
-    if (!user || !auth.currentUser) return toast({ variant: "destructive", title: "Not Authenticated" });
+    if (!user || !auth.currentUser) {
+        toast({ variant: "destructive", title: "Not Authenticated" });
+        return;
+    }
     setIsSubmittingOwner(true);
     try {
-      if (data.name !== user.displayName) {
+      if (data.name !== auth.currentUser.displayName) {
         await updateProfile(auth.currentUser, { displayName: data.name });
       }
 
@@ -159,9 +170,12 @@ export default function PetProfilePage() {
       await setDoc(userDocRef, { ...data, email: user.email }, { merge: true });
 
       setOwnerData(prev => ({ ...prev, ...data }));
+      resetOwnerForm(data);
+
       toast({ title: "Success", description: "Your profile has been updated." });
       setIsEditingOwner(false);
     } catch (error) {
+      console.error("Failed to update profile:", error);
       toast({ variant: "destructive", title: "Error", description: "Failed to update profile." });
     } finally {
       setIsSubmittingOwner(false);
