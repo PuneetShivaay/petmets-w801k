@@ -228,11 +228,11 @@ export default function PetProfilePage() {
                 <>
                   <div className="flex items-center gap-2">
                     <Phone className="h-5 w-5 text-muted-foreground" />
-                    <p className="text-base sm:text-lg">{ownerData.phone} <span className="text-xs text-muted-foreground">(Placeholder)</span></p>
+                    <p className="text-base sm:text-lg">{ownerData.phone}</p>
                   </div>
                   <div className="flex items-start gap-2">
                     <Home className="h-5 w-5 text-muted-foreground mt-1" />
-                    <p className="text-base sm:text-lg">{ownerData.address} <span className="text-xs text-muted-foreground">(Placeholder)</span></p>
+                    <p className="text-base sm:text-lg">{ownerData.address}</p>
                   </div>
                 </>
               )}
