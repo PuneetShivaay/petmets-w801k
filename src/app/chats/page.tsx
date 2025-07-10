@@ -2,7 +2,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from 'react';
-import { collection, query, where, onSnapshot, orderBy, getDoc, doc } from 'firebase/firestore';
+import { collection, query, where, onSnapshot, getDoc, doc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { useAuth } from '@/contexts/auth-context';
 import { useRouter } from 'next/navigation';
@@ -65,10 +65,11 @@ export default function ChatsListPage() {
     if (authIsLoading || !user) return;
 
     setIsLoadingChats(true);
+    // Simplified query to avoid needing a composite index.
+    // We will sort the results on the client side.
     const q = query(
         collection(db, 'chats'), 
-        where('participants', 'array-contains', user.uid),
-        orderBy('lastMessageTimestamp', 'desc')
+        where('participants', 'array-contains', user.uid)
     );
     
     const unsubscribe = onSnapshot(q, async (querySnapshot) => {
@@ -80,6 +81,13 @@ export default function ChatsListPage() {
         const chat = { id: doc.id, ...data } as Chat;
         chatsData.push(chat);
         data.participants.forEach((p: string) => allParticipantIds.add(p));
+      });
+      
+      // Sort on the client-side
+      chatsData.sort((a, b) => {
+        const timeA = a.lastMessageTimestamp?.toDate() || new Date(0);
+        const timeB = b.lastMessageTimestamp?.toDate() || new Date(0);
+        return timeB.getTime() - timeA.getTime();
       });
       
       setChats(chatsData);
