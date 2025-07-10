@@ -31,12 +31,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
 
   // The AuthProvider now guarantees that this component and its children
   // will not render until authentication is resolved.
-  // So, if authIsLoading is true, this component won't even be in the tree.
-
-  if (authIsLoading) {
-      // This path is now handled by the AuthProvider's loader, so we render nothing here.
-      return null;
-  }
+  // So, we no longer need a loading check here.
 
   // If auth is resolved and the user is not logged in, but on the login page.
   if (!user && pathname === '/login') {
@@ -49,5 +44,6 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
   }
   
   // This will be shown briefly during the redirect from a protected page to /login
+  // or while auth state is being resolved initially.
   return null;
 }
