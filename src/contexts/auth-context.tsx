@@ -70,7 +70,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // The isClient check prevents the loader from rendering on the server.
   return (
     <AuthContext.Provider value={value}>
-      {isLoading && isClient ? <InitialAuthLoader /> : children}
+      {isLoading && isClient && <InitialAuthLoader />}
+      {children}
     </AuthContext.Provider>
   );
 }
