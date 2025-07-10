@@ -2,7 +2,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { collection, collectionGroup, getDocs, doc, setDoc, serverTimestamp } from "firebase/firestore";
+import { collection, collectionGroup, getDocs, doc, setDoc, serverTimestamp, query, where, onSnapshot, updateDoc, deleteDoc } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { useAuth } from "@/contexts/auth-context";
 import { useToast } from "@/hooks/use-toast";
@@ -12,7 +12,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import Image from "next/image";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Heart, Search, Loader2, Check } from "lucide-react";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Badge } from "@/components/ui/badge";
+import { Heart, Search, Loader2, Check, Bell, X } from "lucide-react";
 
 // Define a type for the pet data we'll fetch
 interface Pet {
@@ -25,6 +27,15 @@ interface Pet {
   dataAiHint: string;
 }
 
+interface MatchRequest {
+    id: string;
+    requesterId: string;
+    requesterEmail: string;
+    targetPetName: string;
+    status: 'pending' | 'accepted' | 'declined';
+}
+
+
 export default function MatchPetPage() {
   const { user, isLoading: isAuthLoading } = useAuth();
   const { toast } = useToast();
@@ -32,6 +43,11 @@ export default function MatchPetPage() {
   const [loading, setLoading] = useState(true);
   const [matchRequests, setMatchRequests] = useState<Record<string, boolean>>({}); // key: composite petId, value: true if requested
   const [submitting, setSubmitting] = useState<string | null>(null); // Stores the composite ID of the pet being requested
+  
+  const [incomingRequests, setIncomingRequests] = useState<MatchRequest[]>([]);
+  const [isPopoverOpen, setIsPopoverOpen] = useState(false);
+  const [isUpdatingRequest, setIsUpdatingRequest] = useState<string | null>(null);
+
 
   const fetchPets = useCallback(async () => {
     if (!user) {
@@ -41,15 +57,12 @@ export default function MatchPetPage() {
     setLoading(true);
     try {
       // This is a collection group query. It requires a specific index in Firestore.
-      // The error message in the browser's developer console will provide a link to create it.
       const petsQuery = collectionGroup(db, "pets");
       const querySnapshot = await getDocs(petsQuery);
 
       const petsList: Pet[] = querySnapshot.docs.map((petDoc) => {
         const data = petDoc.data();
         const pathParts = petDoc.ref.path.split('/');
-        // The ownerId is the document ID of the user, which is the 2nd part of the path (index 1)
-        // e.g., users/{ownerId}/pets/{petId}
         const ownerId = pathParts[1];
         const petId = petDoc.id;
         
@@ -64,7 +77,6 @@ export default function MatchPetPage() {
         };
       });
       
-      // Filter out the current user's own pet(s) from the list
       const displayPets = petsList.filter(pet => pet.ownerId !== user.uid);
       setPets(displayPets);
 
@@ -81,11 +93,31 @@ export default function MatchPetPage() {
   }, [user, toast]);
 
   useEffect(() => {
-    // Only fetch pets if auth is resolved.
     if (!isAuthLoading) {
       fetchPets();
     }
   }, [isAuthLoading, fetchPets]);
+
+  // Listen for incoming match requests
+  useEffect(() => {
+    if (!user) return;
+
+    const requestsQuery = query(
+      collection(db, "matchRequests"),
+      where("targetOwnerId", "==", user.uid),
+      where("status", "==", "pending")
+    );
+
+    const unsubscribe = onSnapshot(requestsQuery, (snapshot) => {
+      const requests = snapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data(),
+      } as MatchRequest));
+      setIncomingRequests(requests);
+    });
+
+    return () => unsubscribe();
+  }, [user]);
   
   const handleMatchRequest = async (targetPet: Pet) => {
     if (!user) {
@@ -120,12 +152,94 @@ export default function MatchPetPage() {
     }
   };
 
+  const handleRequestResponse = async (requestId: string, status: 'accepted' | 'declined') => {
+    setIsUpdatingRequest(requestId);
+    try {
+        const requestRef = doc(db, "matchRequests", requestId);
+        await updateDoc(requestRef, { status: status });
+        
+        toast({
+            title: `Request ${status}`,
+            description: `You have ${status} the match request.`
+        });
+        // The real-time listener will automatically remove it from the list.
+    } catch (error) {
+        console.error(`Error updating request ${requestId}:`, error);
+        toast({
+            variant: "destructive",
+            title: "Update Failed",
+            description: "Could not update the request. Please try again."
+        });
+    } finally {
+        setIsUpdatingRequest(null);
+    }
+  }
+
   return (
     <div>
       <PageHeader
         title="Match Your Pet"
         description="Find the perfect pet companion for playdates and celebrations. Browse available pets and send a match request."
-      />
+      >
+        <Popover open={isPopoverOpen} onOpenChange={setIsPopoverOpen}>
+          <PopoverTrigger asChild>
+            <Button variant="outline" size="icon" className="relative">
+              <Bell className="h-5 w-5" />
+              {incomingRequests.length > 0 && (
+                <Badge variant="destructive" className="absolute -top-2 -right-2 h-6 w-6 rounded-full flex items-center justify-center p-0">
+                  {incomingRequests.length}
+                </Badge>
+              )}
+              <span className="sr-only">View match requests</span>
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-80">
+            <div className="grid gap-4">
+              <div className="space-y-2">
+                <h4 className="font-medium leading-none">Incoming Requests</h4>
+                <p className="text-sm text-muted-foreground">
+                  Accept or decline requests from other pet owners.
+                </p>
+              </div>
+              <div className="grid gap-2">
+                {incomingRequests.length > 0 ? (
+                  incomingRequests.map(req => (
+                    <div key={req.id} className="grid grid-cols-[1fr_auto] items-center gap-4 rounded-md border p-3">
+                      <div>
+                        <p className="text-sm font-medium truncate">From: {req.requesterEmail}</p>
+                        <p className="text-sm text-muted-foreground">For: {req.targetPetName}</p>
+                      </div>
+                      <div className="flex gap-1">
+                          <Button 
+                            size="sm" 
+                            variant="outline" 
+                            className="h-8 px-2"
+                            onClick={() => handleRequestResponse(req.id, 'accepted')}
+                            disabled={isUpdatingRequest === req.id}
+                          >
+                             {isUpdatingRequest === req.id ? <Loader2 className="h-4 w-4 animate-spin"/> : <Check className="h-4 w-4 text-green-500" />}
+                          </Button>
+                          <Button 
+                            size="sm" 
+                            variant="destructive"
+                            className="h-8 px-2"
+                            onClick={() => handleRequestResponse(req.id, 'declined')}
+                             disabled={isUpdatingRequest === req.id}
+                           >
+                            {isUpdatingRequest === req.id ? <Loader2 className="h-4 w-4 animate-spin"/> : <X className="h-4 w-4"/>}
+                          </Button>
+                      </div>
+                    </div>
+                  ))
+                ) : (
+                  <p className="text-sm text-muted-foreground text-center py-4">No new requests.</p>
+                )}
+              </div>
+            </div>
+          </PopoverContent>
+        </Popover>
+      </PageHeader>
+      
       <div className="mb-8 flex items-center gap-4">
         <Button variant="outline" disabled>
           <Search className="mr-2 h-4 w-4" /> Filter Pets (Coming Soon)
@@ -193,3 +307,5 @@ export default function MatchPetPage() {
     </div>
   );
 }
+
+    
