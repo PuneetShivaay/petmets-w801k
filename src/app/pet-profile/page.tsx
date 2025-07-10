@@ -90,7 +90,7 @@ export default function PetProfilePage() {
 
       const [userDocSnap, petDocSnap] = await Promise.all([
         getDoc(userDocRef),
-        getDoc(petDocSnap),
+        getDoc(petDocRef),
       ]);
       
       const fetchedOwnerData = userDocSnap.exists() ? userDocSnap.data() : {};
