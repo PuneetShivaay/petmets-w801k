@@ -6,6 +6,7 @@ import { collection, query, onSnapshot, orderBy, addDoc, serverTimestamp, doc, u
 import Link from 'next/link';
 import { db } from '@/lib/firebase';
 import { useAuth } from '@/contexts/auth-context';
+import { useParams } from 'next/navigation';
 
 import { Card, CardContent, CardHeader, CardFooter } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -30,10 +31,11 @@ interface UserProfile {
     name: string;
 }
 
-export default function ChatPage({ params }: { params: { chatId: string } }) {
+export default function ChatPage() {
   const { user } = useAuth();
   const { hideLoading } = useLoading();
-  const { chatId } = params;
+  const params = useParams();
+  const chatId = params.chatId as string;
   
   const [messages, setMessages] = useState<Message[]>([]);
   const [newMessage, setNewMessage] = useState('');
