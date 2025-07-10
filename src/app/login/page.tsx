@@ -6,8 +6,9 @@ import { useRouter } from "next/navigation";
 import { useForm, type SubmitHandler } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { signInWithEmailAndPassword, createUserWithEmailAndPassword, sendPasswordResetEmail } from "firebase/auth";
-import { auth } from "@/lib/firebase";
+import { signInWithEmailAndPassword, createUserWithEmailAndPassword, sendPasswordResetEmail, updateProfile } from "firebase/auth";
+import { doc, setDoc, serverTimestamp } from "firebase/firestore";
+import { auth, db } from "@/lib/firebase";
 import { useAuth } from "@/contexts/auth-context";
 import { useLoading } from "@/contexts/loading-context";
 
@@ -109,7 +110,41 @@ export default function LoginPage() {
     setIsSubmitting(true);
     setFormError(null);
     try {
-      await createUserWithEmailAndPassword(auth, data.email, data.password);
+      const userCredential = await createUserWithEmailAndPassword(auth, data.email, data.password);
+      const newUser = userCredential.user;
+
+      // Create default profiles in Firestore
+      const defaultOwnerName = "Pet Owner";
+      await updateProfile(newUser, { displayName: defaultOwnerName });
+
+      const userDocRef = doc(db, "users", newUser.uid);
+      const petDocRef = doc(db, "users", newUser.uid, "pets", "main-pet");
+
+      const defaultOwnerData = {
+        name: defaultOwnerName,
+        email: newUser.email,
+        phone: "",
+        address: "",
+        avatar: "https://placehold.co/128x128.png",
+        dataAiHint: "friendly person",
+        createdAt: serverTimestamp(),
+      };
+
+      const defaultPetData = {
+        name: "Buddy",
+        breed: "Golden Retriever",
+        age: "3 years",
+        avatar: "https://placehold.co/128x128.png",
+        dataAiHint: "golden retriever",
+        bio: "Loves long walks in the park and playing fetch. A very good boy indeed!",
+        createdAt: serverTimestamp(),
+      };
+
+      await Promise.all([
+        setDoc(userDocRef, defaultOwnerData),
+        setDoc(petDocRef, defaultPetData),
+      ]);
+
       showPageTransitionLoading();
       router.push('/');
     } catch (error: any) {
@@ -120,7 +155,7 @@ export default function LoginPage() {
           break;
         default:
           message = 'Failed to sign up. Please try again.';
-          console.error("Sign up error:", error.message);
+          console.error("Sign up error:", error);
       }
       setFormError(message);
       setIsSubmitting(false);
