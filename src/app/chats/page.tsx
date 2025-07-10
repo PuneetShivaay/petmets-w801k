@@ -8,7 +8,7 @@ import { useAuth } from '@/contexts/auth-context';
 import { useRouter } from 'next/navigation';
 
 import { PageHeader } from '@/components/page-header';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Skeleton } from '@/components/ui/skeleton';
 import { User, MessageSquare } from 'lucide-react';
@@ -116,10 +116,7 @@ export default function ChatsListPage() {
         description="Talk with other pet owners you've matched with."
       />
       <Card>
-        <CardHeader>
-          <CardTitle>Conversations</CardTitle>
-        </CardHeader>
-        <CardContent>
+        <CardContent className="p-4 sm:p-6">
           {isLoadingChats ? (
               <div className="space-y-2">
                   {[...Array(3)].map((_,i) => <Skeleton key={i} className="h-20 w-full" />)}
