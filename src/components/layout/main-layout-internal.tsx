@@ -108,10 +108,8 @@ function HeaderContentInternal() {
     
     if (user) {
         if (pathname.startsWith('/profile/')) {
-            // Title for profile pages is handled within the page component itself
             title = undefined; 
         } else if (pathname.startsWith('/chats/')) {
-            // Title for individual chat pages is handled within the page component
             title = undefined;
         } else {
              title = navItems.find(item => item.href === pathname)?.title || 'PetMets Dashboard';
@@ -140,12 +138,15 @@ function HeaderContentInternal() {
 
     return (
         <>
-            <div className="md:hidden">
+            <div className="md:hidden flex items-center gap-4">
                  <SidebarTrigger /> 
+                 <AppLogo />
             </div>
-            <h1 className="flex-1 font-headline text-xl font-semibold truncate">
-                {renderTitle(title)}
-            </h1>
+            <div className="hidden md:block">
+                 <h1 className="flex-1 font-headline text-xl font-semibold truncate">
+                    {renderTitle(title)}
+                </h1>
+            </div>
         </>
     );
 }
@@ -161,15 +162,12 @@ function LogoutButtonInternal() {
     showLoading();
     try {
         await userSignOut();
-        // The AuthProvider and AppLayout useEffect will handle redirect to /login
-        // router.push('/login'); // This might be redundant if AppLayout handles it
         if (isMobile) {
           setOpenMobile(false);
         }
     } catch (error) {
         console.error("Logout failed", error);
         toast({ title: "Logout Failed", description: (error as Error).message, variant: "destructive" });
-        // showLoading will be hidden by AppLayout path change or manually if needed
     }
   };
 
@@ -208,7 +206,7 @@ export function MainLayoutInternal({ children }: { children: React.ReactNode }) 
         )}
       </Sidebar>
       <SidebarInset className="flex flex-col">
-        <header className="sticky top-0 z-10 flex h-16 items-center gap-4 border-b bg-background px-4 md:px-6">
+        <header className="sticky top-0 z-10 flex h-16 items-center justify-between gap-4 border-b bg-background px-4 md:px-6">
             <HeaderContentInternal />
         </header>
         <main className="flex-1 overflow-auto p-4 md:p-6 lg:p-8">
