@@ -30,19 +30,19 @@ export interface NavItem {
 
 export const navItems: NavItem[] = [
   {
-    title: 'Dashboard',
+    title: 'Match Your Pet',
     href: '/',
+    icon: HeartHandshake,
+  },
+  {
+    title: 'Dashboard',
+    href: '/dashboard',
     icon: LayoutDashboard,
   },
   {
     title: 'Pet Profile',
     href: '/pet-profile',
     icon: User,
-  },
-  {
-    title: 'Match Your Pet',
-    href: '/match-pet',
-    icon: HeartHandshake,
   },
   {
     title: 'Pet Chats',

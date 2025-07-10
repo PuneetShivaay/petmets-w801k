@@ -288,14 +288,14 @@ export default function MatchPetPage() {
           <Input 
             type="search"
             placeholder="Filter by pet name or breed..."
-            className="pl-10 border-accent/50 focus:border-accent"
+            className="pl-10 border-accent focus:ring-accent"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
         </div>
         <Popover open={isPopoverOpen} onOpenChange={setIsPopoverOpen}>
           <PopoverTrigger asChild>
-            <Button variant="outline" className="relative shrink-0 border-accent/50 hover:border-accent">
+            <Button variant="outline" className="relative shrink-0 border-accent hover:border-accent hover:bg-accent/10 focus:ring-accent">
               <Bell className="mr-2 h-5 w-5" />
               <span>Notifications</span>
               {incomingRequests.length > 0 && (
