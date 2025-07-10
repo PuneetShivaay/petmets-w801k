@@ -242,7 +242,7 @@ export default function PetProfilePage() {
   if (isLoading) {
     return (
         <div className="space-y-6">
-            <p className="text-lg text-muted-foreground">View and manage your pet's details and your account information.</p>
+            <p className="text-muted-foreground">View and manage your pet's details and your account information.</p>
             <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
                 <Card><CardHeader><Skeleton className="h-24 w-full" /></CardHeader><CardContent><Skeleton className="h-20 w-full" /></CardContent><CardFooter><Skeleton className="h-10 w-full" /></CardFooter></Card>
                 <Card><CardHeader><Skeleton className="h-24 w-full" /></CardHeader><CardContent><Skeleton className="h-20 w-full" /></CardContent><CardFooter><Skeleton className="h-10 w-full" /></CardFooter></Card>
@@ -253,7 +253,7 @@ export default function PetProfilePage() {
 
   return (
     <div className="space-y-6">
-      <p className="text-lg text-muted-foreground">View and manage your pet's details and your account information.</p>
+      <p className="text-muted-foreground">View and manage your pet's details and your account information.</p>
       <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
         <Card className="shadow-lg">
           <form onSubmit={handlePetSubmit(onPetSubmit)}>

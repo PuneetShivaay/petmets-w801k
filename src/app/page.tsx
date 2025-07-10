@@ -280,7 +280,7 @@ export default function MatchPetPage() {
 
   return (
     <div className="space-y-6">
-      <p className="text-lg text-muted-foreground">Find the perfect pet companion for playdates and celebrations. Browse available pets and send a match request.</p>
+      <p className="text-muted-foreground">Find the perfect pet companion for playdates and celebrations. Browse available pets and send a match request.</p>
       
       <div className="flex items-center justify-between gap-4">
         <div className="relative flex-grow">

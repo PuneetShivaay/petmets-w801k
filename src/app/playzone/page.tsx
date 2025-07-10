@@ -11,7 +11,7 @@ export default function PetPlayzonePage() {
 
   return (
     <div className="space-y-6">
-      <p className="text-lg text-muted-foreground text-center">Our dedicated pet play area offers a spacious garden and a refreshing swimming pool for pure fun and freedom. Let your pets enjoy!</p>
+      <p className="text-muted-foreground text-center">Our dedicated pet play area offers a spacious garden and a refreshing swimming pool for pure fun and freedom. Let your pets enjoy!</p>
       <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
         {playzoneFeatures.map((feature, index) => (
           <Card key={index} className="overflow-hidden rounded-lg shadow-lg">

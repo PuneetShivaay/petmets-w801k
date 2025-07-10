@@ -15,7 +15,7 @@ export default function PetTrainingPage() {
   return (
     <div className="space-y-6">
       <div className="text-center">
-        <p className="text-lg text-muted-foreground">Connect with certified pet trainers. Featuring real photos of trainers working with dogs, teaching obedience, tricks, and building confidence.</p>
+        <p className="text-muted-foreground">Connect with certified pet trainers. Featuring real photos of trainers working with dogs, teaching obedience, tricks, and building confidence.</p>
         <Link href="/providers?service=trainers" passHref>
           <Button size="lg" className="mt-4 bg-accent text-accent-foreground hover:bg-accent/90">
             <GraduationCap className="mr-2 h-5 w-5" /> Find a Trainer

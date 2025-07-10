@@ -18,7 +18,7 @@ export default function BookingManagementPage() {
   return (
     <div className="space-y-6">
       <div className="flex flex-col items-center justify-between gap-4 md:flex-row">
-        <p className="text-lg text-muted-foreground md:max-w-2xl">View, schedule, and manage all your pet service appointments in one place. Stay organized and never miss an appointment.</p>
+        <p className="text-muted-foreground md:max-w-2xl">View, schedule, and manage all your pet service appointments in one place. Stay organized and never miss an appointment.</p>
         <Link href="/providers">
           <Button className="bg-accent text-accent-foreground hover:bg-accent/90">
             <CalendarPlus className="mr-2 h-4 w-4" /> Book New Service

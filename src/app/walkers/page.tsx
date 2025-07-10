@@ -15,7 +15,7 @@ export default function PetWalkersPage() {
   return (
     <div className="space-y-6">
       <div className="text-center">
-        <p className="text-lg text-muted-foreground">Connect with verified and experienced pet walkers. Ensure your furry friends get their daily dose of exercise, walks, and sniffs with trusted professionals.</p>
+        <p className="text-muted-foreground">Connect with verified and experienced pet walkers. Ensure your furry friends get their daily dose of exercise, walks, and sniffs with trusted professionals.</p>
         <Link href="/providers?service=walkers" passHref>
           <Button size="lg" className="mt-4 bg-accent text-accent-foreground hover:bg-accent/90">
             <PawPrint className="mr-2 h-5 w-5" /> Browse All Walkers

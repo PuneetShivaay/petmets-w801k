@@ -15,7 +15,7 @@ export default function PetGroomingPage() {
   return (
     <div className="space-y-6">
       <div className="text-center">
-        <p className="text-lg text-muted-foreground">Connect with expert pet groomers. Showcasing adorable, freshly-groomed pets photographed like furry celebrities. Pamper your pet today!</p>
+        <p className="text-muted-foreground">Connect with expert pet groomers. Showcasing adorable, freshly-groomed pets photographed like furry celebrities. Pamper your pet today!</p>
         <Link href="/providers?service=groomers" passHref>
           <Button size="lg" className="mt-4 bg-accent text-accent-foreground hover:bg-accent/90">
             <Scissors className="mr-2 h-5 w-5" /> Find a Groomer

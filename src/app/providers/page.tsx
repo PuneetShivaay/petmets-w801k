@@ -17,7 +17,7 @@ export default function ServiceProvidersPage() {
 
   return (
     <div className="space-y-6">
-      <p className="text-lg text-muted-foreground">Browse profiles of pet walkers, groomers, trainers, and boarding facilities. View photos, read detailed service descriptions, and book appointments.</p>
+      <p className="text-muted-foreground">Browse profiles of pet walkers, groomers, trainers, and boarding facilities. View photos, read detailed service descriptions, and book appointments.</p>
       <Card>
         <CardContent className="p-4">
           <div className="grid grid-cols-1 gap-4 md:grid-cols-3">

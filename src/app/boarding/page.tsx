@@ -15,7 +15,7 @@ export default function PetBoardingPage() {
   return (
     <div className="space-y-6">
       <div className="text-center">
-        <p className="text-lg text-muted-foreground">Facilitate pet boarding services in cozy and safe environments. Featuring supervised care, playgroups, and comfy nap corners for your peace of mind.</p>
+        <p className="text-muted-foreground">Facilitate pet boarding services in cozy and safe environments. Featuring supervised care, playgroups, and comfy nap corners for your peace of mind.</p>
         <Link href="/providers?service=boarding" passHref>
           <Button size="lg" className="mt-4 bg-accent text-accent-foreground hover:bg-accent/90">
             <Hotel className="mr-2 h-5 w-5" /> Find Boarding
