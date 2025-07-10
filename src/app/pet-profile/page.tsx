@@ -61,13 +61,16 @@ export default function PetProfilePage() {
   const { user } = useAuth(); // AppLayout guarantees user is available here
   const { toast } = useToast();
   const petAvatarInputRef = useRef<HTMLInputElement>(null);
+  const ownerAvatarInputRef = useRef<HTMLInputElement>(null);
 
   const [isLoading, setIsLoading] = useState(true);
   const [isEditingPet, setIsEditingPet] = useState(false);
   const [isEditingOwner, setIsEditingOwner] = useState(false);
   const [isSubmittingPet, setIsSubmittingPet] = useState(false);
   const [isSubmittingOwner, setIsSubmittingOwner] = useState(false);
-  const [isUploading, setIsUploading] = useState(false);
+  const [isUploadingPetAvatar, setIsUploadingPetAvatar] = useState(false);
+  const [isUploadingOwnerAvatar, setIsUploadingOwnerAvatar] = useState(false);
+
 
   const [petData, setPetData] = useState(defaultPetData);
   const [ownerData, setOwnerData] = useState(defaultOwnerData);
@@ -172,7 +175,7 @@ export default function PetProfilePage() {
     }
   };
   
-  const handleAvatarUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handlePetAvatarUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     if (!user || !event.target.files || event.target.files.length === 0) {
       return;
     }
@@ -186,7 +189,7 @@ export default function PetProfilePage() {
         return;
     }
 
-    setIsUploading(true);
+    setIsUploadingPetAvatar(true);
     try {
       const avatarRef = storageRef(storage, `users/${user.uid}/pets/main-pet/avatar.jpg`);
       const snapshot = await uploadBytes(avatarRef, file);
@@ -201,7 +204,40 @@ export default function PetProfilePage() {
       console.error("Avatar upload failed:", error);
       toast({ variant: 'destructive', title: 'Upload Failed', description: 'There was an error uploading your image. Please try again.' });
     } finally {
-      setIsUploading(false);
+      setIsUploadingPetAvatar(false);
+    }
+  };
+  
+  const handleOwnerAvatarUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    if (!user || !event.target.files || event.target.files.length === 0) {
+      return;
+    }
+    const file = event.target.files[0];
+    if (!file.type.startsWith('image/')) {
+        toast({ variant: 'destructive', title: 'Invalid File Type', description: 'Please select an image file.' });
+        return;
+    }
+    if (file.size > 5 * 1024 * 1024) { // 5MB limit
+        toast({ variant: 'destructive', title: 'File Too Large', description: 'Please select an image smaller than 5MB.' });
+        return;
+    }
+
+    setIsUploadingOwnerAvatar(true);
+    try {
+      const avatarRef = storageRef(storage, `users/${user.uid}/owner/avatar.jpg`);
+      const snapshot = await uploadBytes(avatarRef, file);
+      const downloadURL = await getDownloadURL(snapshot.ref);
+
+      const userDocRef = doc(db, "users", user.uid);
+      await setDoc(userDocRef, { avatar: downloadURL }, { merge: true });
+
+      setOwnerData(prev => ({ ...prev, avatar: downloadURL }));
+      toast({ title: 'Profile Picture Updated!', description: 'Your new picture is saved.' });
+    } catch (error) {
+      console.error("Avatar upload failed:", error);
+      toast({ variant: 'destructive', title: 'Upload Failed', description: 'There was an error uploading your image. Please try again.' });
+    } finally {
+      setIsUploadingOwnerAvatar(false);
     }
   };
 
@@ -239,10 +275,10 @@ export default function PetProfilePage() {
                     <input
                       type="file"
                       ref={petAvatarInputRef}
-                      onChange={handleAvatarUpload}
+                      onChange={handlePetAvatarUpload}
                       className="hidden"
                       accept="image/*"
-                      disabled={isUploading}
+                      disabled={isUploadingPetAvatar}
                     />
                     <Button
                       type="button"
@@ -250,10 +286,10 @@ export default function PetProfilePage() {
                       variant="outline"
                       className="absolute -bottom-2 -right-2 h-8 w-8 rounded-full bg-background flex items-center justify-center group-hover:flex"
                       onClick={() => petAvatarInputRef.current?.click()}
-                      disabled={isUploading}
+                      disabled={isUploadingPetAvatar}
                       aria-label="Upload new pet avatar"
                     >
-                      {isUploading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
+                      {isUploadingPetAvatar ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
                     </Button>
                 </div>
                 <div>
@@ -324,10 +360,31 @@ export default function PetProfilePage() {
           <form onSubmit={handleOwnerSubmit(onOwnerSubmit)}>
             <CardHeader>
               <div className="flex items-center gap-4">
-                <Avatar className="h-20 w-20 border-2 border-accent">
-                  <AvatarImage src={ownerData.avatar} alt={ownerData.name} data-ai-hint={ownerData.dataAiHint} />
-                  <AvatarFallback><User className="h-10 w-10" /></AvatarFallback>
-                </Avatar>
+                 <div className="relative group">
+                    <Avatar className="h-20 w-20 border-2 border-accent">
+                      <AvatarImage src={ownerData.avatar} alt={ownerData.name} data-ai-hint={ownerData.dataAiHint} />
+                      <AvatarFallback><User className="h-10 w-10" /></AvatarFallback>
+                    </Avatar>
+                     <input
+                      type="file"
+                      ref={ownerAvatarInputRef}
+                      onChange={handleOwnerAvatarUpload}
+                      className="hidden"
+                      accept="image/*"
+                      disabled={isUploadingOwnerAvatar}
+                    />
+                    <Button
+                      type="button"
+                      size="icon"
+                      variant="outline"
+                      className="absolute -bottom-2 -right-2 h-8 w-8 rounded-full bg-background flex items-center justify-center group-hover:flex"
+                      onClick={() => ownerAvatarInputRef.current?.click()}
+                      disabled={isUploadingOwnerAvatar}
+                      aria-label="Upload new owner avatar"
+                    >
+                      {isUploadingOwnerAvatar ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
+                    </Button>
+                </div>
                 <div>
                    {isEditingOwner ? (
                      <>
@@ -411,3 +468,5 @@ export default function PetProfilePage() {
     </div>
   );
 }
+
+    
