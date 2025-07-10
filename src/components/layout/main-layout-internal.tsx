@@ -180,8 +180,8 @@ function LogoutButtonInternal() {
   );
 }
 
-export function MainLayoutInternal({ children }: { children: React.ReactNode }) {
-  const { user } = useAuth(); // Used to decide whether to show logout
+function MainLayoutChild({ children }: { children: React.ReactNode }) {
+  const { user } = useAuth();
   const pathname = usePathname();
   const isChatPage = pathname.startsWith('/chats/');
   const { isMobile } = useSidebar();
@@ -189,7 +189,7 @@ export function MainLayoutInternal({ children }: { children: React.ReactNode }) 
   const showHeader = isMobile ? !isChatPage : true;
 
   return (
-    <SidebarProvider defaultOpen> 
+    <>
       <Sidebar className="border-r border-sidebar-border">
         <SidebarHeader className="p-4">
           <AppLogoLinkInternal />
@@ -199,25 +199,35 @@ export function MainLayoutInternal({ children }: { children: React.ReactNode }) 
             <SidebarNavigationInternal />
           </ScrollArea>
         </SidebarContent>
-        {user && ( // Only show footer with logout if user is logged in
+        {user && (
           <SidebarFooter className="p-4 border-t border-sidebar-border">
-              <LogoutButtonInternal />
+            <LogoutButtonInternal />
           </SidebarFooter>
         )}
       </Sidebar>
       <SidebarInset className="flex flex-col">
         {showHeader && (
-            <header className="sticky top-0 z-10 flex h-16 items-center justify-between gap-4 border-b bg-background px-4">
-                <HeaderContentInternal />
-            </header>
+          <header className="sticky top-0 z-10 flex h-16 items-center justify-between gap-4 border-b bg-background px-4">
+            <HeaderContentInternal />
+          </header>
         )}
-        <main className={cn(
+        <main
+          className={cn(
             "flex-1 overflow-auto",
             isChatPage && isMobile ? "p-0" : "p-2 sm:p-4 md:p-6"
-        )}>
+          )}
+        >
           {children}
         </main>
       </SidebarInset>
+    </>
+  );
+}
+
+export function MainLayoutInternal({ children }: { children: React.ReactNode }) {
+  return (
+    <SidebarProvider defaultOpen>
+      <MainLayoutChild>{children}</MainLayoutChild>
     </SidebarProvider>
   );
 }
