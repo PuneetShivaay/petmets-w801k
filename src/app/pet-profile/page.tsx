@@ -68,10 +68,12 @@ export default function PetProfilePage() {
 
   const { register: registerPet, handleSubmit: handlePetSubmit, reset: resetPetForm, formState: { errors: petErrors } } = useForm<PetFormData>({
     resolver: zodResolver(petSchema),
+    defaultValues: petData,
   });
 
   const { register: registerOwner, handleSubmit: handleOwnerSubmit, reset: resetOwnerForm, formState: { errors: ownerErrors } } = useForm<OwnerFormData>({
     resolver: zodResolver(ownerSchema),
+    defaultValues: { name: "Pet Owner", phone: "", address: "" },
   });
 
   useEffect(() => {
@@ -82,7 +84,22 @@ export default function PetProfilePage() {
     }
 
     const fetchProfileData = async () => {
-      setPageLoading(true);
+      // Set initial state immediately for a better UX, especially for new users
+      const initialOwnerData = {
+        name: user.displayName || "Pet Owner",
+        email: user.email || "No email provided",
+        phone: "",
+        address: "",
+        avatar: "https://placehold.co/128x128.png",
+        dataAiHint: "friendly person",
+      };
+      setOwnerData(initialOwnerData);
+      setPetData(defaultPetData);
+      resetOwnerForm({ name: initialOwnerData.name, phone: initialOwnerData.phone, address: initialOwnerData.address });
+      resetPetForm(defaultPetData);
+      setPageLoading(false); // Assume fast load, remove skeleton immediately
+
+      // Now, fetch the actual data from Firestore to get the most up-to-date info
       try {
         const userDocRef = doc(db, "users", user.uid);
         const petDocRef = doc(db, "users", user.uid, "pets", "main-pet");
@@ -92,35 +109,21 @@ export default function PetProfilePage() {
           getDoc(petDocRef)
         ]);
         
-        let currentOwnerData = {
-          name: user.displayName || "Pet Owner",
-          email: user.email || "No email provided",
-          phone: "",
-          address: "",
-          avatar: "https://placehold.co/128x128.png",
-          dataAiHint: "friendly person",
-        };
-
         if (userDocSnap.exists()) {
-          const fetchedData = userDocSnap.data();
-          currentOwnerData = { ...currentOwnerData, ...fetchedData };
+          const fetchedOwnerData = { ...initialOwnerData, ...userDocSnap.data() };
+          setOwnerData(fetchedOwnerData);
+          resetOwnerForm({ name: fetchedOwnerData.name, phone: fetchedOwnerData.phone, address: fetchedOwnerData.address });
         }
-        setOwnerData(currentOwnerData);
-        resetOwnerForm(currentOwnerData);
         
-        let currentPetData = defaultPetData;
         if (petDocSnap.exists()) {
-          const fetchedPetData = petDocSnap.data();
-          currentPetData = { ...defaultPetData, ...fetchedPetData };
+          const fetchedPetData = { ...defaultPetData, ...petDocSnap.data() };
+          setPetData(fetchedPetData);
+          resetPetForm(fetchedPetData);
         }
-        setPetData(currentPetData);
-        resetPetForm(currentPetData);
 
       } catch (error) {
         console.error("Error fetching profile data:", error);
         toast({ variant: "destructive", title: "Error", description: "Could not fetch profile data." });
-      } finally {
-        setPageLoading(false);
       }
     };
 
@@ -135,7 +138,7 @@ export default function PetProfilePage() {
     setIsSubmittingPet(true);
     try {
       const petDocRef = doc(db, "users", user.uid, "pets", "main-pet");
-      const dataToSave = { ...petData, ...data }; // Merge form data with existing state
+      const dataToSave = { ...petData, ...data };
       
       await setDoc(petDocRef, dataToSave, { merge: true });
       
@@ -164,12 +167,12 @@ export default function PetProfilePage() {
       }
 
       const userDocRef = doc(db, "users", user.uid);
-      const dataToSave = { ...ownerData, ...data, email: user.email }; // Merge form data
+      const dataToSave = { ...ownerData, ...data, email: user.email };
 
       await setDoc(userDocRef, dataToSave, { merge: true });
       
       setOwnerData(dataToSave);
-      resetOwnerForm(dataToSave);
+      resetOwnerForm({ name: dataToSave.name, phone: dataToSave.phone, address: dataToSave.address });
 
       toast({ title: "Success", description: "Your profile has been updated." });
       setIsEditingOwner(false);
@@ -197,7 +200,6 @@ export default function PetProfilePage() {
   }
   
   if (!user) {
-      // This state should be brief as AppLayout handles redirection.
       return null;
   }
 
@@ -209,7 +211,6 @@ export default function PetProfilePage() {
         description="View and manage your pet's details and your account information."
       />
       <div className="grid grid-cols-1 gap-8 md:grid-cols-2">
-        {/* Pet Profile Card */}
         <Card className="shadow-lg">
           <form onSubmit={handlePetSubmit(onPetSubmit)}>
             <CardHeader>
@@ -282,7 +283,6 @@ export default function PetProfilePage() {
           </form>
         </Card>
 
-        {/* Owner Profile Card */}
         <Card className="shadow-lg">
           <form onSubmit={handleOwnerSubmit(onOwnerSubmit)}>
             <CardHeader>
@@ -317,6 +317,7 @@ export default function PetProfilePage() {
                       <Phone className="h-5 w-5 text-muted-foreground" />
                       <Input id="ownerPhone" {...registerOwner("phone")} placeholder="555-123-4567" />
                     </div>
+                     {ownerErrors.phone && <p className="text-sm text-destructive">{ownerErrors.phone.message}</p>}
                   </div>
                   <div className="space-y-1">
                     <Label htmlFor="ownerAddress">Address</Label>
@@ -324,6 +325,7 @@ export default function PetProfilePage() {
                       <Home className="h-5 w-5 text-muted-foreground mt-2" />
                       <Input id="ownerAddress" {...registerOwner("address")} placeholder="123 Pet Street, Pawville" />
                     </div>
+                     {ownerErrors.address && <p className="text-sm text-destructive">{ownerErrors.address.message}</p>}
                   </div>
                 </>
               ) : (
@@ -347,7 +349,7 @@ export default function PetProfilePage() {
                     {isSubmittingOwner ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
                     Save
                   </Button>
-                  <Button type="button" variant="outline" onClick={() => { setIsEditingOwner(false); resetOwnerForm(ownerData); }}>
+                  <Button type="button" variant="outline" onClick={() => { setIsEditingOwner(false); resetOwnerForm({ name: ownerData.name, phone: ownerData.phone, address: ownerData.address }); }}>
                     <XCircle className="mr-2 h-4 w-4" /> Cancel
                   </Button>
                 </div>
