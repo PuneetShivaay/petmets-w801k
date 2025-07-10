@@ -104,7 +104,6 @@ function SidebarNavigationInternal() {
 function HeaderContentInternal() {
     const pathname = usePathname();
     const { user } = useAuth();
-    const { isMobile } = useSidebar();
     let title: string | undefined;
     
     if (user) {
@@ -141,7 +140,6 @@ function HeaderContentInternal() {
         <>
             <div className="flex items-center gap-2">
                  <SidebarTrigger /> 
-                 {isMobile && <AppLogo />}
             </div>
             <div className="flex-1 text-center md:text-left">
                  <h1 className="font-headline text-xl font-semibold truncate">
@@ -192,7 +190,7 @@ export function MainLayoutInternal({ children }: { children: React.ReactNode }) 
   return (
     <SidebarProvider defaultOpen> 
       <Sidebar className="border-r border-sidebar-border">
-        <SidebarHeader className="p-4">
+        <SidebarHeader className="p-2 sm:p-4">
           <AppLogoLinkInternal />
         </SidebarHeader>
         <SidebarContent>
@@ -207,10 +205,10 @@ export function MainLayoutInternal({ children }: { children: React.ReactNode }) 
         )}
       </Sidebar>
       <SidebarInset className="flex flex-col">
-        <header className="sticky top-0 z-10 flex h-16 items-center justify-between gap-4 border-b bg-background px-2 sm:px-4 md:px-6">
+        <header className="sticky top-0 z-10 flex h-16 items-center justify-between gap-4 border-b bg-background px-2 sm:px-4">
             <HeaderContentInternal />
         </header>
-        <main className="flex-1 overflow-auto p-2 sm:p-4 md:p-6">
+        <main className="flex-1 overflow-auto p-2 sm:p-4">
           {children}
         </main>
       </SidebarInset>
