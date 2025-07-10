@@ -17,37 +17,33 @@ import {
   SidebarMenu,
   SidebarMenuItem,
   SidebarMenuButton,
-  SidebarInset,
   useSidebar,        
 } from "@/components/ui/sidebar";
 import { Button } from "@/components/ui/button"; 
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { LogOut } from "lucide-react";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { LogOut, ArrowLeft, User } from "lucide-react";
 import { useLoading } from "@/contexts/loading-context";
 import { useAuth } from "@/contexts/auth-context";
 import { useToast } from "@/hooks/use-toast";
 
-function AppLogoLinkInternal() {
-  const { isMobile, setOpenMobile } = useSidebar();
-  const { showLoading } = useLoading();
-  const handleLogoClick = () => {
-    showLoading();
-    if (isMobile) {
-      setOpenMobile(false);
-    }
-  };
-  return (
-    <Link href="/" onClick={handleLogoClick} className="block">
-      <AppLogo />
-    </Link>
-  );
+interface OtherUser {
+    id: string;
+    avatar: string;
+    dataAiHint: string;
+    name: string;
 }
 
-function SidebarNavigationInternal() {
+function MainLayoutChild({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
+  const router = useRouter();
   const { isMobile, setOpenMobile } = useSidebar();
   const { showLoading } = useLoading();
-  const { user } = useAuth(); // Get auth user
+  const { user, userSignOut } = useAuth();
+  const { toast } = useToast();
+
+  const [pageTitle, setPageTitle] = React.useState<string | undefined>(undefined);
+  const [otherUser, setOtherUser] = React.useState<OtherUser | null>(null);
 
   const handleLinkClick = () => {
     showLoading();
@@ -56,98 +52,11 @@ function SidebarNavigationInternal() {
     }
   };
 
-  const filteredNavItems = navItems.filter(item => {
-    if (item.href === '/login') return !user; // Show Login only if not logged in
-    if (item.href === '/pet-profile') return !!user; // Show Pet Profile only if logged in
-    return true; 
-  });
-
-
-  return (
-    <SidebarMenu className="p-2 pt-0 sm:p-4 sm:pt-0">
-      {filteredNavItems.map((item) => (
-        <SidebarMenuItem key={item.href}>
-          <Link href={item.href} passHref legacyBehavior>
-            <SidebarMenuButton
-              asChild={item.href.startsWith("/")}
-              className={cn(
-                "w-full justify-start",
-                pathname === item.href && "bg-sidebar-primary text-sidebar-primary-foreground",
-                pathname !== item.href && "hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
-                item.disabled && "cursor-not-allowed opacity-80"
-              )}
-              disabled={item.disabled}
-              target={item.external ? "_blank" : undefined}
-              rel={item.external ? "noopener noreferrer" : undefined}
-              tooltip={item.title}
-              onClick={item.href.startsWith("/") ? handleLinkClick : undefined}
-            >
-              <a>
-                <item.icon className="mr-2 h-5 w-5" />
-                <span className="text-sidebar-foreground">{item.title}</span>
-                {item.label && (
-                  <span className="ml-auto text-xs text-muted-foreground">
-                    {item.label}
-                  </span>
-                )}
-              </a>
-            </SidebarMenuButton>
-          </Link>
-        </SidebarMenuItem>
-      ))}
-    </SidebarMenu>
-  );
-}
-
-function HeaderContentInternal() {
-    const pathname = usePathname();
-    const { user } = useAuth();
-    let title: string | undefined;
-
-    if (user) {
-        const currentNavItem = navItems.find(item => item.href === pathname);
-        title = currentNavItem ? currentNavItem.title : 'PetMets Dashboard';
-    } else if (pathname === '/login') {
-      title = 'Login / Sign Up';
-    }
-    
-    const renderTitle = (text?: string): React.ReactNode => {
-        if (!text) return null;
-        if (!text.includes('PetMets')) {
-            return text;
-        }
-        const parts = text.split('PetMets');
-        return (
-            <>
-                {parts[0]}
-                <span className="font-semibold">
-                    <span className="text-primary">Pet</span>
-                    <span className="text-accent">Mets</span>
-                </span>
-                {parts[1]}
-            </>
-        );
-      };
-
-    return (
-        <div className="flex w-full items-center gap-2">
-            <div className="flex items-center gap-2 sm:gap-4">
-                 <SidebarTrigger />
-            </div>
-            
-            <h1 className="font-headline text-lg sm:text-xl font-semibold truncate">
-                {renderTitle(title)}
-            </h1>
-        </div>
-    );
-}
-
-function LogoutButtonInternal() {
-  const { isMobile, setOpenMobile } = useSidebar();
-  const { showLoading } = useLoading(); 
-  const { userSignOut, user } = useAuth();
-  const { toast } = useToast();
-
+  const handleGoBack = () => {
+    showLoading();
+    router.back();
+  };
+  
   const handleLogoutClick = async () => {
     showLoading();
     try {
@@ -161,64 +70,113 @@ function LogoutButtonInternal() {
     }
   };
 
-  if (!user) return null;
 
-  return (
-    <SidebarMenuButton
-        className="w-full justify-start"
-        onClick={handleLogoutClick}
-        tooltip="Logout"
-    >
-        <LogOut className="mr-2 h-5 w-5" />
-        <span className="text-sidebar-foreground">Logout</span>
-    </SidebarMenuButton>
-  );
-}
-
-function MainLayoutChild({ children }: { children: React.ReactNode }) {
-  const pathname = usePathname();
-
-  // This allows child pages to set the header title.
-  // We clone the child element and pass a `setPageTitle` prop to it.
-  const childrenWithProps = React.Children.map(children, child => {
-    if (React.isValidElement(child)) {
-        // @ts-ignore
-      return React.cloneElement(child, { });
-    }
-    return child;
+  const filteredNavItems = navItems.filter(item => {
+    if (item.href === '/login') return !user;
+    if (item.href === '/pet-profile') return !!user;
+    return true; 
   });
-
+  
+  const defaultTitle = navItems.find(item => item.href === pathname)?.title;
+  
   const isDynamicPage = pathname.startsWith('/chats/') || pathname.startsWith('/profile/');
   const headerIsVisible = !isDynamicPage;
 
+  const childrenWithProps = React.Children.map(children, child => {
+    if (React.isValidElement(child)) {
+        // @ts-ignore
+      return React.cloneElement(child, { setPageTitle, setOtherUser });
+    }
+    return child;
+  });
 
   return (
     <>
       <Sidebar className="border-r border-sidebar-border">
         <SidebarHeader className="p-4">
-          <AppLogoLinkInternal />
+          <Link href="/" onClick={handleLinkClick} className="block">
+            <AppLogo />
+          </Link>
         </SidebarHeader>
         <SidebarContent>
           <ScrollArea className="flex-grow">
-            <SidebarNavigationInternal />
+            <SidebarMenu className="p-2 pt-0 sm:p-4 sm:pt-0">
+              {filteredNavItems.map((item) => (
+                <SidebarMenuItem key={item.href}>
+                  <Link href={item.href} passHref legacyBehavior>
+                    <SidebarMenuButton
+                      asChild={item.href.startsWith("/")}
+                      className={cn(
+                        "w-full justify-start",
+                        pathname === item.href && "bg-sidebar-primary text-sidebar-primary-foreground",
+                        pathname !== item.href && "hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
+                        item.disabled && "cursor-not-allowed opacity-80"
+                      )}
+                      disabled={item.disabled}
+                      target={item.external ? "_blank" : undefined}
+                      rel={item.external ? "noopener noreferrer" : undefined}
+                      tooltip={item.title}
+                      onClick={item.href.startsWith("/") ? handleLinkClick : undefined}
+                    >
+                      <a>
+                        <item.icon className="mr-2 h-5 w-5" />
+                        <span className="text-sidebar-foreground">{item.title}</span>
+                      </a>
+                    </SidebarMenuButton>
+                  </Link>
+                </SidebarMenuItem>
+              ))}
+            </SidebarMenu>
           </ScrollArea>
         </SidebarContent>
-        {useAuth().user && (
+        {user && (
           <SidebarFooter className="p-4 border-t border-sidebar-border">
-            <LogoutButtonInternal />
+             <SidebarMenuButton
+                className="w-full justify-start"
+                onClick={handleLogoutClick}
+                tooltip="Logout"
+            >
+                <LogOut className="mr-2 h-5 w-5" />
+                <span className="text-sidebar-foreground">Logout</span>
+            </SidebarMenuButton>
           </SidebarFooter>
         )}
       </Sidebar>
-      <SidebarInset className="flex flex-col">
-          {headerIsVisible && (
-            <header className="sticky top-0 z-10 flex h-16 items-center justify-between gap-4 border-b bg-background px-2 sm:px-4">
-                <HeaderContentInternal />
+      <div className="flex-1 flex flex-col">
+        {headerIsVisible ? (
+            <header className="sticky top-0 z-10 flex h-16 items-center justify-between gap-4 border-b bg-background px-4">
+                <div className="flex w-full items-center gap-2">
+                    <SidebarTrigger />
+                    <h1 className="font-headline text-lg sm:text-xl font-semibold truncate">
+                        {pageTitle || defaultTitle}
+                    </h1>
+                </div>
             </header>
+          ) : (
+            isDynamicPage && (
+              <header className="sticky top-0 z-10 flex h-16 items-center justify-start gap-3 border-b bg-background px-4">
+                  <SidebarTrigger className="sm:hidden" />
+                  <Button variant="ghost" size="icon" className="h-9 w-9" onClick={handleGoBack}>
+                      <ArrowLeft className="h-5 w-5" />
+                  </Button>
+                   {otherUser && (
+                     <div className="flex items-center gap-3 overflow-hidden">
+                       <Avatar className="h-9 w-9">
+                           <AvatarImage src={otherUser.avatar} data-ai-hint={otherUser.dataAiHint} />
+                           <AvatarFallback><User /></AvatarFallback>
+                       </Avatar>
+                       <span className="font-semibold text-lg truncate">{otherUser.name}</span>
+                     </div>
+                   )}
+              </header>
+            )
           )}
-        <main className={cn("flex-1 overflow-auto", !headerIsVisible && "h-screen")}>
-          {childrenWithProps}
+        <main className={cn("flex-1 overflow-auto", isDynamicPage && "h-screen")}>
+          <div className="p-4 sm:p-6">
+            {childrenWithProps}
+          </div>
         </main>
-      </SidebarInset>
+      </div>
     </>
   );
 }
