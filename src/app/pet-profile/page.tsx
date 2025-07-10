@@ -1,24 +1,26 @@
 
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useForm, type SubmitHandler } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { updateProfile } from "firebase/auth";
-import { doc, getDoc, setDoc, serverTimestamp } from "firebase/firestore";
+import { doc, getDoc, setDoc } from "firebase/firestore";
+import { ref as storageRef, uploadBytes, getDownloadURL } from "firebase/storage";
+
 
 import { PageHeader } from "@/components/page-header";
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { PawPrint, User, Edit3, Mail, Phone, Home, Save, XCircle, Loader2 } from "lucide-react";
+import { PawPrint, User, Edit3, Mail, Phone, Home, Save, XCircle, Loader2, Upload } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 
-import { auth, db } from "@/lib/firebase";
+import { auth, db, storage } from "@/lib/firebase";
 import { useAuth } from "@/contexts/auth-context";
 import { useToast } from "@/hooks/use-toast";
 
@@ -58,12 +60,15 @@ const defaultOwnerData = {
 export default function PetProfilePage() {
   const { user, isLoading: isAuthLoading } = useAuth();
   const { toast } = useToast();
+  const petAvatarInputRef = useRef<HTMLInputElement>(null);
 
   const [isPageLoading, setIsPageLoading] = useState(true);
   const [isEditingPet, setIsEditingPet] = useState(false);
   const [isEditingOwner, setIsEditingOwner] = useState(false);
   const [isSubmittingPet, setIsSubmittingPet] = useState(false);
   const [isSubmittingOwner, setIsSubmittingOwner] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
+
 
   const [petData, setPetData] = useState(defaultPetData);
   const [ownerData, setOwnerData] = useState(defaultOwnerData);
@@ -105,7 +110,7 @@ export default function PetProfilePage() {
 
     } catch (error) {
       console.error("Error fetching profile data:", error);
-      toast({ variant: "destructive", title: "Error", description: `Could not fetch profile data. Please check your connection. Error: ${(error as Error).message}` });
+      toast({ variant: "destructive", title: "Error", description: `Could not fetch profile data. Please check your connection.` });
     } finally {
       setIsPageLoading(false);
     }
@@ -115,8 +120,6 @@ export default function PetProfilePage() {
     if (!isAuthLoading && user) {
       fetchProfileData();
     } else if (!isAuthLoading && !user) {
-      // User is not logged in, no need to fetch, stop loading.
-      // The main layout will handle the redirect.
       setIsPageLoading(false);
     }
   }, [user, isAuthLoading, fetchProfileData]);
@@ -170,9 +173,42 @@ export default function PetProfilePage() {
       setIsSubmittingOwner(false);
     }
   };
+  
+  const handleAvatarUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    if (!user || !event.target.files || event.target.files.length === 0) {
+      return;
+    }
+    const file = event.target.files[0];
+    // Simple validation for image type and size
+    if (!file.type.startsWith('image/')) {
+        toast({ variant: 'destructive', title: 'Invalid File Type', description: 'Please select an image file.' });
+        return;
+    }
+    if (file.size > 5 * 1024 * 1024) { // 5MB limit
+        toast({ variant: 'destructive', title: 'File Too Large', description: 'Please select an image smaller than 5MB.' });
+        return;
+    }
 
-  // The AuthProvider handles the main loading state. 
-  // We show a skeleton here only for the initial data fetch on this page.
+    setIsUploading(true);
+    try {
+      const avatarRef = storageRef(storage, `users/${user.uid}/pets/main-pet/avatar.jpg`);
+      const snapshot = await uploadBytes(avatarRef, file);
+      const downloadURL = await getDownloadURL(snapshot.ref);
+
+      const petDocRef = doc(db, "users", user.uid, "pets", "main-pet");
+      await setDoc(petDocRef, { avatar: downloadURL }, { merge: true });
+
+      setPetData(prev => ({ ...prev, avatar: downloadURL }));
+      toast({ title: 'Avatar Updated!', description: "Your pet's new picture is saved." });
+    } catch (error) {
+      console.error("Avatar upload failed:", error);
+      toast({ variant: 'destructive', title: 'Upload Failed', description: 'There was an error uploading your image. Please try again.' });
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
+
   if (isPageLoading) {
     return (
         <div>
@@ -189,8 +225,6 @@ export default function PetProfilePage() {
   }
   
   if (!user) {
-      // This state is handled by AppLayout redirecting to /login.
-      // This return prevents a flash of content while redirecting.
       return null;
   }
 
@@ -205,10 +239,31 @@ export default function PetProfilePage() {
           <form onSubmit={handlePetSubmit(onPetSubmit)}>
             <CardHeader>
               <div className="flex items-center gap-4">
-                <Avatar className="h-20 w-20 border-2 border-primary">
-                  <AvatarImage src={petData.avatar} alt={petData.name} data-ai-hint={petData.dataAiHint} />
-                  <AvatarFallback><PawPrint className="h-10 w-10" /></AvatarFallback>
-                </Avatar>
+                <div className="relative group">
+                    <Avatar className="h-20 w-20 border-2 border-primary">
+                      <AvatarImage src={petData.avatar} alt={petData.name} data-ai-hint={petData.dataAiHint} />
+                      <AvatarFallback><PawPrint className="h-10 w-10" /></AvatarFallback>
+                    </Avatar>
+                    <input
+                      type="file"
+                      ref={petAvatarInputRef}
+                      onChange={handleAvatarUpload}
+                      className="hidden"
+                      accept="image/*"
+                      disabled={isUploading}
+                    />
+                    <Button
+                      type="button"
+                      size="icon"
+                      variant="outline"
+                      className="absolute -bottom-2 -right-2 h-8 w-8 rounded-full bg-background group-hover:flex items-center justify-center hidden"
+                      onClick={() => petAvatarInputRef.current?.click()}
+                      disabled={isUploading}
+                      aria-label="Upload new pet avatar"
+                    >
+                      {isUploading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
+                    </Button>
+                </div>
                 <div>
                   {isEditingPet ? (
                      <Input id="petName" {...registerPet("name")} className="font-headline text-2xl sm:text-3xl p-2 h-auto" />

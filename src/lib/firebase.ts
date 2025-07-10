@@ -2,6 +2,7 @@
 import { initializeApp, getApps, getApp, type FirebaseApp } from "firebase/app";
 import { getAuth, type Auth } from "firebase/auth";
 import { getFirestore, enableIndexedDbPersistence, type Firestore } from "firebase/firestore";
+import { getStorage, type FirebaseStorage } from "firebase/storage";
 
 const firebaseConfig = {
   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
@@ -17,6 +18,7 @@ const app: FirebaseApp = !getApps().length ? initializeApp(firebaseConfig) : get
 
 const auth: Auth = getAuth(app);
 const db: Firestore = getFirestore(app);
+const storage: FirebaseStorage = getStorage(app);
 
 // Promise to track Firestore persistence setup
 let firestoreReadyPromise: Promise<void> | null = null;
@@ -50,4 +52,4 @@ export function isFirestoreReady(): Promise<void> {
     return Promise.resolve();
 }
 
-export { app, auth, db };
+export { app, auth, db, storage };
