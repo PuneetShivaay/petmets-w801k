@@ -204,29 +204,31 @@ export default function MatchPetPage() {
               <div className="grid gap-2">
                 {incomingRequests.length > 0 ? (
                   incomingRequests.map(req => (
-                    <div key={req.id} className="grid grid-cols-[1fr_auto] items-center gap-4 rounded-md border p-3">
+                    <div key={req.id} className="rounded-md border p-3 flex flex-col gap-2">
                       <div>
                         <p className="text-sm font-medium truncate">From: {req.requesterEmail}</p>
                         <p className="text-sm text-muted-foreground">For: {req.targetPetName}</p>
                       </div>
-                      <div className="flex gap-1">
+                      <div className="flex gap-2 justify-end">
                           <Button 
                             size="sm" 
                             variant="outline" 
-                            className="h-8 px-2"
+                            className="h-8 px-2 flex-1"
                             onClick={() => handleRequestResponse(req.id, 'accepted')}
                             disabled={isUpdatingRequest === req.id}
                           >
                              {isUpdatingRequest === req.id ? <Loader2 className="h-4 w-4 animate-spin"/> : <Check className="h-4 w-4 text-green-500" />}
+                             <span className="ml-1">Accept</span>
                           </Button>
                           <Button 
                             size="sm" 
                             variant="destructive"
-                            className="h-8 px-2"
+                            className="h-8 px-2 flex-1"
                             onClick={() => handleRequestResponse(req.id, 'declined')}
                              disabled={isUpdatingRequest === req.id}
                            >
                             {isUpdatingRequest === req.id ? <Loader2 className="h-4 w-4 animate-spin"/> : <X className="h-4 w-4"/>}
+                            <span className="ml-1">Decline</span>
                           </Button>
                       </div>
                     </div>
