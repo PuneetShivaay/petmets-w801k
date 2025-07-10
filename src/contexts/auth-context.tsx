@@ -5,8 +5,8 @@ import type { ReactNode} from 'react';
 import { createContext, useContext, useEffect, useState, useMemo, useCallback } from 'react';
 import type { User } from 'firebase/auth';
 import { onAuthStateChanged, signOut as firebaseSignOut } from 'firebase/auth';
-import { auth } from '@/lib/firebase';
-import { Loader2 } from 'lucide-react'; // Import Loader2 for self-contained loader
+import { auth, isFirestoreReady } from '@/lib/firebase';
+import { Loader2 } from 'lucide-react';
 
 interface AuthContextType {
   user: User | null;
@@ -18,35 +18,40 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
-  const [isLoading, setIsLoading] = useState(true); // True until first auth check completes
+  const [isAuthLoading, setIsAuthLoading] = useState(true);
+  const [firestoreReady, setFirestoreReady] = useState(false);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
       setUser(currentUser);
-      setIsLoading(false);
+      setIsAuthLoading(false);
     });
+    
+    // Check for Firestore readiness
+    isFirestoreReady().then(() => {
+        setFirestoreReady(true);
+    });
+
     return () => unsubscribe();
   }, []);
 
   const userSignOut = useCallback(async () => {
     await firebaseSignOut(auth);
-    // User state will be updated by onAuthStateChanged
   }, []);
+
+  const isLoading = isAuthLoading || !firestoreReady;
 
   const value = useMemo(() => ({
     user,
-    isLoading,
+    isLoading, // We only expose a single loading flag to consumers
     userSignOut,
   }), [user, isLoading, userSignOut]);
 
-  // This is the key change: while auth state is being determined,
-  // we show a full-page loader here and do NOT render the rest of the app.
-  // This prevents any child components from trying to access Firebase services
-  // before they are ready and the user's auth status is known.
   if (isLoading) {
     return (
       <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-background/80 backdrop-blur-sm">
         <Loader2 className="h-16 w-16 animate-spin text-primary" />
+        <span className="sr-only">Loading application...</span>
       </div>
     );
   }

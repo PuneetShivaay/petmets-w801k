@@ -6,7 +6,7 @@ import { useForm, type SubmitHandler } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { updateProfile } from "firebase/auth";
-import { doc, getDoc, setDoc } from "firebase/firestore";
+import { doc, getDoc, setDoc, serverTimestamp } from "firebase/firestore";
 
 import { PageHeader } from "@/components/page-header";
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
@@ -37,7 +37,6 @@ const ownerSchema = z.object({
 });
 type OwnerFormData = z.infer<typeof ownerSchema>;
 
-// These represent the initial state and are used if no data is found in Firestore.
 const defaultPetData = {
     name: "Buddy",
     breed: "Golden Retriever",
@@ -57,7 +56,7 @@ const defaultOwnerData = {
 };
 
 export default function PetProfilePage() {
-  const { user } = useAuth();
+  const { user, isLoading: isAuthLoading } = useAuth();
   const { toast } = useToast();
 
   const [isPageLoading, setIsPageLoading] = useState(true);
@@ -66,18 +65,15 @@ export default function PetProfilePage() {
   const [isSubmittingPet, setIsSubmittingPet] = useState(false);
   const [isSubmittingOwner, setIsSubmittingOwner] = useState(false);
 
-  // Initialize state with default data structure
   const [petData, setPetData] = useState(defaultPetData);
   const [ownerData, setOwnerData] = useState(defaultOwnerData);
 
   const { register: registerPet, handleSubmit: handlePetSubmit, reset: resetPetForm, formState: { errors: petErrors } } = useForm<PetFormData>({
     resolver: zodResolver(petSchema),
-    defaultValues: petData,
   });
 
   const { register: registerOwner, handleSubmit: handleOwnerSubmit, reset: resetOwnerForm, formState: { errors: ownerErrors } } = useForm<OwnerFormData>({
     resolver: zodResolver(ownerSchema),
-    defaultValues: { name: ownerData.name, phone: ownerData.phone, address: ownerData.address },
   });
 
   const fetchProfileData = useCallback(async () => {
@@ -109,21 +105,21 @@ export default function PetProfilePage() {
 
     } catch (error) {
       console.error("Error fetching profile data:", error);
-      toast({ variant: "destructive", title: "Error", description: `Could not fetch profile data: ${(error as Error).message}` });
+      toast({ variant: "destructive", title: "Error", description: `Could not fetch profile data. Please check your connection. Error: ${(error as Error).message}` });
     } finally {
       setIsPageLoading(false);
     }
   }, [user, resetOwnerForm, resetPetForm, toast]);
 
   useEffect(() => {
-    // Only run fetch logic if user object exists. AuthProvider ensures user is resolved.
-    if (user) {
+    if (!isAuthLoading && user) {
       fetchProfileData();
-    } else {
-      // If there's no user, we are likely being redirected, so we can stop loading.
+    } else if (!isAuthLoading && !user) {
+      // User is not logged in, no need to fetch, stop loading.
+      // The main layout will handle the redirect.
       setIsPageLoading(false);
     }
-  }, [user, fetchProfileData]);
+  }, [user, isAuthLoading, fetchProfileData]);
 
   const onPetSubmit: SubmitHandler<PetFormData> = async (data) => {
     if (!user) {
@@ -133,13 +129,11 @@ export default function PetProfilePage() {
     setIsSubmittingPet(true);
     try {
       const petDocRef = doc(db, "users", user.uid, "pets", "main-pet");
-      // Merge with existing data to preserve fields not in the form (like avatar)
       const dataToSave = { ...petData, ...data }; 
       
       await setDoc(petDocRef, dataToSave, { merge: true });
       
       setPetData(dataToSave);
-      resetPetForm(dataToSave); // Reset form with latest saved data
       toast({ title: "Success", description: "Pet details updated." });
       setIsEditingPet(false);
     } catch (error) {
@@ -167,7 +161,6 @@ export default function PetProfilePage() {
       await setDoc(userDocRef, dataToSave, { merge: true });
       
       setOwnerData(dataToSave);
-      resetOwnerForm(dataToSave);
       toast({ title: "Success", description: "Your profile has been updated." });
       setIsEditingOwner(false);
     } catch (error) {
@@ -178,6 +171,8 @@ export default function PetProfilePage() {
     }
   };
 
+  // The AuthProvider handles the main loading state. 
+  // We show a skeleton here only for the initial data fetch on this page.
   if (isPageLoading) {
     return (
         <div>
@@ -195,7 +190,7 @@ export default function PetProfilePage() {
   
   if (!user) {
       // This state is handled by AppLayout redirecting to /login.
-      // This return prevents a flash of content.
+      // This return prevents a flash of content while redirecting.
       return null;
   }
 
