@@ -267,8 +267,12 @@ export default function MatchPetPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col items-center justify-between gap-4 sm:flex-row">
-        <p className="text-lg text-muted-foreground md:max-w-2xl">Find the perfect pet companion for playdates and celebrations. Browse available pets and send a match request.</p>
+      <p className="text-lg text-muted-foreground">Find the perfect pet companion for playdates and celebrations. Browse available pets and send a match request.</p>
+      
+      <div className="flex items-center justify-between gap-4">
+        <Button variant="outline" disabled>
+          <Search className="mr-2 h-4 w-4" /> Filter Pets (Coming Soon)
+        </Button>
         <Popover open={isPopoverOpen} onOpenChange={setIsPopoverOpen}>
           <PopoverTrigger asChild>
             <Button variant="outline" size="icon" className="relative shrink-0">
@@ -328,12 +332,6 @@ export default function MatchPetPage() {
             </div>
           </PopoverContent>
         </Popover>
-      </div>
-      
-      <div className="flex items-center gap-4">
-        <Button variant="outline" disabled>
-          <Search className="mr-2 h-4 w-4" /> Filter Pets (Coming Soon)
-        </Button>
       </div>
 
       {loading ? (
