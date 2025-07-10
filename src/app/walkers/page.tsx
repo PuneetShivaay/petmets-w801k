@@ -1,5 +1,4 @@
 
-import { PageHeader } from "@/components/page-header";
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import Image from "next/image";
@@ -14,14 +13,11 @@ export default function PetWalkersPage() {
   ];
 
   return (
-    <div>
-      <PageHeader
-        title="Professional Pet Walkers"
-        description="Connect with verified and experienced pet walkers. Ensure your furry friends get their daily dose of exercise, walks, and sniffs with trusted professionals."
-      />
-      <div className="mb-6 text-center">
+    <div className="space-y-8">
+      <div className="text-center">
+        <p className="text-lg text-muted-foreground">Connect with verified and experienced pet walkers. Ensure your furry friends get their daily dose of exercise, walks, and sniffs with trusted professionals.</p>
         <Link href="/providers?service=walkers" passHref>
-          <Button size="lg" className="bg-accent text-accent-foreground hover:bg-accent/90">
+          <Button size="lg" className="mt-4 bg-accent text-accent-foreground hover:bg-accent/90">
             <PawPrint className="mr-2 h-5 w-5" /> Browse All Walkers
           </Button>
         </Link>
@@ -33,8 +29,9 @@ export default function PetWalkersPage() {
               <Image 
                 src={walker.image} 
                 alt={walker.name} 
-                layout="fill" 
-                objectFit="cover"
+                fill 
+                sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                style={{ objectFit: 'cover' }}
                 data-ai-hint={walker.dataAiHint}
               />
             </div>

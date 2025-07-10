@@ -1,5 +1,4 @@
 
-import { PageHeader } from "@/components/page-header";
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import Image from "next/image";
@@ -17,12 +16,9 @@ export default function ServiceProvidersPage() {
   ];
 
   return (
-    <div>
-      <PageHeader
-        title="Find Pet Service Providers"
-        description="Browse profiles of pet walkers, groomers, trainers, and boarding facilities. View photos, read detailed service descriptions, and book appointments."
-      />
-      <Card className="mb-8">
+    <div className="space-y-8">
+      <p className="text-lg text-muted-foreground">Browse profiles of pet walkers, groomers, trainers, and boarding facilities. View photos, read detailed service descriptions, and book appointments.</p>
+      <Card>
         <CardContent className="p-4 sm:p-6">
           <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
             <Input placeholder="Search by name or keyword..." className="md:col-span-2" />
@@ -52,8 +48,9 @@ export default function ServiceProvidersPage() {
               <Image 
                 src={provider.image} 
                 alt={provider.name} 
-                layout="fill" 
-                objectFit="cover"
+                fill 
+                sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                style={{objectFit: 'cover'}}
                 data-ai-hint={provider.dataAiHint}
               />
             </div>

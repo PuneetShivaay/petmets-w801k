@@ -1,5 +1,4 @@
 
-import { PageHeader } from "@/components/page-header";
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import Image from "next/image";
@@ -14,14 +13,11 @@ export default function PetTrainingPage() {
   ];
 
   return (
-    <div>
-      <PageHeader
-        title="Certified Pet Trainers"
-        description="Connect with certified pet trainers. Featuring real photos of trainers working with dogs, teaching obedience, tricks, and building confidence."
-      />
-      <div className="mb-6 text-center">
+    <div className="space-y-8">
+      <div className="text-center">
+        <p className="text-lg text-muted-foreground">Connect with certified pet trainers. Featuring real photos of trainers working with dogs, teaching obedience, tricks, and building confidence.</p>
         <Link href="/providers?service=trainers" passHref>
-          <Button size="lg" className="bg-accent text-accent-foreground hover:bg-accent/90">
+          <Button size="lg" className="mt-4 bg-accent text-accent-foreground hover:bg-accent/90">
             <GraduationCap className="mr-2 h-5 w-5" /> Find a Trainer
           </Button>
         </Link>
@@ -33,8 +29,9 @@ export default function PetTrainingPage() {
               <Image 
                 src={trainer.image} 
                 alt={trainer.name} 
-                layout="fill" 
-                objectFit="cover"
+                fill 
+                sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                style={{ objectFit: 'cover' }}
                 data-ai-hint={trainer.dataAiHint}
               />
             </div>

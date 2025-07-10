@@ -1,5 +1,4 @@
 
-import { PageHeader } from "@/components/page-header";
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import Image from "next/image";
@@ -14,14 +13,11 @@ export default function PetBoardingPage() {
   ];
 
   return (
-    <div>
-      <PageHeader
-        title="Safe Pet Boarding"
-        description="Facilitate pet boarding services in cozy and safe environments. Featuring supervised care, playgroups, and comfy nap corners for your peace of mind."
-      />
-      <div className="mb-6 text-center">
+    <div className="space-y-8">
+      <div className="text-center">
+        <p className="text-lg text-muted-foreground">Facilitate pet boarding services in cozy and safe environments. Featuring supervised care, playgroups, and comfy nap corners for your peace of mind.</p>
         <Link href="/providers?service=boarding" passHref>
-          <Button size="lg" className="bg-accent text-accent-foreground hover:bg-accent/90">
+          <Button size="lg" className="mt-4 bg-accent text-accent-foreground hover:bg-accent/90">
             <Hotel className="mr-2 h-5 w-5" /> Find Boarding
           </Button>
         </Link>
@@ -33,8 +29,9 @@ export default function PetBoardingPage() {
               <Image 
                 src={facility.image} 
                 alt={facility.name} 
-                layout="fill" 
-                objectFit="cover"
+                fill
+                sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                style={{ objectFit: 'cover' }}
                 data-ai-hint={facility.dataAiHint}
               />
             </div>

@@ -1,5 +1,4 @@
 
-import { PageHeader } from "@/components/page-header";
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import Image from "next/image";
@@ -14,14 +13,11 @@ export default function PetGroomingPage() {
   ];
 
   return (
-    <div>
-      <PageHeader
-        title="Expert Pet Groomers"
-        description="Connect with expert pet groomers. Showcasing adorable, freshly-groomed pets photographed like furry celebrities. Pamper your pet today!"
-      />
-       <div className="mb-6 text-center">
+    <div className="space-y-8">
+      <div className="text-center">
+        <p className="text-lg text-muted-foreground">Connect with expert pet groomers. Showcasing adorable, freshly-groomed pets photographed like furry celebrities. Pamper your pet today!</p>
         <Link href="/providers?service=groomers" passHref>
-          <Button size="lg" className="bg-accent text-accent-foreground hover:bg-accent/90">
+          <Button size="lg" className="mt-4 bg-accent text-accent-foreground hover:bg-accent/90">
             <Scissors className="mr-2 h-5 w-5" /> Find a Groomer
           </Button>
         </Link>
@@ -33,8 +29,9 @@ export default function PetGroomingPage() {
               <Image 
                 src={groomer.image} 
                 alt={groomer.name} 
-                layout="fill" 
-                objectFit="cover"
+                fill
+                sizes="(max-width: 768px) 100vw, 50vw"
+                style={{ objectFit: 'cover' }}
                 data-ai-hint={groomer.dataAiHint}
               />
             </div>

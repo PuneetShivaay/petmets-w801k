@@ -1,5 +1,4 @@
 
-import { PageHeader } from "@/components/page-header";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import Image from "next/image";
 import { Waves, Sun } from "lucide-react";
@@ -11,11 +10,8 @@ export default function PetPlayzonePage() {
   ];
 
   return (
-    <div>
-      <PageHeader
-        title="Pet Playzone"
-        description="Our dedicated pet play area offers a spacious garden and a refreshing swimming pool for pure fun and freedom. Let your pets enjoy!"
-      />
+    <div className="space-y-8">
+      <p className="text-lg text-muted-foreground text-center">Our dedicated pet play area offers a spacious garden and a refreshing swimming pool for pure fun and freedom. Let your pets enjoy!</p>
       <div className="grid grid-cols-1 gap-8 md:grid-cols-2">
         {playzoneFeatures.map((feature, index) => (
           <Card key={index} className="overflow-hidden rounded-lg shadow-lg">
@@ -23,8 +19,9 @@ export default function PetPlayzonePage() {
               <Image 
                 src={feature.image} 
                 alt={feature.title} 
-                layout="fill" 
-                objectFit="cover"
+                fill 
+                sizes="(max-width: 768px) 100vw, 50vw"
+                style={{objectFit: 'cover'}}
                 data-ai-hint={feature.dataAiHint}
               />
             </div>

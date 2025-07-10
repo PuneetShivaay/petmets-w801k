@@ -9,8 +9,6 @@ import { updateProfile } from "firebase/auth";
 import { doc, getDoc, setDoc } from "firebase/firestore";
 import { ref as storageRef, uploadBytes, getDownloadURL } from "firebase/storage";
 
-
-import { PageHeader } from "@/components/page-header";
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -243,11 +241,8 @@ export default function PetProfilePage() {
 
   if (isLoading) {
     return (
-        <div>
-            <PageHeader
-                title="Pet & Owner Profile"
-                description="View and manage your pet's details and your account information."
-            />
+        <div className="space-y-8">
+            <p className="text-lg text-muted-foreground">View and manage your pet's details and your account information.</p>
             <div className="grid grid-cols-1 gap-8 md:grid-cols-2">
                 <Card><CardHeader><Skeleton className="h-24 w-full" /></CardHeader><CardContent><Skeleton className="h-20 w-full" /></CardContent><CardFooter><Skeleton className="h-10 w-full" /></CardFooter></Card>
                 <Card><CardHeader><Skeleton className="h-24 w-full" /></CardHeader><CardContent><Skeleton className="h-20 w-full" /></CardContent><CardFooter><Skeleton className="h-10 w-full" /></CardFooter></Card>
@@ -257,11 +252,8 @@ export default function PetProfilePage() {
   }
 
   return (
-    <div>
-      <PageHeader
-        title="Pet & Owner Profile"
-        description="View and manage your pet's details and your account information."
-      />
+    <div className="space-y-8">
+      <p className="text-lg text-muted-foreground">View and manage your pet's details and your account information.</p>
       <div className="grid grid-cols-1 gap-8 md:grid-cols-2">
         <Card className="shadow-lg">
           <form onSubmit={handlePetSubmit(onPetSubmit)}>
@@ -468,5 +460,3 @@ export default function PetProfilePage() {
     </div>
   );
 }
-
-    

@@ -1,5 +1,4 @@
 
-import { PageHeader } from "@/components/page-header";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
@@ -17,17 +16,15 @@ export default function BookingManagementPage() {
   ];
 
   return (
-    <div>
-      <PageHeader
-        title="Manage Your Bookings"
-        description="View, schedule, and manage all your pet service appointments in one place. Stay organized and never miss an appointment."
-      >
+    <div className="space-y-8">
+      <div className="flex flex-col items-center justify-between gap-4 md:flex-row">
+        <p className="text-lg text-muted-foreground md:max-w-2xl">View, schedule, and manage all your pet service appointments in one place. Stay organized and never miss an appointment.</p>
         <Link href="/providers">
           <Button className="bg-accent text-accent-foreground hover:bg-accent/90">
             <CalendarPlus className="mr-2 h-4 w-4" /> Book New Service
           </Button>
         </Link>
-      </PageHeader>
+      </div>
 
       <div className="grid grid-cols-1 gap-8 md:grid-cols-3">
         <div className="md:col-span-2">

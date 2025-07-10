@@ -6,13 +6,13 @@ import { useParams, useRouter } from 'next/navigation';
 import { doc, getDoc } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 
-import { PageHeader } from "@/components/page-header";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { PawPrint, User, Mail, Phone, Home, ArrowLeft, Loader2 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/contexts/auth-context";
 
 interface PetData {
   name: string;
@@ -36,6 +36,7 @@ export default function UserProfilePage() {
   const params = useParams();
   const router = useRouter();
   const { toast } = useToast();
+  const { user } = useAuth();
   const userId = params.userId as string;
 
   const [isLoading, setIsLoading] = useState(true);
@@ -81,11 +82,14 @@ export default function UserProfilePage() {
   useEffect(() => {
     fetchProfileData();
   }, [fetchProfileData]);
+  
+  const pageTitle = isLoading ? "Loading Profile..." : ownerData?.name ? `${ownerData.name}'s Profile` : "Profile Not Found";
+  const isOwnProfile = user?.uid === userId;
 
   if (isLoading) {
     return (
-        <div>
-            <PageHeader title="Loading Profile..." />
+        <div className="space-y-8">
+            <h1 className="font-headline text-2xl font-bold tracking-tight sm:text-3xl md:text-4xl">{pageTitle}</h1>
             <div className="text-center">
                  <Loader2 className="h-16 w-16 animate-spin text-primary mx-auto" />
             </div>
@@ -99,27 +103,29 @@ export default function UserProfilePage() {
   
   if (!ownerData) {
       return (
-          <div>
-            <PageHeader title="Profile Not Found">
-                <Button variant="outline" onClick={() => router.back()}>
-                    <ArrowLeft className="mr-2 h-4 w-4" /> Go Back
-                </Button>
-            </PageHeader>
+          <div className="space-y-4">
+             <h1 className="font-headline text-2xl font-bold tracking-tight sm:text-3xl md:text-4xl">{pageTitle}</h1>
+            <Button variant="outline" onClick={() => router.back()}>
+                <ArrowLeft className="mr-2 h-4 w-4" /> Go Back
+            </Button>
             <p>Could not load the requested user profile. It may have been deleted.</p>
           </div>
       )
   }
 
   return (
-    <div>
-      <PageHeader title={`${ownerData.name}'s Profile`}>
-        <Button variant="outline" onClick={() => router.back()}>
-          <ArrowLeft className="mr-2 h-4 w-4" /> Go Back
-        </Button>
-      </PageHeader>
+    <div className="space-y-8">
+       <div className="flex flex-col items-start justify-between gap-4 md:flex-row md:items-center">
+          <h1 className="font-headline text-2xl font-bold tracking-tight sm:text-3xl md:text-4xl">{pageTitle}</h1>
+          {!isOwnProfile && (
+            <Button variant="outline" onClick={() => router.back()}>
+              <ArrowLeft className="mr-2 h-4 w-4" /> Go Back
+            </Button>
+          )}
+       </div>
       
       <div className="grid grid-cols-1 gap-8 md:grid-cols-2">
-        {petData && (
+        {petData ? (
             <Card className="shadow-lg">
                 <CardHeader>
                 <div className="flex items-center gap-4">
@@ -144,6 +150,10 @@ export default function UserProfilePage() {
                     </div>
                 </CardContent>
             </Card>
+        ) : (
+          <Card className="shadow-lg flex items-center justify-center p-8">
+            <p className="text-muted-foreground">{ownerData.name} has not added a pet profile yet.</p>
+          </Card>
         )}
 
         <Card className="shadow-lg">

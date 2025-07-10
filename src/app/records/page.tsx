@@ -1,5 +1,4 @@
 
-import { PageHeader } from "@/components/page-header";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -15,15 +14,13 @@ export default function DigitalRecordsPage() {
   ];
 
   return (
-    <div>
-      <PageHeader
-        title="Digital Pet Records"
-        description="Centralized storage for your pet's important documents. Upload, organize, and safely store bills, vet receipts, vaccination cards, and health records."
-      >
+    <div className="space-y-8">
+      <div className="flex flex-col items-center justify-between gap-4 md:flex-row">
+        <p className="text-lg text-muted-foreground md:max-w-2xl">Centralized storage for your pet's important documents. Upload, organize, and safely store bills, vet receipts, vaccination cards, and health records.</p>
         <Button>
           <Upload className="mr-2 h-4 w-4" /> Upload New Document
         </Button>
-      </PageHeader>
+      </div>
 
       <div className="grid grid-cols-1 gap-8 md:grid-cols-3">
         <div className="md:col-span-2">

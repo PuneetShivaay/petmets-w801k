@@ -74,7 +74,8 @@ function SidebarNavigationInternal() {
               asChild={item.href.startsWith("/")}
               className={cn(
                 "w-full justify-start",
-                pathname === item.href && "bg-sidebar-accent text-sidebar-accent-foreground",
+                pathname === item.href && "bg-sidebar-primary text-sidebar-primary-foreground",
+                pathname !== item.href && "hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
                 item.disabled && "cursor-not-allowed opacity-80"
               )}
               disabled={item.disabled}
@@ -84,7 +85,7 @@ function SidebarNavigationInternal() {
               onClick={item.href.startsWith("/") ? handleLinkClick : undefined}
             >
               <a>
-                <item.icon className="mr-2 h-5 w-5 text-primary" />
+                <item.icon className="mr-2 h-5 w-5" />
                 <span className="text-sidebar-foreground">{item.title}</span>
                 {item.label && (
                   <span className="ml-auto text-xs text-muted-foreground">
@@ -103,15 +104,24 @@ function SidebarNavigationInternal() {
 function HeaderContentInternal() {
     const pathname = usePathname();
     const { user } = useAuth();
-    let title: string = 'PetMets';
+    let title: string | undefined;
     
     if (user) {
-      title = navItems.find(item => item.href === pathname)?.title || 'PetMets Dashboard';
+        if (pathname.startsWith('/profile/')) {
+            // Title for profile pages is handled within the page component itself
+            title = undefined; 
+        } else if (pathname.startsWith('/chats/')) {
+            // Title for individual chat pages is handled within the page component
+            title = undefined;
+        } else {
+             title = navItems.find(item => item.href === pathname)?.title || 'PetMets Dashboard';
+        }
     } else if (pathname === '/login') {
       title = 'Login / Sign Up';
     }
     
-    const renderTitle = (text: string): React.ReactNode => {
+    const renderTitle = (text?: string): React.ReactNode => {
+        if (!text) return null;
         if (!text.includes('PetMets')) {
             return text;
         }
@@ -133,7 +143,7 @@ function HeaderContentInternal() {
             <div className="md:hidden">
                  <SidebarTrigger /> 
             </div>
-            <h1 className="flex-1 font-headline text-xl font-semibold">
+            <h1 className="flex-1 font-headline text-xl font-semibold truncate">
                 {renderTitle(title)}
             </h1>
         </>
@@ -171,7 +181,7 @@ function LogoutButtonInternal() {
         onClick={handleLogoutClick}
         tooltip="Logout"
     >
-        <LogOut className="mr-2 h-5 w-5 text-primary" />
+        <LogOut className="mr-2 h-5 w-5" />
         <span className="text-sidebar-foreground">Logout</span>
     </SidebarMenuButton>
   );
@@ -182,7 +192,7 @@ export function MainLayoutInternal({ children }: { children: React.ReactNode }) 
 
   return (
     <SidebarProvider defaultOpen> 
-      <Sidebar className="border-r">
+      <Sidebar className="border-r border-sidebar-border">
         <SidebarHeader className="p-4">
           <AppLogoLinkInternal />
         </SidebarHeader>

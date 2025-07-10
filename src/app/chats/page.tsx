@@ -7,13 +7,11 @@ import { db } from '@/lib/firebase';
 import { useAuth } from '@/contexts/auth-context';
 import { useRouter } from 'next/navigation';
 
-import { PageHeader } from '@/components/page-header';
 import { Card, CardContent } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Skeleton } from '@/components/ui/skeleton';
 import { User, MessageSquare } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
-import { cn } from '@/lib/utils';
 import { useLoading } from '@/contexts/loading-context';
 
 interface Chat {
@@ -110,19 +108,16 @@ export default function ChatsListPage() {
   }
 
   return (
-    <div>
-      <PageHeader
-        title="Pet Chats"
-        description="Talk with other pet owners you've matched with."
-      />
+    <div className="space-y-8">
+       <p className="text-lg text-muted-foreground text-center">Talk with other pet owners you've matched with.</p>
       <Card>
-        <CardContent className="p-4 sm:p-6">
+        <CardContent className="p-0">
           {isLoadingChats ? (
-              <div className="space-y-2">
+              <div className="space-y-2 p-4 sm:p-6">
                   {[...Array(3)].map((_,i) => <Skeleton key={i} className="h-20 w-full" />)}
               </div>
           ) : chats.length > 0 ? (
-              <div className="space-y-2">
+              <div className="space-y-1">
               {chats.map(chat => {
                   const otherUserId = getOtherParticipant(chat);
                   const profile = otherUserId ? userProfiles[otherUserId] : undefined;
