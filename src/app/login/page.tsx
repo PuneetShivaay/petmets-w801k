@@ -73,6 +73,8 @@ export default function LoginPage() {
 
 
   useEffect(() => {
+    // This effect handles the redirect after the user state is confirmed.
+    // AppLayout will handle redirecting away from login if the user is already logged in.
     if (!authIsLoading && user) {
       router.push('/');
     }
@@ -84,8 +86,7 @@ export default function LoginPage() {
     setFormError(null);
     try {
       await signInWithEmailAndPassword(auth, data.email, data.password);
-      showPageTransitionLoading();
-      router.push('/');
+      // The useEffect hook and AppLayout will handle the redirect.
     } catch (error: any) {
       let message = "An unexpected error occurred. Please try again.";
       switch (error.code) {
@@ -117,7 +118,6 @@ export default function LoginPage() {
       const userCredential = await createUserWithEmailAndPassword(auth, data.email, data.password);
       const newUser = userCredential.user;
 
-      // Create default profiles in Firestore
       const defaultOwnerName = "Pet Owner";
       await updateProfile(newUser, { displayName: defaultOwnerName });
 
@@ -149,9 +149,12 @@ export default function LoginPage() {
         setDoc(petDocRef, defaultPetData),
       ]);
 
-      showPageTransitionLoading();
-      router.push('/');
-    } catch (error: any) {
+      // No need to manually redirect here. The onAuthStateChanged listener
+      // in AuthProvider will detect the new user, and the useEffect hook in this
+      // component or the AppLayout will handle the redirect.
+      
+    } catch (error: any)
+{
       let message = "An unexpected error occurred. Please try again.";
       switch (error.code) {
         case 'auth/email-already-in-use':
@@ -172,7 +175,6 @@ export default function LoginPage() {
     setForgotPasswordSuccess(null);
     try {
       await sendPasswordResetEmail(auth, data.email);
-      // For security, always show a generic success message to prevent user enumeration
       setForgotPasswordSuccess(`If an account exists for ${data.email}, a password reset link has been sent. Please check your inbox (and spam folder).`);
       resetForgotPasswordForm();
     } catch (error: any) {
@@ -183,7 +185,9 @@ export default function LoginPage() {
     }
   };
   
-  if (authIsLoading || (!authIsLoading && user)) {
+  // This loader is for when the page is accessed directly and auth is still initializing.
+  // Or when navigating away after a successful login/signup.
+  if (authIsLoading) {
     return (
       <div className="flex min-h-screen flex-col items-center justify-center bg-background p-4">
         <Loader2 className="h-16 w-16 animate-spin text-primary" />

@@ -14,36 +14,38 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
   const { hideLoading: hidePageTransitionLoading } = useLoading();
   const router = useRouter();
 
-  // This effect now only runs after authIsLoading is false.
+  // This effect handles page transitions and redirects once auth is resolved.
   useEffect(() => {
-    // Hide the page transition loader on navigation.
+    // Hide the global page transition loader whenever navigation occurs.
     hidePageTransitionLoading();
 
-    // If auth is resolved (not loading), we can safely perform redirects.
+    // Only perform redirects after the initial auth check is complete.
     if (!authIsLoading) {
-        if (user && pathname === '/login') {
-            router.push('/');
-        } else if (!user && pathname !== '/login') {
-            router.push('/login');
-        }
+      if (user && pathname === '/login') {
+        // If logged in and on the login page, redirect to the dashboard.
+        router.push('/');
+      } else if (!user && pathname !== '/login') {
+        // If not logged in and not on the login page, redirect to login.
+        router.push('/login');
+      }
     }
   }, [user, authIsLoading, pathname, router, hidePageTransitionLoading]);
 
-  // The AuthProvider now guarantees that this component and its children
-  // will not render until authentication is resolved.
-  // So, we no longer need a loading check here.
+  // The AuthProvider handles the initial loading screen.
+  // AppLayout now assumes that if it renders, auth is resolved.
 
-  // If auth is resolved and the user is not logged in, but on the login page.
+  // If the user is not logged in but is on the login page, show the login page.
   if (!user && pathname === '/login') {
     return <main className="h-full min-h-screen">{children}</main>;
   }
 
-  // If auth is resolved and the user is logged in.
+  // If the user is logged in, show the main application layout.
   if (user) {
     return <MainLayoutInternal>{children}</MainLayoutInternal>;
   }
   
-  // This will be shown briefly during the redirect from a protected page to /login
-  // or while auth state is being resolved initially.
+  // Return null during the brief moment a redirect is occurring,
+  // or if for some reason this component renders while auth is still loading.
+  // The AuthProvider's loader should mostly prevent this from being visible.
   return null;
 }
