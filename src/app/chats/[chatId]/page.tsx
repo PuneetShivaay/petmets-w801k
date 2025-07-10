@@ -33,11 +33,17 @@ interface OtherUser {
     name: string;
 }
 
-interface ChatPageProps {
-    setPageTitle?: (title: string) => void;
+interface HeaderProfile {
+    name: string;
+    avatar: string;
+    dataAiHint?: string;
 }
 
-export default function ChatPage({ setPageTitle }: ChatPageProps) {
+interface ChatPageProps {
+    setHeaderProfile?: (profile: HeaderProfile) => void;
+}
+
+export default function ChatPage({ setHeaderProfile }: ChatPageProps) {
   const { user } = useAuth();
   const { hideLoading } = useLoading();
   const params = useParams();
@@ -82,8 +88,12 @@ export default function ChatPage({ setPageTitle }: ChatPageProps) {
                         dataAiHint: data.dataAiHint || 'paw print logo'
                     };
                     setOtherUser(otherUserData);
-                    if (setPageTitle) {
-                        setPageTitle(`${otherUserData.name}`);
+                    if (setHeaderProfile) {
+                        setHeaderProfile({
+                            name: otherUserData.name,
+                            avatar: otherUserData.avatar,
+                            dataAiHint: otherUserData.dataAiHint
+                        });
                     }
                 }
             }
@@ -91,7 +101,7 @@ export default function ChatPage({ setPageTitle }: ChatPageProps) {
     };
     fetchChatInfo();
 
-  }, [chatId, user, setPageTitle]);
+  }, [chatId, user, setHeaderProfile]);
 
   useEffect(() => {
     if (!chatId) return;

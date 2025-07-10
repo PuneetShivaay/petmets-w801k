@@ -22,11 +22,17 @@ import {
 } from "@/components/ui/sidebar";
 import { Button } from "@/components/ui/button"; 
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { LogOut, ArrowLeft } from "lucide-react";
+import { LogOut, ArrowLeft, User } from "lucide-react";
 import { useLoading } from "@/contexts/loading-context";
 import { useAuth } from "@/contexts/auth-context";
 import { useToast } from "@/hooks/use-toast";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
+interface HeaderProfile {
+    name: string;
+    avatar: string;
+    dataAiHint?: string;
+}
 
 function AppLogoLinkInternal() {
   const { isMobile, setOpenMobile } = useSidebar();
@@ -100,7 +106,7 @@ function SidebarNavigationInternal() {
   );
 }
 
-function HeaderContentInternal({ title: dynamicTitle }: { title?: string }) {
+function HeaderContentInternal({ profile }: { profile?: HeaderProfile }) {
     const pathname = usePathname();
     const router = useRouter();
     const { user } = useAuth();
@@ -109,8 +115,8 @@ function HeaderContentInternal({ title: dynamicTitle }: { title?: string }) {
     const isDynamicPage = pathname.startsWith('/profile/') || pathname.startsWith('/chats/');
     
     if (user) {
-        if (isDynamicPage) {
-            title = dynamicTitle; // Use the dynamic title passed from the page
+        if (isDynamicPage && profile) {
+            title = profile.name;
         } else {
              title = navItems.find(item => item.href === pathname)?.title || 'PetMets Dashboard';
         }
@@ -138,15 +144,30 @@ function HeaderContentInternal({ title: dynamicTitle }: { title?: string }) {
 
     return (
         <div className="flex w-full items-center gap-2">
-            <SidebarTrigger />
-            {isDynamicPage && (
-                <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => router.back()} aria-label="Go back">
-                    <ArrowLeft className="h-5 w-5" />
-                </Button>
+            <div className="flex items-center gap-2 sm:gap-4">
+                 <SidebarTrigger />
+                 {isDynamicPage && (
+                    <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0" onClick={() => router.back()} aria-label="Go back">
+                        <ArrowLeft className="h-5 w-5" />
+                    </Button>
+                )}
+            </div>
+            
+            {isDynamicPage && profile ? (
+                <div className="flex items-center gap-2 overflow-hidden">
+                    <Avatar className="h-8 w-8">
+                        <AvatarImage src={profile.avatar} data-ai-hint={profile.dataAiHint} />
+                        <AvatarFallback><User className="h-4 w-4"/></AvatarFallback>
+                    </Avatar>
+                    <h1 className="font-headline text-lg font-semibold truncate">
+                        {renderTitle(title)}
+                    </h1>
+                </div>
+            ) : (
+                <h1 className="font-headline text-lg sm:text-xl font-semibold truncate">
+                    {renderTitle(title)}
+                </h1>
             )}
-             <h1 className="font-headline text-xl font-semibold truncate">
-                {renderTitle(title)}
-            </h1>
         </div>
     );
 }
@@ -186,15 +207,20 @@ function LogoutButtonInternal() {
 
 function MainLayoutChild({ children }: { children: React.ReactNode }) {
   const { user } = useAuth();
-  const [pageTitle, setPageTitle] = React.useState<string | undefined>(undefined);
+  const [headerProfile, setHeaderProfile] = React.useState<HeaderProfile | undefined>(undefined);
   const pathname = usePathname();
+
+  // Reset header profile on path change
+  React.useEffect(() => {
+    setHeaderProfile(undefined);
+  }, [pathname]);
 
   // This allows child pages to set the header title.
   // We clone the child element and pass a `setPageTitle` prop to it.
   const childrenWithProps = React.Children.map(children, child => {
     if (React.isValidElement(child)) {
         // @ts-ignore
-      return React.cloneElement(child, { setPageTitle });
+      return React.cloneElement(child, { setHeaderProfile });
     }
     return child;
   });
@@ -221,8 +247,8 @@ function MainLayoutChild({ children }: { children: React.ReactNode }) {
         )}
       </Sidebar>
       <SidebarInset className="flex flex-col">
-          <header className="sticky top-0 z-10 flex h-16 items-center justify-between gap-4 border-b bg-background px-4">
-            <HeaderContentInternal title={pageTitle} />
+          <header className="sticky top-0 z-10 flex h-16 items-center justify-between gap-4 border-b bg-background px-2 sm:px-4">
+            <HeaderContentInternal profile={headerProfile} />
           </header>
         <main className="flex-1 overflow-auto p-2 sm:p-4 md:p-6">
           {childrenWithProps}

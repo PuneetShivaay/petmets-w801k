@@ -31,11 +31,17 @@ interface OwnerData {
   dataAiHint: string;
 }
 
-interface UserProfilePageProps {
-    setPageTitle?: (title: string) => void;
+interface HeaderProfile {
+    name: string;
+    avatar: string;
+    dataAiHint?: string;
 }
 
-export default function UserProfilePage({ setPageTitle }: UserProfilePageProps) {
+interface UserProfilePageProps {
+    setHeaderProfile?: (profile: HeaderProfile) => void;
+}
+
+export default function UserProfilePage({ setHeaderProfile }: UserProfilePageProps) {
   const params = useParams();
   const router = useRouter();
   const { toast } = useToast();
@@ -62,11 +68,13 @@ export default function UserProfilePage({ setPageTitle }: UserProfilePageProps) 
       if (userDocSnap.exists()) {
         const data = userDocSnap.data() as OwnerData;
         setOwnerData(data);
-        const title = data.name ? `${data.name}'s Profile` : "User Profile";
-        if(setPageTitle) setPageTitle(title);
+        if(setHeaderProfile) {
+            const title = data.name ? `${data.name}'s Profile` : "User Profile";
+            setHeaderProfile({ name: title, avatar: data.avatar, dataAiHint: data.dataAiHint });
+        }
       } else {
         toast({ variant: "destructive", title: "Error", description: "This user profile does not exist." });
-        if(setPageTitle) setPageTitle("Profile Not Found");
+        if(setHeaderProfile) setHeaderProfile({ name: "Profile Not Found", avatar: "" });
         router.push('/'); // Redirect if user not found
         return;
       }
@@ -84,7 +92,7 @@ export default function UserProfilePage({ setPageTitle }: UserProfilePageProps) 
     } finally {
       setIsLoading(false);
     }
-  }, [userId, router, toast, setPageTitle]);
+  }, [userId, router, toast, setHeaderProfile]);
 
   useEffect(() => {
     fetchProfileData();
