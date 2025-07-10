@@ -25,7 +25,8 @@ interface Message {
   timestamp: any;
 }
 
-interface UserProfile {
+interface OtherUser {
+    id: string;
     avatar: string;
     dataAiHint: string;
     name: string;
@@ -41,7 +42,7 @@ export default function ChatPage() {
   const [newMessage, setNewMessage] = useState('');
   const [isSending, setIsSending] = useState(false);
   const [isLoadingMessages, setIsLoadingMessages] = useState(true);
-  const [otherUser, setOtherUser] = useState<UserProfile | null>(null);
+  const [otherUser, setOtherUser] = useState<OtherUser | null>(null);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
@@ -70,6 +71,7 @@ export default function ChatPage() {
                 if (userDoc.exists()) {
                     const data = userDoc.data();
                     setOtherUser({
+                        id: otherUserId,
                         name: data.name || 'Pet Owner',
                         avatar: data.avatar || 'https://i.imgur.com/83AAQ1X.png',
                         dataAiHint: data.dataAiHint || 'paw print logo'
@@ -137,15 +139,18 @@ export default function ChatPage() {
                 </Button>
             </Link>
             {otherUser ? (
-                <>
-                <Avatar>
-                    <AvatarImage src={otherUser.avatar} data-ai-hint={otherUser.dataAiHint} />
-                    <AvatarFallback><User /></AvatarFallback>
-                </Avatar>
-                <h2 className="text-lg font-semibold">{otherUser.name}</h2>
-                </>
+                <Link href={`/profile/${otherUser.id}`} className="flex items-center gap-4 group">
+                    <Avatar>
+                        <AvatarImage src={otherUser.avatar} data-ai-hint={otherUser.dataAiHint} />
+                        <AvatarFallback><User /></AvatarFallback>
+                    </Avatar>
+                    <h2 className="text-lg font-semibold group-hover:underline">{otherUser.name}</h2>
+                </Link>
             ) : (
-                <Skeleton className="h-8 w-40" />
+                <div className="flex items-center gap-4">
+                    <Skeleton className="h-10 w-10 rounded-full" />
+                    <Skeleton className="h-8 w-40" />
+                </div>
             )}
         </CardHeader>
         <CardContent className="flex-grow p-0">
@@ -190,4 +195,3 @@ export default function ChatPage() {
     </Card>
   );
 }
-
