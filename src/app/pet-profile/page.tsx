@@ -58,7 +58,7 @@ const defaultOwnerData = {
 };
 
 export default function PetProfilePage() {
-  const { user } = useAuth();
+  const { user } = useAuth(); // AppLayout guarantees user is available here
   const { toast } = useToast();
   const petAvatarInputRef = useRef<HTMLInputElement>(null);
 
@@ -81,8 +81,9 @@ export default function PetProfilePage() {
   });
 
   const fetchProfileData = useCallback(async () => {
-    if (!user) return;
-    setIsLoading(true);
+    if (!user) return; // Should not happen due to AppLayout guard, but safe to keep
+    
+    // Don't set loading to true here to avoid skeleton flash on fast connections
     try {
       const userDocRef = doc(db, "users", user.uid);
       const petDocRef = doc(db, "users", user.uid, "pets", "main-pet");
@@ -111,16 +112,13 @@ export default function PetProfilePage() {
       console.error("Error fetching profile data:", error);
       toast({ variant: "destructive", title: "Error", description: `Could not fetch profile data. ${(error as Error).message}` });
     } finally {
-      setIsLoading(false);
+      setIsLoading(false); // Data fetching is complete
     }
   }, [user, resetOwnerForm, resetPetForm, toast]);
 
   useEffect(() => {
-    // The AppLayout now guarantees user is available here, so we can fetch directly.
-    if (user) {
-      fetchProfileData();
-    }
-  }, [user, fetchProfileData]);
+    fetchProfileData();
+  }, [fetchProfileData]);
 
   const onPetSubmit: SubmitHandler<PetFormData> = async (data) => {
     if (!user) {
@@ -220,12 +218,6 @@ export default function PetProfilePage() {
             </div>
         </div>
     )
-  }
-  
-  if (!user) {
-    // This case should be handled by AppLayout redirecting to /login,
-    // but as a fallback, we can render nothing.
-    return null;
   }
 
   return (
