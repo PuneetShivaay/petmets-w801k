@@ -59,7 +59,6 @@ export default function HomePage() {
       <div className="container mx-auto p-4 md:p-8">
         {/* Skeleton for Hero Section */}
         <Card className="overflow-hidden shadow-xl mb-8 md:mb-12">
-          <div className="grid grid-cols-1 md:grid-cols-2">
             <div className="flex flex-col justify-center p-8 md:p-12">
               <Skeleton className="h-10 w-3/4 mb-2" />
               <Skeleton className="h-6 w-1/2 mb-6" />
@@ -67,10 +66,6 @@ export default function HomePage() {
               <Skeleton className="h-5 w-5/6 mb-10" />
               <Skeleton className="h-10 w-40" />
             </div>
-            <div className="relative h-64 md:h-auto">
-              <Skeleton className="h-full w-full" />
-            </div>
-          </div>
         </Card>
         
         {/* Skeleton for Features Section */}
@@ -98,7 +93,7 @@ export default function HomePage() {
     <div className="container mx-auto flex flex-col gap-8 p-4 md:gap-12 md:p-8">
       {/* Hero Section */}
       <Card className="overflow-hidden rounded-xl shadow-2xl bg-card">
-        <div className="grid grid-cols-1 md:grid-cols-2">
+        <div className="grid grid-cols-1">
           <div className="flex flex-col justify-center p-8 py-12 md:p-12 lg:p-16">
             {user ? (
               <>
@@ -134,18 +129,6 @@ export default function HomePage() {
                 </div>
               </>
             )}
-          </div>
-          <div className="relative h-64 min-h-[300px] md:h-auto">
-            <Image
-              src={user ? "https://placehold.co/800x600.png" : "https://placehold.co/800x600.png"}
-              alt="Happy pets"
-              layout="fill"
-              objectFit="cover"
-              data-ai-hint={user ? "pet owner playing" : "happy pets group"}
-              priority
-              className="md:rounded-r-xl"
-            />
-             <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent md:bg-gradient-to-r md:from-black/5 md:to-transparent"></div>
           </div>
         </div>
       </Card>
