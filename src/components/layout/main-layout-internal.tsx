@@ -137,14 +137,12 @@ function HeaderContentInternal() {
       };
 
     return (
-        <>
-            <SidebarTrigger /> 
-            <div className="flex-1">
-                 <h1 className="font-headline text-xl font-semibold truncate">
-                    {renderTitle(title)}
-                </h1>
-            </div>
-        </>
+        <div className="flex items-center gap-4">
+            <SidebarTrigger />
+             <h1 className="hidden font-headline text-xl font-semibold truncate sm:block">
+                {renderTitle(title)}
+            </h1>
+        </div>
     );
 }
 
@@ -184,6 +182,11 @@ function LogoutButtonInternal() {
 
 export function MainLayoutInternal({ children }: { children: React.ReactNode }) {
   const { user } = useAuth(); // Used to decide whether to show logout
+  const pathname = usePathname();
+  const isChatPage = pathname.startsWith('/chats/');
+  const { isMobile } = useSidebar();
+
+  const showHeader = isMobile ? !isChatPage : true;
 
   return (
     <SidebarProvider defaultOpen> 
@@ -203,10 +206,15 @@ export function MainLayoutInternal({ children }: { children: React.ReactNode }) 
         )}
       </Sidebar>
       <SidebarInset className="flex flex-col">
-        <header className="sticky top-0 z-10 flex h-16 items-center justify-between gap-4 border-b bg-background px-4">
-            <HeaderContentInternal />
-        </header>
-        <main className="flex-1 overflow-auto p-4 md:p-6">
+        {showHeader && (
+            <header className="sticky top-0 z-10 flex h-16 items-center justify-between gap-4 border-b bg-background px-4">
+                <HeaderContentInternal />
+            </header>
+        )}
+        <main className={cn(
+            "flex-1 overflow-auto",
+            isChatPage && isMobile ? "p-0" : "p-2 sm:p-4 md:p-6"
+        )}>
           {children}
         </main>
       </SidebarInset>

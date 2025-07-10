@@ -132,7 +132,7 @@ export default function ChatPage() {
   };
 
   return (
-    <Card className="h-full flex flex-col shadow-xl">
+    <Card className="h-full flex flex-col shadow-xl rounded-none sm:rounded-lg">
         <CardHeader className="border-b flex flex-row items-center gap-2 p-3 sm:p-4">
             <Link href="/chats" passHref>
                 <Button variant="ghost" size="icon" aria-label="Back to conversations">
