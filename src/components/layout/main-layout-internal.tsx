@@ -22,17 +22,10 @@ import {
 } from "@/components/ui/sidebar";
 import { Button } from "@/components/ui/button"; 
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { LogOut, ArrowLeft, User } from "lucide-react";
+import { LogOut } from "lucide-react";
 import { useLoading } from "@/contexts/loading-context";
 import { useAuth } from "@/contexts/auth-context";
 import { useToast } from "@/hooks/use-toast";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-
-interface HeaderProfile {
-    name: string;
-    avatar: string;
-    dataAiHint?: string;
-}
 
 function AppLogoLinkInternal() {
   const { isMobile, setOpenMobile } = useSidebar();
@@ -112,7 +105,8 @@ function HeaderContentInternal() {
     let title: string | undefined;
 
     if (user) {
-        title = navItems.find(item => item.href === pathname)?.title || 'PetMets Dashboard';
+        const currentNavItem = navItems.find(item => item.href === pathname);
+        title = currentNavItem ? currentNavItem.title : 'PetMets Dashboard';
     } else if (pathname === '/login') {
       title = 'Login / Sign Up';
     }
@@ -182,7 +176,6 @@ function LogoutButtonInternal() {
 }
 
 function MainLayoutChild({ children }: { children: React.ReactNode }) {
-  const { user } = useAuth();
   const pathname = usePathname();
 
   // This allows child pages to set the header title.
@@ -195,8 +188,8 @@ function MainLayoutChild({ children }: { children: React.ReactNode }) {
     return child;
   });
 
-  const isChatPage = pathname.startsWith('/chats/');
-  const headerIsVisible = !isChatPage;
+  const isDynamicPage = pathname.startsWith('/chats/') || pathname.startsWith('/profile/');
+  const headerIsVisible = !isDynamicPage;
 
 
   return (
@@ -210,7 +203,7 @@ function MainLayoutChild({ children }: { children: React.ReactNode }) {
             <SidebarNavigationInternal />
           </ScrollArea>
         </SidebarContent>
-        {user && (
+        {useAuth().user && (
           <SidebarFooter className="p-4 border-t border-sidebar-border">
             <LogoutButtonInternal />
           </SidebarFooter>
