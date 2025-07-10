@@ -35,11 +35,6 @@ export const navItems: NavItem[] = [
     icon: HeartHandshake,
   },
   {
-    title: 'Dashboard',
-    href: '/dashboard',
-    icon: LayoutDashboard,
-  },
-  {
     title: 'Pet Profile',
     href: '/pet-profile',
     icon: User,
