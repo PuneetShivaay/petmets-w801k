@@ -16,7 +16,7 @@ import { AppLogo } from "@/components/icons";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardHeader, CardTitle, CardFooter, CardDescription } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogTrigger } from "@/components/ui/dialog";
 import { LogIn, UserPlus, Loader2, Eye, EyeOff } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
@@ -90,10 +90,14 @@ export default function LoginPage() {
       let message = "An unexpected error occurred. Please try again.";
       switch (error.code) {
         case "auth/user-not-found":
-        case "auth/wrong-password":
-        case "auth/invalid-credential":
-          message = "Invalid email or password. Please check your credentials and try again.";
+          message = "No account found with this email address. Please sign up.";
           break;
+        case "auth/wrong-password":
+          message = "Incorrect password. Please try again.";
+          break;
+        case "auth/invalid-credential":
+            message = "Invalid email or password. Please check your credentials and try again.";
+            break;
         case "auth/too-many-requests":
           message = "Access to this account has been temporarily disabled due to too many failed login attempts. You can try again later or reset your password.";
           break;
