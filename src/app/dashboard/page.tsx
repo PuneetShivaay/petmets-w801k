@@ -122,8 +122,8 @@ export default function DashboardPage() {
             <CardHeader className="flex flex-row items-center gap-4">
                 <AlertTriangle className="h-8 w-8 text-primary" />
                 <div>
-                    <CardTitle>Complete Your Profile</CardTitle>
-                    <CardDescription className="text-muted-foreground">
+                    <CardTitle className="text-xl sm:text-2xl">Complete Your Profile</CardTitle>
+                    <CardDescription className="text-primary/90">
                         Fill out your pet and owner details to get the most out of PetMets and connect with others.
                     </CardDescription>
                 </div>
