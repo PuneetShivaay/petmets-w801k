@@ -6,17 +6,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { MainLayoutInternal } from "./main-layout-internal";
 import { useLoading } from '@/contexts/loading-context';
 import { useAuth } from "@/contexts/auth-context";
-import { Loader2 } from "lucide-react";
 import { useEffect } from 'react';
-
-// This is a minimal loader component to be used ONLY during the initial auth check.
-function InitialAuthLoader() {
-  return (
-    <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-background/80 backdrop-blur-sm">
-      <Loader2 className="h-16 w-16 animate-spin text-primary" />
-    </div>
-  );
-}
 
 export function AppLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -24,37 +14,33 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
   const { hideLoading: hidePageTransitionLoading } = useLoading();
   const router = useRouter();
 
+  // The AuthProvider now guarantees that authIsLoading will be false before this component renders.
+  // The primary job of this useEffect is now just to handle routing logic.
   useEffect(() => {
     // This hook now only handles hiding the loader after page navigations.
     hidePageTransitionLoading();
-  }, [pathname, hidePageTransitionLoading]);
-  
-  // This is the new, stricter loading guard.
-  // It uses the isLoading flag from our improved AuthProvider.
-  // It prevents any child components from rendering until authentication is resolved.
-  if (authIsLoading) {
-    return <InitialAuthLoader />;
-  }
 
-  // Auth is resolved, now handle redirects.
-  // If the user is logged in, but on the login page, redirect to home.
-  if (user && pathname === '/login') {
-    router.push('/');
-    return <InitialAuthLoader />; // Show loader while redirecting
-  }
-  
-  // If there's no user and they aren't on the login page, redirect to login.
-  if (!user && pathname !== '/login') {
-    router.push('/login');
-    return <InitialAuthLoader />; // Show loader while redirecting
-  }
+    // Since authIsLoading is guaranteed to be false here, we can safely perform redirects.
+    if (user && pathname === '/login') {
+      router.push('/');
+    } else if (!user && pathname !== '/login') {
+      router.push('/login');
+    }
+  }, [user, pathname, router, hidePageTransitionLoading]);
 
   // If we are on the login page (and not logged in), render it outside the main layout.
-  if (pathname === '/login') {
+  // The check `!user` is safe because `authIsLoading` is false.
+  if (!user && pathname === '/login') {
     return <main className="h-full min-h-screen">{children}</main>;
   }
-  
-  // For any other page, the user must be logged in. Render the full layout.
+
+  // If the user is logged in, show the main layout.
   // We can be confident `user` is not null here.
-  return <MainLayoutInternal>{children}</MainLayoutInternal>;
+  if (user) {
+    return <MainLayoutInternal>{children}</MainLayoutInternal>;
+  }
+
+  // If no other condition is met (e.g., routing is in progress, or on login page while still auth'd briefly),
+  // return null to prevent rendering anything until the redirect completes.
+  return null;
 }

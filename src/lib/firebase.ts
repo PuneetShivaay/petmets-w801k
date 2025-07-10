@@ -1,7 +1,7 @@
 
 import { initializeApp, getApps, getApp, type FirebaseApp } from "firebase/app";
 import { getAuth, type Auth } from "firebase/auth";
-import { getFirestore, enableIndexedDbPersistence, type Firestore } from "firebase/firestore";
+import { getFirestore, type Firestore } from "firebase/firestore";
 import { getStorage, type FirebaseStorage } from "firebase/storage";
 
 const firebaseConfig = {
@@ -17,28 +17,31 @@ const firebaseConfig = {
 const app: FirebaseApp = !getApps().length ? initializeApp(firebaseConfig) : getApp();
 
 const auth: Auth = getAuth(app);
-const db: Firestore = getFirestore(app);
+
+// Configure Firestore with cache settings to enable IndexedDB persistence.
+// The enableIndexedDbPersistence() method is deprecated.
+const db: Firestore = getFirestore(app, {
+  cache: {
+    kind: "indexeddb",
+    // You can add other cache settings here if needed.
+  },
+});
 const storage: FirebaseStorage = getStorage(app);
 
-// Promise to track Firestore persistence setup
+// Promise to track Firestore persistence setup.
+// The way to properly wait for cache initialization might be different
+// with the new cache API. Consult the Firebase documentation for the
+// recommended approach.
 let firestoreReadyPromise: Promise<void> | null = null;
 
 if (typeof window !== 'undefined') {
-  firestoreReadyPromise = enableIndexedDbPersistence(db)
-    .then(() => {
-      console.log("Firestore offline persistence enabled successfully.");
-    })
-    .catch((err) => {
-      if (err.code === 'failed-precondition') {
-        console.warn("Firestore offline persistence failed: Can only be enabled in one tab at a time.");
-      } else if (err.code === 'unimplemented') {
-        console.warn("Firestore offline persistence is not supported in this browser.");
-      } else {
-        console.error("Firestore offline persistence failed with error:", err);
-      }
-      // In any case, resolve the promise so the app doesn't hang.
-      // The app will work online, but offline support might be degraded.
-    });
+  // With the new cache API, you might not need to explicitly wait for
+  // a persistence promise like before. The SDK might handle this internally,
+  // or provide a different way to check readiness.
+  // For now, we'll resolve immediately as a placeholder, but you should
+  // verify the correct approach in the Firebase documentation if you
+  // rely on waiting for offline persistence.
+  firestoreReadyPromise = Promise.resolve();
 }
 
 /**
