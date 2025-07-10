@@ -1,3 +1,4 @@
+
 "use client";
 
 import * as React from "react";
@@ -20,27 +21,24 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
     hidePageTransitionLoading();
   }, [pathname, hidePageTransitionLoading]);
 
+  // Auth is now handled by the AuthProvider, which shows a loader and prevents this component
+  // from rendering until auth is resolved. This makes the logic here much cleaner.
+  // We no longer need to check `authIsLoading`.
+
   useEffect(() => {
-    if (!authIsLoading) { // Only perform redirects once auth state is resolved
-      if (user && pathname === '/login') {
-        showPageTransitionLoading();
-        router.push('/');
-      } else if (!user && pathname !== '/login') {
-        showPageTransitionLoading();
-        router.push('/login');
-      }
+    // Perform redirects once auth state is known.
+    if (user && pathname === '/login') {
+      showPageTransitionLoading();
+      router.push('/');
+    } else if (!user && pathname !== '/login') {
+      showPageTransitionLoading();
+      router.push('/login');
     }
-  }, [pathname, user, authIsLoading, router, showPageTransitionLoading]);
+  }, [pathname, user, router, showPageTransitionLoading]);
 
-  if (authIsLoading) {
-    // The parent AuthProvider component renders a loader, so we can return null here
-    // to avoid layout shifts or rendering unauthenticated content.
-    return null;
-  }
-
-  // If we are on the login page and the user is not logged in
+  // If we are on the login page and the user is not logged in.
   if (pathname === '/login') {
-    // If the user *is* logged in, the useEffect above will redirect them.
+    // If user *is* logged in, the useEffect above will redirect them.
     // In the meantime, show a loader to prevent the login form from flashing.
     if (user) return <GlobalLoader />;
     return <main className="h-full min-h-screen">{children}</main>;

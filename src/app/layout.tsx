@@ -6,8 +6,7 @@ import { AppLayout } from '@/components/layout/app-layout';
 import { Toaster } from "@/components/ui/toaster";
 import { LoadingProvider } from '@/contexts/loading-context';
 import { AuthProvider } from '@/contexts/auth-context';
-// import { GlobalLoader } from '@/components/global-loader'; // Original import
-import { AuthSensitiveGlobalLoader } from '@/components/auth-sensitive-global-loader'; // New wrapper
+import { GlobalLoader } from '@/components/global-loader';
 
 const ptSans = PT_Sans({
   subsets: ['latin'],
@@ -35,7 +34,8 @@ export default function RootLayout({
           <AuthProvider>
             <AppLayout>{children}</AppLayout>
             <Toaster />
-            <AuthSensitiveGlobalLoader /> {/* Use the new wrapper here */}
+            {/* The main GlobalLoader is for page transitions, not initial auth loading. */}
+            <GlobalLoader />
           </AuthProvider>
         </LoadingProvider>
       </body>

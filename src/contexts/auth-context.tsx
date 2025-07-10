@@ -39,8 +39,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     userSignOut,
   }), [user, isLoading, userSignOut]);
 
+  // This is the key change: while auth state is being determined,
+  // we show a full-page loader here and do NOT render the rest of the app.
+  // This prevents any child components from trying to access Firebase services
+  // before they are ready and the user's auth status is known.
   if (isLoading) {
-    // Render a self-contained loader here, not the GlobalLoader component
     return (
       <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-background/80 backdrop-blur-sm">
         <Loader2 className="h-16 w-16 animate-spin text-primary" />
