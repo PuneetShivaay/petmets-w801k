@@ -139,7 +139,7 @@ function HeaderContentInternal() {
     return (
         <div className="flex items-center gap-4">
             <SidebarTrigger />
-             <h1 className="hidden font-headline text-xl font-semibold truncate sm:block">
+             <h1 className="font-headline text-xl font-semibold truncate">
                 {renderTitle(title)}
             </h1>
         </div>
