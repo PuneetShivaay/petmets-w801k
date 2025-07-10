@@ -22,7 +22,7 @@ import {
 } from "@/components/ui/sidebar";
 import { Button } from "@/components/ui/button"; 
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { LogOut, Menu } from "lucide-react";
+import { LogOut } from "lucide-react";
 import { useLoading } from "@/contexts/loading-context";
 import { useAuth } from "@/contexts/auth-context"; // Import useAuth
 import { useToast } from "@/hooks/use-toast";
@@ -138,10 +138,8 @@ function HeaderContentInternal() {
 
     return (
         <>
-            <div className="flex items-center gap-2">
-                 <SidebarTrigger /> 
-            </div>
-            <div className="flex-1 text-center md:text-left">
+            <SidebarTrigger /> 
+            <div className="flex-1">
                  <h1 className="font-headline text-xl font-semibold truncate">
                     {renderTitle(title)}
                 </h1>
@@ -190,7 +188,7 @@ export function MainLayoutInternal({ children }: { children: React.ReactNode }) 
   return (
     <SidebarProvider defaultOpen> 
       <Sidebar className="border-r border-sidebar-border">
-        <SidebarHeader className="p-2 sm:p-4">
+        <SidebarHeader className="p-4">
           <AppLogoLinkInternal />
         </SidebarHeader>
         <SidebarContent>
@@ -199,16 +197,16 @@ export function MainLayoutInternal({ children }: { children: React.ReactNode }) 
           </ScrollArea>
         </SidebarContent>
         {user && ( // Only show footer with logout if user is logged in
-          <SidebarFooter className="p-2 sm:p-4 border-t border-sidebar-border">
+          <SidebarFooter className="p-4 border-t border-sidebar-border">
               <LogoutButtonInternal />
           </SidebarFooter>
         )}
       </Sidebar>
       <SidebarInset className="flex flex-col">
-        <header className="sticky top-0 z-10 flex h-16 items-center justify-between gap-4 border-b bg-background px-2 sm:px-4">
+        <header className="sticky top-0 z-10 flex h-16 items-center justify-between gap-4 border-b bg-background px-4">
             <HeaderContentInternal />
         </header>
-        <main className="flex-1 overflow-auto p-2 sm:p-4">
+        <main className="flex-1 overflow-auto p-4 md:p-6">
           {children}
         </main>
       </SidebarInset>
