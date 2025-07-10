@@ -269,20 +269,20 @@ export default function MatchPetPage() {
     <div className="space-y-6">
       <p className="text-lg text-muted-foreground">Find the perfect pet companion for playdates and celebrations. Browse available pets and send a match request.</p>
       
-      <div className="flex items-center justify-start gap-2">
+      <div className="flex items-center justify-between gap-2">
         <Button variant="outline" disabled>
           <Search className="mr-2 h-4 w-4" /> Filter Pets (soon)
         </Button>
         <Popover open={isPopoverOpen} onOpenChange={setIsPopoverOpen}>
           <PopoverTrigger asChild>
-            <Button variant="outline" size="icon" className="relative shrink-0">
-              <Bell className="h-5 w-5" />
+            <Button variant="outline" className="relative shrink-0">
+              <Bell className="mr-2 h-5 w-5" />
+              <span>Notifications</span>
               {incomingRequests.length > 0 && (
                 <Badge variant="destructive" className="absolute -top-1 -right-1 h-5 w-5 rounded-full flex items-center justify-center p-0 text-xs">
                   {incomingRequests.length}
                 </Badge>
               )}
-              <span className="sr-only">View match requests</span>
             </Button>
           </PopoverTrigger>
           <PopoverContent className="w-[calc(100vw-2rem)] sm:w-80">
