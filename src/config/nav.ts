@@ -14,7 +14,7 @@ import {
   LayoutDashboard,
   LogIn,
   LogOut,
-  PetProfileIcon,
+  User,
   MessageSquare,
 } from 'lucide-react';
 
@@ -37,7 +37,7 @@ export const navItems: NavItem[] = [
   {
     title: 'Pet Profile',
     href: '/pet-profile',
-    icon: PetProfileIcon,
+    icon: User,
   },
   {
     title: 'Match Your Pet',
