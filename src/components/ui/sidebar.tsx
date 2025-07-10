@@ -19,7 +19,6 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip"
-import { Menu } from "lucide-react"
 
 const SIDEBAR_COOKIE_NAME = "sidebar_state"
 const SIDEBAR_COOKIE_MAX_AGE = 60 * 60 * 24 * 7
@@ -281,7 +280,13 @@ const SidebarTrigger = React.forwardRef<
       }}
       {...props}
     >
-      <Menu className="h-5 w-5" />
+      <Image
+        src="/images/logo.png"
+        alt="PetMets Menu"
+        width={24}
+        height={24}
+        className="h-6 w-6"
+      />
       <span className="sr-only">Toggle Sidebar</span>
     </Button>
   )

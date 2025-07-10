@@ -138,12 +138,11 @@ function HeaderContentInternal() {
 
     return (
         <>
-            <div className="md:hidden flex items-center gap-4">
+            <div className="md:hidden">
                  <SidebarTrigger /> 
-                 <AppLogo />
             </div>
-            <div className="hidden md:block">
-                 <h1 className="flex-1 font-headline text-xl font-semibold truncate">
+            <div className="flex-1">
+                 <h1 className="font-headline text-xl font-semibold truncate">
                     {renderTitle(title)}
                 </h1>
             </div>
