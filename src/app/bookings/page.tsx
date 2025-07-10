@@ -16,7 +16,7 @@ export default function BookingManagementPage() {
   ];
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6">
       <div className="flex flex-col items-center justify-between gap-4 md:flex-row">
         <p className="text-lg text-muted-foreground md:max-w-2xl">View, schedule, and manage all your pet service appointments in one place. Stay organized and never miss an appointment.</p>
         <Link href="/providers">
@@ -26,7 +26,7 @@ export default function BookingManagementPage() {
         </Link>
       </div>
 
-      <div className="grid grid-cols-1 gap-8 md:grid-cols-3">
+      <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
         <div className="md:col-span-2">
           <Tabs defaultValue="upcoming">
             <TabsList className="grid w-full grid-cols-2">
@@ -42,7 +42,7 @@ export default function BookingManagementPage() {
                   {upcomingBookings.length > 0 ? (
                     <ul className="space-y-4">
                       {upcomingBookings.map((booking) => (
-                        <li key={booking.id} className="rounded-md border p-3 shadow-sm sm:p-4">
+                        <li key={booking.id} className="rounded-md border p-3 shadow-sm">
                           <h3 className="font-semibold">{booking.service}</h3>
                           <p className="text-sm text-muted-foreground">Date: {booking.date} at {booking.time}</p>
                           <div className="mt-2 flex flex-wrap gap-2">
@@ -67,7 +67,7 @@ export default function BookingManagementPage() {
                 {pastBookings.length > 0 ? (
                     <ul className="space-y-4">
                       {pastBookings.map((booking) => (
-                        <li key={booking.id} className="rounded-md border p-3 shadow-sm sm:p-4">
+                        <li key={booking.id} className="rounded-md border p-3 shadow-sm">
                           <h3 className="font-semibold">{booking.service}</h3>
                           <p className="text-sm text-muted-foreground">Date: {booking.date} at {booking.time}</p>
                           <p className="text-sm text-green-600 flex items-center"><CheckCircle className="mr-1 h-4 w-4"/> {booking.status}</p>
@@ -90,7 +90,7 @@ export default function BookingManagementPage() {
             <CardHeader>
               <CardTitle className="text-lg sm:text-xl">Calendar Overview</CardTitle>
             </CardHeader>
-            <CardContent className="flex justify-center">
+            <CardContent className="flex justify-center p-0 sm:p-4">
               <Calendar
                 mode="single"
                 selected={new Date()}

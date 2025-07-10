@@ -241,9 +241,9 @@ export default function PetProfilePage() {
 
   if (isLoading) {
     return (
-        <div className="space-y-8">
+        <div className="space-y-6">
             <p className="text-lg text-muted-foreground">View and manage your pet's details and your account information.</p>
-            <div className="grid grid-cols-1 gap-8 md:grid-cols-2">
+            <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
                 <Card><CardHeader><Skeleton className="h-24 w-full" /></CardHeader><CardContent><Skeleton className="h-20 w-full" /></CardContent><CardFooter><Skeleton className="h-10 w-full" /></CardFooter></Card>
                 <Card><CardHeader><Skeleton className="h-24 w-full" /></CardHeader><CardContent><Skeleton className="h-20 w-full" /></CardContent><CardFooter><Skeleton className="h-10 w-full" /></CardFooter></Card>
             </div>
@@ -252,12 +252,12 @@ export default function PetProfilePage() {
   }
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6">
       <p className="text-lg text-muted-foreground">View and manage your pet's details and your account information.</p>
-      <div className="grid grid-cols-1 gap-8 md:grid-cols-2">
+      <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
         <Card className="shadow-lg">
           <form onSubmit={handlePetSubmit(onPetSubmit)}>
-            <CardHeader>
+            <CardHeader className="p-4">
               <div className="flex items-center gap-4">
                 <div className="relative group">
                     <Avatar className="h-20 w-20 border-2 border-primary">
@@ -286,9 +286,9 @@ export default function PetProfilePage() {
                 </div>
                 <div>
                   {isEditingPet ? (
-                     <Input id="petName" {...registerPet("name")} className="font-headline text-2xl sm:text-3xl p-2 h-auto" />
+                     <Input id="petName" {...registerPet("name")} className="font-headline text-2xl p-2 h-auto" />
                   ) : (
-                    <CardTitle className="font-headline text-2xl sm:text-3xl">{petData.name}</CardTitle>
+                    <CardTitle className="font-headline text-2xl">{petData.name}</CardTitle>
                   )}
                   {petErrors.name && <p className="text-sm text-destructive">{petErrors.name.message}</p>}
                   
@@ -301,7 +301,7 @@ export default function PetProfilePage() {
                 </div>
               </div>
             </CardHeader>
-            <CardContent className="space-y-4">
+            <CardContent className="space-y-4 p-4 pt-0">
               {isEditingPet ? (
                 <>
                   <div className="space-y-1">
@@ -328,7 +328,7 @@ export default function PetProfilePage() {
                 </>
               )}
             </CardContent>
-            <CardFooter>
+            <CardFooter className="p-4 pt-0">
               {isEditingPet ? (
                 <div className="flex w-full gap-2">
                   <Button type="submit" disabled={isSubmittingPet} className="flex-1">
@@ -350,7 +350,7 @@ export default function PetProfilePage() {
 
         <Card className="shadow-lg">
           <form onSubmit={handleOwnerSubmit(onOwnerSubmit)}>
-            <CardHeader>
+            <CardHeader className="p-4">
               <div className="flex items-center gap-4">
                  <div className="relative group">
                     <Avatar className="h-20 w-20 border-2 border-accent">
@@ -380,20 +380,20 @@ export default function PetProfilePage() {
                 <div>
                    {isEditingOwner ? (
                      <>
-                      <Input id="ownerName" {...registerOwner("name")} className="font-headline text-2xl sm:text-3xl p-2 h-auto" />
+                      <Input id="ownerName" {...registerOwner("name")} className="font-headline text-2xl p-2 h-auto" />
                       {ownerErrors.name && <p className="text-sm text-destructive">{ownerErrors.name.message}</p>}
                      </>
                    ) : (
-                    <CardTitle className="font-headline text-2xl sm:text-3xl">{ownerData.name}</CardTitle>
+                    <CardTitle className="font-headline text-2xl">{ownerData.name}</CardTitle>
                    )}
                   <p className="text-muted-foreground">Pet Owner</p>
                 </div>
               </div>
             </CardHeader>
-            <CardContent className="space-y-4">
+            <CardContent className="space-y-4 p-4 pt-0">
               <div className="flex items-center gap-2">
                 <Mail className="h-5 w-5 text-muted-foreground" />
-                <p className="truncate text-base sm:text-lg">{ownerData.email}</p>
+                <p className="truncate text-base">{ownerData.email}</p>
               </div>
               {isEditingOwner ? (
                 <>
@@ -418,17 +418,17 @@ export default function PetProfilePage() {
                 <>
                   <div className="flex items-center gap-2">
                     <Phone className="h-5 w-5 text-muted-foreground" />
-                    <p className="text-base sm:text-lg">{ownerData.phone || "Not set"}</p>
+                    <p className="text-base">{ownerData.phone || "Not set"}</p>
 
                   </div>
                   <div className="flex items-start gap-2">
                     <Home className="h-5 w-5 text-muted-foreground mt-1" />
-                    <p className="text-base sm:text-lg">{ownerData.address || "Not set"}</p>
+                    <p className="text-base">{ownerData.address || "Not set"}</p>
                   </div>
                 </>
               )}
             </CardContent>
-            <CardFooter>
+            <CardFooter className="p-4 pt-0">
               {isEditingOwner ? (
                  <div className="flex w-full gap-2">
                   <Button type="submit" disabled={isSubmittingOwner} className="flex-1">
@@ -450,7 +450,7 @@ export default function PetProfilePage() {
       </div>
 
       <Card className="mt-8 bg-primary/10">
-        <CardContent className="p-6">
+        <CardContent className="p-4 sm:p-6">
           <h3 className="font-headline text-xl font-semibold text-primary">Your Information Hub!</h3>
           <p className="mt-2 text-muted-foreground">
             Keep your pet's and your own information up-to-date. This helps us provide the best service and ensures smooth communication for bookings and emergencies.

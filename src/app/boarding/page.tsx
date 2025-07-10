@@ -13,7 +13,7 @@ export default function PetBoardingPage() {
   ];
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6">
       <div className="text-center">
         <p className="text-lg text-muted-foreground">Facilitate pet boarding services in cozy and safe environments. Featuring supervised care, playgroups, and comfy nap corners for your peace of mind.</p>
         <Link href="/providers?service=boarding" passHref>
@@ -22,7 +22,7 @@ export default function PetBoardingPage() {
           </Button>
         </Link>
       </div>
-      <div className="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3">
+      <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
         {boardingFacilities.map((facility) => (
           <Card key={facility.id} className="flex flex-col overflow-hidden rounded-lg shadow-lg">
             <div className="relative h-52 w-full">

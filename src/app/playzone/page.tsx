@@ -10,9 +10,9 @@ export default function PetPlayzonePage() {
   ];
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6">
       <p className="text-lg text-muted-foreground text-center">Our dedicated pet play area offers a spacious garden and a refreshing swimming pool for pure fun and freedom. Let your pets enjoy!</p>
-      <div className="grid grid-cols-1 gap-8 md:grid-cols-2">
+      <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
         {playzoneFeatures.map((feature, index) => (
           <Card key={index} className="overflow-hidden rounded-lg shadow-lg">
             <div className="relative h-80 w-full">
@@ -37,8 +37,8 @@ export default function PetPlayzonePage() {
           </Card>
         ))}
       </div>
-      <Card className="mt-8 bg-primary/10">
-        <CardContent className="p-6">
+      <Card className="mt-6 bg-primary/10">
+        <CardContent className="p-4 sm:p-6">
           <h3 className="font-headline text-xl font-semibold text-primary">Pure Fun & Freedom Awaits!</h3>
           <p className="mt-2 text-muted-foreground">
             Our playzone is designed with your pet's happiness and safety in mind. Supervised play areas ensure a positive experience for all furry friends.

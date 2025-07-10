@@ -13,7 +13,7 @@ export default function PetTrainingPage() {
   ];
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6">
       <div className="text-center">
         <p className="text-lg text-muted-foreground">Connect with certified pet trainers. Featuring real photos of trainers working with dogs, teaching obedience, tricks, and building confidence.</p>
         <Link href="/providers?service=trainers" passHref>
@@ -22,7 +22,7 @@ export default function PetTrainingPage() {
           </Button>
         </Link>
       </div>
-      <div className="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3">
+      <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
         {trainers.map((trainer) => (
           <Card key={trainer.id} className="flex flex-col overflow-hidden rounded-lg shadow-lg">
             <div className="relative h-52 w-full">

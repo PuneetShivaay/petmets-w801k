@@ -266,7 +266,7 @@ export default function MatchPetPage() {
   };
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6">
       <div className="flex flex-col items-center justify-between gap-4 sm:flex-row">
         <p className="text-lg text-muted-foreground md:max-w-2xl">Find the perfect pet companion for playdates and celebrations. Browse available pets and send a match request.</p>
         <Popover open={isPopoverOpen} onOpenChange={setIsPopoverOpen}>
@@ -350,7 +350,7 @@ export default function MatchPetPage() {
           ))}
         </div>
       ) : displayPets.length === 0 ? (
-        <Card className="text-center py-12">
+        <Card className="text-center py-12 px-4">
             <CardContent>
                 <p className="text-muted-foreground">No other pets are available for matching right now.</p>
                 <p className="text-sm text-muted-foreground mt-2">Either all available pets have been matched, or no other users have created profiles.</p>

@@ -108,12 +108,12 @@ export default function ChatsListPage() {
   }
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6">
        <p className="text-lg text-muted-foreground text-center">Talk with other pet owners you've matched with.</p>
       <Card>
         <CardContent className="p-0">
           {isLoadingChats ? (
-              <div className="space-y-2 p-4 sm:p-6">
+              <div className="space-y-2 p-4">
                   {[...Array(3)].map((_,i) => <Skeleton key={i} className="h-20 w-full" />)}
               </div>
           ) : chats.length > 0 ? (
@@ -125,14 +125,14 @@ export default function ChatsListPage() {
                       <button
                           key={chat.id}
                           onClick={() => handleChatSelect(chat.id)}
-                          className="w-full text-left p-3 rounded-lg flex items-center gap-4 transition-colors hover:bg-muted"
+                          className="w-full text-left p-3 flex items-center gap-4 transition-colors hover:bg-muted"
                       >
                       <Avatar className="h-12 w-12">
                           <AvatarImage src={profile?.avatar} data-ai-hint={profile?.dataAiHint} />
                           <AvatarFallback><User /></AvatarFallback>
                       </Avatar>
                       <div className="flex-grow overflow-hidden">
-                          <p className="font-semibold truncate text-lg">{profile?.name || 'Loading...'}</p>
+                          <p className="font-semibold truncate">{profile?.name || 'Loading...'}</p>
                           <p className="text-sm text-muted-foreground truncate">{chat.lastMessage}</p>
                       </div>
                       {chat.lastMessageTimestamp && (
@@ -145,7 +145,7 @@ export default function ChatsListPage() {
               })}
               </div>
           ) : (
-            <div className="text-center py-10">
+            <div className="text-center py-10 px-4">
                 <MessageSquare className="mx-auto h-12 w-12 text-muted-foreground" />
                 <h3 className="mt-4 text-lg font-medium">No Conversations Yet</h3>
                 <p className="mt-1 text-sm text-muted-foreground">Accept a match request to start a conversation!</p>

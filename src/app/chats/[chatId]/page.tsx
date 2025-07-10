@@ -133,14 +133,14 @@ export default function ChatPage() {
 
   return (
     <Card className="h-full flex flex-col shadow-xl">
-        <CardHeader className="border-b flex flex-row items-center gap-4">
+        <CardHeader className="border-b flex flex-row items-center gap-2 p-3 sm:p-4">
             <Link href="/chats" passHref>
                 <Button variant="ghost" size="icon" aria-label="Back to conversations">
                     <ArrowLeft />
                 </Button>
             </Link>
             {otherUser ? (
-                <Link href={`/profile/${otherUser.id}`} className="flex items-center gap-4 group">
+                <Link href={`/profile/${otherUser.id}`} className="flex items-center gap-3 group">
                     <Avatar>
                         <AvatarImage src={otherUser.avatar} data-ai-hint={otherUser.dataAiHint} />
                         <AvatarFallback><User /></AvatarFallback>
@@ -148,16 +148,16 @@ export default function ChatPage() {
                     <h2 className="text-lg font-semibold group-hover:underline">{otherUser.name}</h2>
                 </Link>
             ) : (
-                <div className="flex items-center gap-4">
+                <div className="flex items-center gap-3">
                     <Skeleton className="h-10 w-10 rounded-full" />
                     <Skeleton className="h-8 w-40" />
                 </div>
             )}
         </CardHeader>
         <CardContent className="flex-grow p-0">
-            <ScrollArea className="h-full max-h-[calc(100vh-250px)] p-4">
+            <ScrollArea className="h-full max-h-[calc(100vh-220px)] p-2 sm:p-4">
             {isLoadingMessages ? (
-                <div className="space-y-4">
+                <div className="space-y-4 p-2">
                     <Skeleton className="h-10 w-3/5" />
                     <Skeleton className="h-10 w-3/5 ml-auto" />
                     <Skeleton className="h-10 w-2/5" />
@@ -167,13 +167,13 @@ export default function ChatPage() {
                     {messages.map(message => (
                         <div key={message.id} className={cn("flex items-end gap-2", message.senderId === user?.uid ? "justify-end" : "justify-start")}>
                             <div className={cn(
-                                "rounded-lg p-3 max-w-xs lg:max-w-md",
+                                "rounded-lg p-2 sm:p-3 max-w-[80%]",
                                 message.senderId === user?.uid ? "bg-primary text-primary-foreground" : "bg-muted"
                             )}>
                                 <p className="text-sm break-words">{message.text}</p>
                                 {message.timestamp && (
                                     <p className={cn(
-                                        "text-xs mt-1",
+                                        "text-xs mt-1 text-right",
                                         message.senderId === user?.uid ? "text-primary-foreground/70" : "text-muted-foreground"
                                     )}>
                                         {format(message.timestamp.toDate(), 'p')}
@@ -187,7 +187,7 @@ export default function ChatPage() {
             )}
             </ScrollArea>
         </CardContent>
-        <CardFooter className="p-4 border-t">
+        <CardFooter className="p-2 sm:p-4 border-t">
             <form onSubmit={handleSendMessage} className="w-full flex items-center gap-2">
             <Input 
                 value={newMessage}

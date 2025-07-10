@@ -56,28 +56,28 @@ export default function HomePage() {
 
   if (authIsLoading) {
     return (
-      <div className="container mx-auto p-4 md:p-8">
+      <div className="container mx-auto">
         {/* Skeleton for Hero Section */}
-        <Card className="overflow-hidden shadow-xl mb-8 md:mb-12">
-            <div className="flex flex-col justify-center p-8 md:p-12">
+        <Card className="overflow-hidden shadow-xl mb-6 md:mb-8">
+            <div className="flex flex-col justify-center p-6 md:p-12">
               <Skeleton className="h-10 w-3/4 mb-2" />
               <Skeleton className="h-6 w-1/2 mb-6" />
               <Skeleton className="h-5 w-full mb-2" />
-              <Skeleton className="h-5 w-5/6 mb-10" />
+              <Skeleton className="h-5 w-5/6 mb-8" />
               <Skeleton className="h-10 w-40" />
             </div>
         </Card>
         
         {/* Skeleton for Features Section */}
         <div className="mb-8">
-          <Skeleton className="mx-auto h-10 w-1/3 mb-8" />
+          <Skeleton className="mx-auto h-10 w-1/3 mb-6" />
         </div>
         <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           {[...Array(6)].map((_, i) => (
             <Card key={i} className="flex flex-col">
               <Skeleton className="h-40 w-full rounded-t-lg" />
-              <CardContent className="flex-grow p-6 pt-0">
-                <Skeleton className="h-6 w-3/4 mt-6 mb-2" />
+              <CardContent className="flex-grow p-4 pt-0">
+                <Skeleton className="h-6 w-3/4 mt-4 mb-2" />
                 <Skeleton className="h-4 w-full mb-1" />
                 <Skeleton className="h-4 w-5/6 mb-4" />
                 <Skeleton className="h-10 w-full" />
@@ -90,21 +90,21 @@ export default function HomePage() {
   }
 
   return (
-    <div className="container mx-auto flex flex-col gap-8 p-4 md:gap-12 md:p-8">
+    <div className="container mx-auto flex flex-col gap-6 md:gap-8">
       {/* Hero Section */}
       <Card className="overflow-hidden rounded-xl shadow-2xl bg-card">
         <div className="grid grid-cols-1">
-          <div className="flex flex-col justify-center p-8 py-12 md:p-12 lg:p-16">
+          <div className="flex flex-col justify-center p-6 md:p-12">
             {user ? (
               <>
                 <h1 className="font-headline text-2xl font-bold tracking-tight text-foreground sm:text-3xl lg:text-4xl">
                   Welcome back,
                 </h1>
                 <p className="mt-1 text-lg sm:text-xl text-primary truncate font-medium">{user.email}</p>
-                <p className="mt-6 text-sm leading-relaxed text-muted-foreground sm:text-base">
+                <p className="mt-4 text-sm leading-relaxed text-muted-foreground sm:text-base">
                   Ready to manage your pet's world? Explore services, update profiles, and much more, all in one place.
                 </p>
-                <div className="mt-10">
+                <div className="mt-8">
                   <Link href="/pet-profile" passHref>
                     <Button size="default" className="bg-primary text-primary-foreground hover:bg-primary/90 shadow-md hover:shadow-lg transition-shadow">
                       Go to Your Profile <ArrowRight className="ml-2 h-5 w-5" />
@@ -117,10 +117,10 @@ export default function HomePage() {
                 <h1 className="font-headline text-2xl font-bold tracking-tight text-foreground sm:text-3xl lg:text-4xl">
                   Welcome to <span className="text-primary">Pet</span><span className="text-accent">Mets</span>!
                 </h1>
-                <p className="mt-6 text-sm leading-relaxed text-muted-foreground sm:text-base">
+                <p className="mt-4 text-sm leading-relaxed text-muted-foreground sm:text-base">
                   Your all-in-one platform for pet care. Find services, manage records, and connect with a community of pet lovers.
                 </p>
-                <div className="mt-10">
+                <div className="mt-8">
                   <Link href="/login" passHref>
                     <Button size="default" className="bg-primary text-primary-foreground hover:bg-primary/90 shadow-md hover:shadow-lg transition-shadow">
                       Login or Sign Up <LogIn className="ml-2 h-5 w-5" />
@@ -136,10 +136,10 @@ export default function HomePage() {
       {/* Features Section */}
       {dashboardNavItems.length > 0 && (
         <section>
-          <h2 className="mb-8 text-center font-headline text-3xl font-bold tracking-tight text-foreground sm:text-4xl">
+          <h2 className="mb-6 text-center font-headline text-3xl font-bold tracking-tight text-foreground sm:text-4xl">
             Explore <span className="text-primary">Pet</span><span className="text-accent">Mets</span>
           </h2>
-          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3"> {/* Adjusted to 3 columns for better card size */}
+          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
             {dashboardNavItems.map((item) => (
               <FeatureCard
                 key={item.href}

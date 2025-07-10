@@ -14,7 +14,7 @@ export default function DigitalRecordsPage() {
   ];
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6">
       <div className="flex flex-col items-center justify-between gap-4 md:flex-row">
         <p className="text-lg text-muted-foreground md:max-w-2xl">Centralized storage for your pet's important documents. Upload, organize, and safely store bills, vet receipts, vaccination cards, and health records.</p>
         <Button>
@@ -22,7 +22,7 @@ export default function DigitalRecordsPage() {
         </Button>
       </div>
 
-      <div className="grid grid-cols-1 gap-8 md:grid-cols-3">
+      <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
         <div className="md:col-span-2">
           <Card className="shadow-lg">
             <CardHeader>
