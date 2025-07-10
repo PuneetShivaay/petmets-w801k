@@ -1,8 +1,8 @@
 
 "use client";
 
-import { useState, useEffect } from "react";
-import { collection, collectionGroup, getDocs, doc, setDoc, serverTimestamp } from "firebase/firestore";
+import { useState, useEffect, useCallback } from "react";
+import { collectionGroup, getDocs, doc, setDoc, serverTimestamp } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { useAuth } from "@/contexts/auth-context";
 import { useToast } from "@/hooks/use-toast";
@@ -25,55 +25,64 @@ interface Pet {
 }
 
 export default function MatchPetPage() {
-  const { user } = useAuth();
+  const { user, isLoading: isAuthLoading } = useAuth();
   const { toast } = useToast();
   const [pets, setPets] = useState<Pet[]>([]);
   const [loading, setLoading] = useState(true);
   const [matchRequests, setMatchRequests] = useState<Record<string, boolean>>({}); // key: petId, value: true if requested
   const [submitting, setSubmitting] = useState<string | null>(null); // Stores the ID of the pet being requested
 
-  useEffect(() => {
-    const fetchPets = async () => {
-      setLoading(true);
-      try {
-        // This is a collection group query. It requires a specific index in Firestore.
-        // The error message in the browser's developer console will provide a link to create it.
-        const petsQuery = collectionGroup(db, "pets");
-        const querySnapshot = await getDocs(petsQuery);
-
-        const petsList: Pet[] = querySnapshot.docs.map((petDoc) => {
-          const data = petDoc.data();
-          const pathParts = petDoc.ref.path.split('/');
-          const ownerId = pathParts[1];
-          
-          return {
-            id: petDoc.id,
-            ownerId: ownerId,
-            name: data.name || "Unnamed Pet",
-            breed: data.breed || "Unknown Breed",
-            image: data.avatar || "https://placehold.co/300x300.png",
-            dataAiHint: data.dataAiHint || "pet portrait",
-          };
-        });
-        
-        // Filter out the current user's own pet(s) from the list
-        const displayPets = user ? petsList.filter(pet => pet.ownerId !== user.uid) : petsList;
-        setPets(displayPets);
-
-      } catch (error) {
-        console.error("Error fetching pets:", error);
-        toast({
-          variant: "destructive",
-          title: "Failed to load pets",
-          description: "This may require a Firestore index. Check the browser console for a link to create it.",
-        });
-      } finally {
+  const fetchPets = useCallback(async () => {
+    if (!user) {
         setLoading(false);
-      }
-    };
+        return;
+    }
+    setLoading(true);
+    try {
+      // This is a collection group query. It requires a specific index in Firestore.
+      // The error message in the browser's developer console will provide a link to create it.
+      const petsQuery = collectionGroup(db, "pets");
+      const querySnapshot = await getDocs(petsQuery);
 
-    fetchPets();
+      const petsList: Pet[] = querySnapshot.docs.map((petDoc) => {
+        const data = petDoc.data();
+        const pathParts = petDoc.ref.path.split('/');
+        // The ownerId is the document ID of the user, which is the 2nd part of the path (index 1)
+        // e.g., users/{ownerId}/pets/{petId}
+        const ownerId = pathParts[1];
+        
+        return {
+          id: petDoc.id,
+          ownerId: ownerId,
+          name: data.name || "Unnamed Pet",
+          breed: data.breed || "Unknown Breed",
+          image: data.avatar || "https://placehold.co/300x300.png",
+          dataAiHint: data.dataAiHint || "pet portrait",
+        };
+      });
+      
+      // Filter out the current user's own pet(s) from the list
+      const displayPets = petsList.filter(pet => pet.ownerId !== user.uid);
+      setPets(displayPets);
+
+    } catch (error) {
+      console.error("Error fetching pets:", error);
+      toast({
+        variant: "destructive",
+        title: "Failed to load pets",
+        description: "This may require a Firestore index. Check the browser console for a link to create it.",
+      });
+    } finally {
+      setLoading(false);
+    }
   }, [user, toast]);
+
+  useEffect(() => {
+    // Only fetch pets if auth is resolved.
+    if (!isAuthLoading) {
+      fetchPets();
+    }
+  }, [isAuthLoading, fetchPets]);
   
   const handleMatchRequest = async (targetPet: Pet) => {
     if (!user) {
@@ -137,7 +146,7 @@ export default function MatchPetPage() {
         <Card className="text-center py-12">
             <CardContent>
                 <p className="text-muted-foreground">No other pets are available for matching right now.</p>
-                <p className="text-sm text-muted-foreground mt-2">Check back later!</p>
+                <p className="text-sm text-muted-foreground mt-2">Check back later or ensure other users have created profiles!</p>
             </CardContent>
         </Card>
       ) : (
@@ -148,8 +157,9 @@ export default function MatchPetPage() {
                 <Image 
                   src={pet.image} 
                   alt={pet.name} 
-                  layout="fill" 
-                  objectFit="cover" 
+                  fill
+                  sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                  style={{ objectFit: 'cover' }}
                   data-ai-hint={pet.dataAiHint}
                 />
               </div>
