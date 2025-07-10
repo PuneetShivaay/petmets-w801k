@@ -7,6 +7,7 @@ import Link from 'next/link';
 import { db } from '@/lib/firebase';
 import { useAuth } from '@/contexts/auth-context';
 import { useParams } from 'next/navigation';
+import { format } from 'date-fns';
 
 import { Card, CardContent, CardHeader, CardFooter } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -170,6 +171,14 @@ export default function ChatPage() {
                                 message.senderId === user?.uid ? "bg-primary text-primary-foreground" : "bg-muted"
                             )}>
                                 <p className="text-sm break-words">{message.text}</p>
+                                {message.timestamp && (
+                                    <p className={cn(
+                                        "text-xs mt-1",
+                                        message.senderId === user?.uid ? "text-primary-foreground/70" : "text-muted-foreground"
+                                    )}>
+                                        {format(message.timestamp.toDate(), 'p')}
+                                    </p>
+                                )}
                             </div>
                         </div>
                     ))}
