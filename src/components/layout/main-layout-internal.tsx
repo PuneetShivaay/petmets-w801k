@@ -137,7 +137,7 @@ function HeaderContentInternal({ title: dynamicTitle }: { title?: string }) {
       };
 
     return (
-        <div className="flex items-center gap-2">
+        <div className="flex w-full items-center gap-2">
             <SidebarTrigger />
             {isDynamicPage && (
                 <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => router.back()} aria-label="Go back">
@@ -187,6 +187,7 @@ function LogoutButtonInternal() {
 function MainLayoutChild({ children }: { children: React.ReactNode }) {
   const { user } = useAuth();
   const [pageTitle, setPageTitle] = React.useState<string | undefined>(undefined);
+  const pathname = usePathname();
 
   // This allows child pages to set the header title.
   // We clone the child element and pass a `setPageTitle` prop to it.
@@ -197,6 +198,10 @@ function MainLayoutChild({ children }: { children: React.ReactNode }) {
     }
     return child;
   });
+
+  const isChatPage = pathname.startsWith('/chats/');
+  const headerIsVisible = !isChatPage;
+
 
   return (
     <>

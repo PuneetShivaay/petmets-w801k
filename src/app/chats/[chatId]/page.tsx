@@ -83,7 +83,7 @@ export default function ChatPage({ setPageTitle }: ChatPageProps) {
                     };
                     setOtherUser(otherUserData);
                     if (setPageTitle) {
-                        setPageTitle(`Chat with ${otherUserData.name}`);
+                        setPageTitle(`${otherUserData.name}`);
                     }
                 }
             }
@@ -139,26 +139,11 @@ export default function ChatPage({ setPageTitle }: ChatPageProps) {
     }
   };
 
+  // The main header is handled by the layout now. This component just renders the chat content.
   return (
-    <Card className="h-full flex flex-col shadow-xl rounded-none sm:rounded-lg -m-2 sm:-m-4 md:-m-6">
-        <CardHeader className="border-b flex flex-row items-center gap-2 p-3 sm:p-4">
-            {otherUser ? (
-                <Link href={`/profile/${otherUser.id}`} className="flex items-center gap-3 group">
-                    <Avatar>
-                        <AvatarImage src={otherUser.avatar} data-ai-hint={otherUser.dataAiHint} />
-                        <AvatarFallback><User /></AvatarFallback>
-                    </Avatar>
-                    <h2 className="text-lg font-semibold group-hover:underline">{otherUser.name}</h2>
-                </Link>
-            ) : (
-                <div className="flex items-center gap-3">
-                    <Skeleton className="h-10 w-10 rounded-full" />
-                    <Skeleton className="h-8 w-40" />
-                </div>
-            )}
-        </CardHeader>
+    <Card className="h-full flex flex-col shadow-none rounded-none border-none -m-2 sm:-m-4 md:-m-6">
         <CardContent className="flex-grow p-0">
-            <ScrollArea className="h-full max-h-[calc(100vh-220px)] p-2 sm:p-4">
+            <ScrollArea className="h-full max-h-[calc(100vh-140px)] sm:max-h-[calc(100vh-160px)] p-2 sm:p-4">
             {isLoadingMessages ? (
                 <div className="space-y-4 p-2">
                     <Skeleton className="h-10 w-3/5" />
