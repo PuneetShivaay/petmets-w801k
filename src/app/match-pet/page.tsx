@@ -2,7 +2,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { collection, collectionGroup, getDocs, doc, setDoc, serverTimestamp, query, where, onSnapshot, updateDoc, writeBatch } from "firebase/firestore";
+import { collection, collectionGroup, getDocs, doc, setDoc, serverTimestamp, query, where, onSnapshot, writeBatch } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { useAuth } from "@/contexts/auth-context";
 import { useToast } from "@/hooks/use-toast";
@@ -39,7 +39,8 @@ interface MatchRequest {
 export default function MatchPetPage() {
   const { user, isLoading: isAuthLoading } = useAuth();
   const { toast } = useToast();
-  const [pets, setPets] = useState<Pet[]>([]);
+  const [allPets, setAllPets] = useState<Pet[]>([]);
+  const [displayPets, setDisplayPets] = useState<Pet[]>([]);
   const [loading, setLoading] = useState(true);
   const [matchRequests, setMatchRequests] = useState<Record<string, boolean>>({}); // key: composite petId, value: true if requested
   const [submitting, setSubmitting] = useState<string | null>(null); // Stores the composite ID of the pet being requested
@@ -47,6 +48,8 @@ export default function MatchPetPage() {
   const [incomingRequests, setIncomingRequests] = useState<MatchRequest[]>([]);
   const [isPopoverOpen, setIsPopoverOpen] = useState(false);
   const [isUpdatingRequest, setIsUpdatingRequest] = useState<string | null>(null);
+  
+  const [matchedUserIds, setMatchedUserIds] = useState<Set<string>>(new Set());
 
 
   const fetchPets = useCallback(async () => {
@@ -60,25 +63,26 @@ export default function MatchPetPage() {
       const petsQuery = collectionGroup(db, "pets");
       const querySnapshot = await getDocs(petsQuery);
 
-      const petsList: Pet[] = querySnapshot.docs.map((petDoc) => {
-        const data = petDoc.data();
-        const pathParts = petDoc.ref.path.split('/');
-        const ownerId = pathParts[1];
-        const petId = petDoc.id;
-        
-        return {
-          id: `${ownerId}-${petId}`, // Create a unique composite ID
-          petId: petId,
-          ownerId: ownerId,
-          name: data.name || "Unnamed Pet",
-          breed: data.breed || "Unknown Breed",
-          image: data.avatar || "https://placehold.co/300x300.png",
-          dataAiHint: data.dataAiHint || "pet portrait",
-        };
-      });
+      const petsList: Pet[] = querySnapshot.docs
+        .map((petDoc) => {
+            const data = petDoc.data();
+            const pathParts = petDoc.ref.path.split('/');
+            const ownerId = pathParts[1];
+            const petId = petDoc.id;
+            
+            return {
+            id: `${ownerId}-${petId}`, // Create a unique composite ID
+            petId: petId,
+            ownerId: ownerId,
+            name: data.name || "Unnamed Pet",
+            breed: data.breed || "Unknown Breed",
+            image: data.avatar || "https://placehold.co/300x300.png",
+            dataAiHint: data.dataAiHint || "pet portrait",
+            };
+        })
+        .filter(pet => pet.ownerId !== user.uid); // Filter out user's own pet
       
-      const displayPets = petsList.filter(pet => pet.ownerId !== user.uid);
-      setPets(displayPets);
+      setAllPets(petsList);
 
     } catch (error) {
       console.error("Error fetching pets:", error);
@@ -97,6 +101,42 @@ export default function MatchPetPage() {
       fetchPets();
     }
   }, [isAuthLoading, fetchPets]);
+  
+  // Listen for existing chats to filter out matched users
+  useEffect(() => {
+      if (!user) return;
+      
+      const chatsQuery = query(
+          collection(db, 'chats'),
+          where('participants', 'array-contains', user.uid)
+      );
+
+      const unsubscribe = onSnapshot(chatsQuery, (snapshot) => {
+          const newMatchedIds = new Set<string>();
+          snapshot.forEach(doc => {
+              const chatData = doc.data();
+              chatData.participants.forEach((participantId: string) => {
+                  if (participantId !== user.uid) {
+                      newMatchedIds.add(participantId);
+                  }
+              });
+          });
+          setMatchedUserIds(newMatchedIds);
+      });
+
+      return () => unsubscribe();
+  }, [user]);
+
+  // Filter the displayed pets whenever the full pet list or matched user list changes
+  useEffect(() => {
+      if (allPets.length > 0) {
+          const filtered = allPets.filter(pet => !matchedUserIds.has(pet.ownerId));
+          setDisplayPets(filtered);
+      } else {
+        setDisplayPets([]);
+      }
+  }, [allPets, matchedUserIds]);
+
 
   // Listen for incoming match requests
   useEffect(() => {
@@ -279,16 +319,16 @@ export default function MatchPetPage() {
             </Card>
           ))}
         </div>
-      ) : pets.length === 0 ? (
+      ) : displayPets.length === 0 ? (
         <Card className="text-center py-12">
             <CardContent>
                 <p className="text-muted-foreground">No other pets are available for matching right now.</p>
-                <p className="text-sm text-muted-foreground mt-2">Check back later or ensure other users have created profiles!</p>
+                <p className="text-sm text-muted-foreground mt-2">Either all available pets have been matched, or no other users have created profiles.</p>
             </CardContent>
         </Card>
       ) : (
         <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-          {pets.map((pet) => (
+          {displayPets.map((pet) => (
             <Card key={pet.id} className="overflow-hidden rounded-lg shadow-lg">
               <div className="relative h-60 w-full">
                 <Image 
@@ -327,3 +367,5 @@ export default function MatchPetPage() {
     </div>
   );
 }
+
+    
