@@ -4,13 +4,13 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useAuth } from "@/contexts/auth-context";
-import { collection, query, where, onSnapshot, doc, getDoc } from "firebase/firestore";
+import { collection, query, where, onSnapshot, doc, getDoc, getCountFromServer } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ArrowRight, Bell, Calendar, FileText, User, HeartHandshake, AlertTriangle } from "lucide-react";
+import { ArrowRight, Bell, Calendar, FileText, User, HeartHandshake, AlertTriangle, MessageSquare } from "lucide-react";
 
 interface StatCardProps {
   title: string;
@@ -56,10 +56,12 @@ export default function DashboardPage() {
   const [pendingRequests, setPendingRequests] = useState(0);
   const [upcomingBooking, setUpcomingBooking] = useState<{service: string, date: string} | null>(null);
   const [isProfileComplete, setIsProfileComplete] = useState(true);
+  const [matchedProfilesCount, setMatchedProfilesCount] = useState(0);
   
   const [loadingRequests, setLoadingRequests] = useState(true);
   const [loadingBookings, setLoadingBookings] = useState(true);
   const [loadingProfileCheck, setLoadingProfileCheck] = useState(true);
+  const [loadingMatches, setLoadingMatches] = useState(true);
 
   useEffect(() => {
     if (!user) return;
@@ -91,6 +93,16 @@ export default function DashboardPage() {
       setPendingRequests(snapshot.size);
       setLoadingRequests(false);
     });
+
+    // Fetch matched profiles (active chats)
+    const chatsQuery = query(
+        collection(db, "chats"),
+        where("participants", "array-contains", user.uid)
+    );
+    const unsubscribeChats = onSnapshot(chatsQuery, (snapshot) => {
+        setMatchedProfilesCount(snapshot.size);
+        setLoadingMatches(false);
+    });
     
     // MOCK: Fetch upcoming booking
     const mockUpcomingBookings = [
@@ -103,6 +115,7 @@ export default function DashboardPage() {
 
     return () => {
       unsubscribeRequests();
+      unsubscribeChats();
     };
   }, [user]);
 
@@ -138,7 +151,7 @@ export default function DashboardPage() {
         </Card>
       )}
 
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
         <StatCard
           title="Pending Match Requests"
           value={pendingRequests}
@@ -147,6 +160,15 @@ export default function DashboardPage() {
           href="/"
           actionText="Review Requests"
           isLoading={loadingRequests}
+        />
+        <StatCard
+          title="Matched Profiles"
+          value={matchedProfilesCount}
+          description="Connections you have made."
+          icon={HeartHandshake}
+          href="/chats"
+          actionText="View Chats"
+          isLoading={loadingMatches}
         />
         <StatCard
           title="Upcoming Booking"
@@ -160,7 +182,7 @@ export default function DashboardPage() {
         <Card className="shadow-lg lg:col-span-1">
              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium">Quick Actions</CardTitle>
-                <HeartHandshake className="h-4 w-4 text-muted-foreground" />
+                <MessageSquare className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent className="flex flex-col space-y-2 pt-2">
                  <p className="text-xs text-muted-foreground">Manage your pet's life.</p>
