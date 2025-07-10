@@ -269,69 +269,71 @@ export default function MatchPetPage() {
     <div className="space-y-6">
       <p className="text-lg text-muted-foreground">Find the perfect pet companion for playdates and celebrations. Browse available pets and send a match request.</p>
       
-      <div className="flex items-center justify-between gap-4">
-        <Button variant="outline" disabled>
-          <Search className="mr-2 h-4 w-4" /> Filter Pets (Coming Soon)
-        </Button>
-        <Popover open={isPopoverOpen} onOpenChange={setIsPopoverOpen}>
-          <PopoverTrigger asChild>
-            <Button variant="outline" size="icon" className="relative shrink-0">
-              <Bell className="h-5 w-5" />
-              {incomingRequests.length > 0 && (
-                <Badge variant="destructive" className="absolute -top-2 -right-2 h-6 w-6 rounded-full flex items-center justify-center p-0">
-                  {incomingRequests.length}
-                </Badge>
-              )}
-              <span className="sr-only">View match requests</span>
-            </Button>
-          </PopoverTrigger>
-          <PopoverContent className="w-[calc(100vw-2rem)] sm:w-80">
-            <div className="grid gap-4">
-              <div className="space-y-2">
-                <h4 className="font-medium leading-none">Incoming Requests</h4>
-                <p className="text-sm text-muted-foreground">
-                  Accept or decline requests from other pet owners.
-                </p>
-              </div>
-              <div className="grid gap-2">
-                {incomingRequests.length > 0 ? (
-                  incomingRequests.map(req => (
-                    <div key={req.id} className="rounded-md border p-3 flex flex-col gap-2">
-                      <div>
-                        <p className="text-sm font-medium truncate">From: {req.requesterEmail}</p>
-                        <p className="text-sm text-muted-foreground">For: {req.targetPetName}</p>
-                      </div>
-                      <div className="flex gap-2 justify-end">
-                          <Button 
-                            size="sm" 
-                            variant="outline" 
-                            className="h-8 px-2 flex-1"
-                            onClick={() => handleRequestResponse(req, 'accepted')}
-                            disabled={isUpdatingRequest === req.id}
-                          >
-                             {isUpdatingRequest === req.id ? <Loader2 className="h-4 w-4 animate-spin"/> : <Check className="h-4 w-4 text-green-500" />}
-                             <span className="ml-1">Accept</span>
-                          </Button>
-                          <Button 
-                            size="sm" 
-                            variant="destructive"
-                            className="h-8 px-2 flex-1"
-                            onClick={() => handleRequestResponse(req, 'declined')}
-                             disabled={isUpdatingRequest === req.id}
-                           >
-                            {isUpdatingRequest === req.id ? <Loader2 className="h-4 w-4 animate-spin"/> : <X className="h-4 w-4"/>}
-                            <span className="ml-1">Decline</span>
-                          </Button>
-                      </div>
-                    </div>
-                  ))
-                ) : (
-                  <p className="text-sm text-muted-foreground text-center py-4">No new requests.</p>
+      <div className="flex items-center justify-start">
+        <div className="flex items-center gap-2 rounded-lg border p-1 shadow-sm">
+          <Button variant="ghost" disabled className="text-muted-foreground">
+            <Search className="mr-2 h-4 w-4" /> Filter Pets (soon)
+          </Button>
+          <Popover open={isPopoverOpen} onOpenChange={setIsPopoverOpen}>
+            <PopoverTrigger asChild>
+              <Button variant="ghost" size="icon" className="relative shrink-0">
+                <Bell className="h-5 w-5" />
+                {incomingRequests.length > 0 && (
+                  <Badge variant="destructive" className="absolute -top-1 -right-1 h-5 w-5 rounded-full flex items-center justify-center p-0 text-xs">
+                    {incomingRequests.length}
+                  </Badge>
                 )}
+                <span className="sr-only">View match requests</span>
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-[calc(100vw-2rem)] sm:w-80">
+              <div className="grid gap-4">
+                <div className="space-y-2">
+                  <h4 className="font-medium leading-none">Incoming Requests</h4>
+                  <p className="text-sm text-muted-foreground">
+                    Accept or decline requests from other pet owners.
+                  </p>
+                </div>
+                <div className="grid gap-2">
+                  {incomingRequests.length > 0 ? (
+                    incomingRequests.map(req => (
+                      <div key={req.id} className="rounded-md border p-3 flex flex-col gap-2">
+                        <div>
+                          <p className="text-sm font-medium truncate">From: {req.requesterEmail}</p>
+                          <p className="text-sm text-muted-foreground">For: {req.targetPetName}</p>
+                        </div>
+                        <div className="flex gap-2 justify-end">
+                            <Button 
+                              size="sm" 
+                              variant="outline" 
+                              className="h-8 px-2 flex-1"
+                              onClick={() => handleRequestResponse(req, 'accepted')}
+                              disabled={isUpdatingRequest === req.id}
+                            >
+                               {isUpdatingRequest === req.id ? <Loader2 className="h-4 w-4 animate-spin"/> : <Check className="h-4 w-4 text-green-500" />}
+                               <span className="ml-1">Accept</span>
+                            </Button>
+                            <Button 
+                              size="sm" 
+                              variant="destructive"
+                              className="h-8 px-2 flex-1"
+                              onClick={() => handleRequestResponse(req, 'declined')}
+                               disabled={isUpdatingRequest === req.id}
+                             >
+                              {isUpdatingRequest === req.id ? <Loader2 className="h-4 w-4 animate-spin"/> : <X className="h-4 w-4"/>}
+                              <span className="ml-1">Decline</span>
+                            </Button>
+                        </div>
+                      </div>
+                    ))
+                  ) : (
+                    <p className="text-sm text-muted-foreground text-center py-4">No new requests.</p>
+                  )}
+                </div>
               </div>
-            </div>
-          </PopoverContent>
-        </Popover>
+            </PopoverContent>
+          </Popover>
+        </div>
       </div>
 
       {loading ? (
