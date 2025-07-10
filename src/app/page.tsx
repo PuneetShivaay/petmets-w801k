@@ -295,7 +295,7 @@ export default function MatchPetPage() {
         </div>
         <Popover open={isPopoverOpen} onOpenChange={setIsPopoverOpen}>
           <PopoverTrigger asChild>
-            <Button variant="outline" className="relative shrink-0 border-accent hover:bg-accent/10 focus:ring-accent">
+            <Button variant="outline" className="relative shrink-0 border-accent focus:ring-accent">
               <Bell className="mr-2 h-5 w-5" />
               <span>Notifications</span>
               {incomingRequests.length > 0 && (
