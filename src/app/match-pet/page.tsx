@@ -13,6 +13,7 @@ import Image from "next/image";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
 import { Heart, Search, Loader2, Check, Bell, X, Clock } from "lucide-react";
 
 // Define a type for the pet data we'll fetch
@@ -49,6 +50,8 @@ export default function MatchPetPage() {
   
   const [matchedUserIds, setMatchedUserIds] = useState<Set<string>>(new Set());
   const [pendingRequestPetIds, setPendingRequestPetIds] = useState<Set<string>>(new Set());
+  
+  const [searchTerm, setSearchTerm] = useState("");
 
 
   const fetchPets = useCallback(async () => {
@@ -126,15 +129,25 @@ export default function MatchPetPage() {
       return () => unsubscribe();
   }, [user]);
 
-  // Filter the displayed pets whenever the full pet list or matched user list changes
+  // Filter the displayed pets whenever the full pet list, matched user list, or search term changes
   useEffect(() => {
       if (allPets.length > 0) {
-          const filtered = allPets.filter(pet => !matchedUserIds.has(pet.ownerId));
-          setDisplayPets(filtered);
+          const filteredByMatch = allPets.filter(pet => !matchedUserIds.has(pet.ownerId));
+          
+          if (searchTerm.trim() === "") {
+            setDisplayPets(filteredByMatch);
+          } else {
+            const lowercasedTerm = searchTerm.toLowerCase();
+            const filteredBySearch = filteredByMatch.filter(pet => 
+              pet.name.toLowerCase().includes(lowercasedTerm) || 
+              pet.breed.toLowerCase().includes(lowercasedTerm)
+            );
+            setDisplayPets(filteredBySearch);
+          }
       } else {
         setDisplayPets([]);
       }
-  }, [allPets, matchedUserIds]);
+  }, [allPets, matchedUserIds, searchTerm]);
 
 
   // Listen for incoming match requests
@@ -269,10 +282,17 @@ export default function MatchPetPage() {
     <div className="space-y-6">
       <p className="text-lg text-muted-foreground">Find the perfect pet companion for playdates and celebrations. Browse available pets and send a match request.</p>
       
-      <div className="flex items-center justify-between gap-2">
-        <Button variant="outline" disabled>
-          <Search className="mr-2 h-4 w-4" /> Filter Pets (soon)
-        </Button>
+      <div className="flex items-center justify-between gap-4">
+        <div className="relative flex-grow">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+          <Input 
+            type="search"
+            placeholder="Filter by pet name or breed..."
+            className="pl-10"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
+        </div>
         <Popover open={isPopoverOpen} onOpenChange={setIsPopoverOpen}>
           <PopoverTrigger asChild>
             <Button variant="outline" className="relative shrink-0">
@@ -350,8 +370,8 @@ export default function MatchPetPage() {
       ) : displayPets.length === 0 ? (
         <Card className="text-center py-12 px-4">
             <CardContent>
-                <p className="text-muted-foreground">No other pets are available for matching right now.</p>
-                <p className="text-sm text-muted-foreground mt-2">Either all available pets have been matched, or no other users have created profiles.</p>
+                <p className="text-muted-foreground">No pets found matching your criteria.</p>
+                <p className="text-sm text-muted-foreground mt-2">Try adjusting your search or check back later!</p>
             </CardContent>
         </Card>
       ) : (
@@ -392,3 +412,5 @@ export default function MatchPetPage() {
     </div>
   );
 }
+
+    
