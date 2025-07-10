@@ -193,7 +193,7 @@ export default function MatchPetPage() {
               <span className="sr-only">View match requests</span>
             </Button>
           </PopoverTrigger>
-          <PopoverContent className="w-80">
+          <PopoverContent className="w-[calc(100vw-2rem)] sm:w-80">
             <div className="grid gap-4">
               <div className="space-y-2">
                 <h4 className="font-medium leading-none">Incoming Requests</h4>
@@ -307,5 +307,7 @@ export default function MatchPetPage() {
     </div>
   );
 }
+
+    
 
     
