@@ -106,20 +106,13 @@ function SidebarNavigationInternal() {
   );
 }
 
-function HeaderContentInternal({ profile }: { profile?: HeaderProfile }) {
+function HeaderContentInternal() {
     const pathname = usePathname();
-    const router = useRouter();
     const { user } = useAuth();
     let title: string | undefined;
 
-    const isDynamicPage = pathname.startsWith('/profile/') || pathname.startsWith('/chats/');
-    
     if (user) {
-        if (isDynamicPage && profile) {
-            title = profile.name;
-        } else {
-             title = navItems.find(item => item.href === pathname)?.title || 'PetMets Dashboard';
-        }
+        title = navItems.find(item => item.href === pathname)?.title || 'PetMets Dashboard';
     } else if (pathname === '/login') {
       title = 'Login / Sign Up';
     }
@@ -146,28 +139,11 @@ function HeaderContentInternal({ profile }: { profile?: HeaderProfile }) {
         <div className="flex w-full items-center gap-2">
             <div className="flex items-center gap-2 sm:gap-4">
                  <SidebarTrigger />
-                 {isDynamicPage && (
-                    <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0" onClick={() => router.back()} aria-label="Go back">
-                        <ArrowLeft className="h-5 w-5" />
-                    </Button>
-                )}
             </div>
             
-            {isDynamicPage && profile ? (
-                <div className="flex items-center gap-2 overflow-hidden">
-                    <Avatar className="h-8 w-8">
-                        <AvatarImage src={profile.avatar} data-ai-hint={profile.dataAiHint} />
-                        <AvatarFallback><User className="h-4 w-4"/></AvatarFallback>
-                    </Avatar>
-                    <h1 className="font-headline text-lg font-semibold truncate">
-                        {renderTitle(title)}
-                    </h1>
-                </div>
-            ) : (
-                <h1 className="font-headline text-lg sm:text-xl font-semibold truncate">
-                    {renderTitle(title)}
-                </h1>
-            )}
+            <h1 className="font-headline text-lg sm:text-xl font-semibold truncate">
+                {renderTitle(title)}
+            </h1>
         </div>
     );
 }
@@ -207,20 +183,14 @@ function LogoutButtonInternal() {
 
 function MainLayoutChild({ children }: { children: React.ReactNode }) {
   const { user } = useAuth();
-  const [headerProfile, setHeaderProfile] = React.useState<HeaderProfile | undefined>(undefined);
   const pathname = usePathname();
-
-  // Reset header profile on path change
-  React.useEffect(() => {
-    setHeaderProfile(undefined);
-  }, [pathname]);
 
   // This allows child pages to set the header title.
   // We clone the child element and pass a `setPageTitle` prop to it.
   const childrenWithProps = React.Children.map(children, child => {
     if (React.isValidElement(child)) {
         // @ts-ignore
-      return React.cloneElement(child, { setHeaderProfile });
+      return React.cloneElement(child, { });
     }
     return child;
   });
@@ -247,10 +217,12 @@ function MainLayoutChild({ children }: { children: React.ReactNode }) {
         )}
       </Sidebar>
       <SidebarInset className="flex flex-col">
-          <header className="sticky top-0 z-10 flex h-16 items-center justify-between gap-4 border-b bg-background px-2 sm:px-4">
-            <HeaderContentInternal profile={headerProfile} />
-          </header>
-        <main className="flex-1 overflow-auto p-2 sm:p-4 md:p-6">
+          {headerIsVisible && (
+            <header className="sticky top-0 z-10 flex h-16 items-center justify-between gap-4 border-b bg-background px-2 sm:px-4">
+                <HeaderContentInternal />
+            </header>
+          )}
+        <main className={cn("flex-1 overflow-auto", !headerIsVisible && "h-screen")}>
           {childrenWithProps}
         </main>
       </SidebarInset>
