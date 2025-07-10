@@ -53,8 +53,8 @@ const defaultOwnerData = {
     email: "loading...",
     phone: "",
     address: "",
-    avatar: "https://placehold.co/128x128.png",
-    dataAiHint: "friendly person",
+    avatar: "https://i.imgur.com/83AAQ1X.png",
+    dataAiHint: "paw print logo",
 };
 
 export default function PetProfilePage() {
@@ -90,7 +90,7 @@ export default function PetProfilePage() {
 
       const [userDocSnap, petDocSnap] = await Promise.all([
         getDoc(userDocRef),
-        getDoc(petDocRef),
+        getDoc(petDocSnap),
       ]);
       
       const fetchedOwnerData = userDocSnap.exists() ? userDocSnap.data() : {};

@@ -129,8 +129,8 @@ export default function LoginPage() {
         email: newUser.email,
         phone: "",
         address: "",
-        avatar: "https://placehold.co/128x128.png",
-        dataAiHint: "friendly person",
+        avatar: "https://i.imgur.com/83AAQ1X.png",
+        dataAiHint: "paw print logo",
         createdAt: serverTimestamp(),
       };
 
