@@ -22,9 +22,9 @@ import {
 } from "@/components/ui/sidebar";
 import { Button } from "@/components/ui/button"; 
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { LogOut } from "lucide-react";
+import { LogOut, ArrowLeft } from "lucide-react";
 import { useLoading } from "@/contexts/loading-context";
-import { useAuth } from "@/contexts/auth-context"; // Import useAuth
+import { useAuth } from "@/contexts/auth-context";
 import { useToast } from "@/hooks/use-toast";
 
 
@@ -60,8 +60,7 @@ function SidebarNavigationInternal() {
   const filteredNavItems = navItems.filter(item => {
     if (item.href === '/login') return !user; // Show Login only if not logged in
     if (item.href === '/pet-profile') return !!user; // Show Pet Profile only if logged in
-    // Add other conditional logic here if needed
-    return true; // Show all other items
+    return true; 
   });
 
 
@@ -103,11 +102,14 @@ function SidebarNavigationInternal() {
 
 function HeaderContentInternal({ title: dynamicTitle }: { title?: string }) {
     const pathname = usePathname();
+    const router = useRouter();
     const { user } = useAuth();
     let title: string | undefined;
+
+    const isDynamicPage = pathname.startsWith('/profile/') || pathname.startsWith('/chats/');
     
     if (user) {
-        if (pathname.startsWith('/profile/') || pathname.startsWith('/chats/')) {
+        if (isDynamicPage) {
             title = dynamicTitle; // Use the dynamic title passed from the page
         } else {
              title = navItems.find(item => item.href === pathname)?.title || 'PetMets Dashboard';
@@ -135,9 +137,14 @@ function HeaderContentInternal({ title: dynamicTitle }: { title?: string }) {
       };
 
     return (
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-2">
             <SidebarTrigger />
-             <h1 className="font-headline text-xl font-semibold truncate sm:block">
+            {isDynamicPage && (
+                <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => router.back()} aria-label="Go back">
+                    <ArrowLeft className="h-5 w-5" />
+                </Button>
+            )}
+             <h1 className="font-headline text-xl font-semibold truncate">
                 {renderTitle(title)}
             </h1>
         </div>
@@ -148,7 +155,6 @@ function LogoutButtonInternal() {
   const { isMobile, setOpenMobile } = useSidebar();
   const { showLoading } = useLoading(); 
   const { userSignOut, user } = useAuth();
-  const router = useRouter();
   const { toast } = useToast();
 
   const handleLogoutClick = async () => {
@@ -164,7 +170,7 @@ function LogoutButtonInternal() {
     }
   };
 
-  if (!user) return null; // Don't show logout button if no user
+  if (!user) return null;
 
   return (
     <SidebarMenuButton
@@ -180,13 +186,8 @@ function LogoutButtonInternal() {
 
 function MainLayoutChild({ children }: { children: React.ReactNode }) {
   const { user } = useAuth();
-  const pathname = usePathname();
-  const { isMobile } = useSidebar();
   const [pageTitle, setPageTitle] = React.useState<string | undefined>(undefined);
 
-  const isChatPage = pathname.startsWith('/chats/');
-  const showHeader = isMobile ? !isChatPage : true;
-  
   // This allows child pages to set the header title.
   // We clone the child element and pass a `setPageTitle` prop to it.
   const childrenWithProps = React.Children.map(children, child => {
@@ -215,17 +216,10 @@ function MainLayoutChild({ children }: { children: React.ReactNode }) {
         )}
       </Sidebar>
       <SidebarInset className="flex flex-col">
-        {showHeader && (
           <header className="sticky top-0 z-10 flex h-16 items-center justify-between gap-4 border-b bg-background px-4">
             <HeaderContentInternal title={pageTitle} />
           </header>
-        )}
-        <main
-          className={cn(
-            "flex-1 overflow-auto",
-            isChatPage && isMobile ? "p-0" : "p-2 sm:p-4 md:p-6"
-          )}
-        >
+        <main className="flex-1 overflow-auto p-2 sm:p-4 md:p-6">
           {childrenWithProps}
         </main>
       </SidebarInset>

@@ -6,10 +6,9 @@ import { useParams, useRouter } from 'next/navigation';
 import { doc, getDoc } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { PawPrint, User, Mail, Phone, Home, ArrowLeft, Loader2 } from "lucide-react";
+import { PawPrint, User, Mail, Phone, Home, Loader2 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/auth-context";
@@ -46,7 +45,6 @@ export default function UserProfilePage({ setPageTitle }: UserProfilePageProps) 
   const [isLoading, setIsLoading] = useState(true);
   const [petData, setPetData] = useState<PetData | null>(null);
   const [ownerData, setOwnerData] = useState<OwnerData | null>(null);
-  const [headerTitle, setHeaderTitle] = useState<string>("Loading Profile...");
 
   const fetchProfileData = useCallback(async () => {
     if (!userId) return;
@@ -65,11 +63,9 @@ export default function UserProfilePage({ setPageTitle }: UserProfilePageProps) 
         const data = userDocSnap.data() as OwnerData;
         setOwnerData(data);
         const title = data.name ? `${data.name}'s Profile` : "User Profile";
-        setHeaderTitle(title);
         if(setPageTitle) setPageTitle(title);
       } else {
         toast({ variant: "destructive", title: "Error", description: "This user profile does not exist." });
-        setHeaderTitle("Profile Not Found");
         if(setPageTitle) setPageTitle("Profile Not Found");
         router.push('/'); // Redirect if user not found
         return;
@@ -94,12 +90,6 @@ export default function UserProfilePage({ setPageTitle }: UserProfilePageProps) 
     fetchProfileData();
   }, [fetchProfileData]);
   
-  useEffect(() => {
-      if(setPageTitle) {
-          setPageTitle(headerTitle);
-      }
-  }, [headerTitle, setPageTitle]);
-  
   const isOwnProfile = user?.uid === userId;
 
   if (isLoading) {
@@ -119,9 +109,6 @@ export default function UserProfilePage({ setPageTitle }: UserProfilePageProps) 
   if (!ownerData) {
       return (
           <div className="space-y-4">
-            <Button variant="outline" onClick={() => router.back()}>
-                <ArrowLeft className="mr-2 h-4 w-4" /> Go Back
-            </Button>
             <p>Could not load the requested user profile. It may have been deleted.</p>
           </div>
       )
@@ -129,12 +116,6 @@ export default function UserProfilePage({ setPageTitle }: UserProfilePageProps) 
 
   return (
     <div className="space-y-8">
-       {!isOwnProfile && (
-            <Button variant="outline" onClick={() => router.back()} className="md:hidden">
-              <ArrowLeft className="mr-2 h-4 w-4" /> Go Back
-            </Button>
-          )}
-      
       <div className="grid grid-cols-1 gap-8 md:grid-cols-2">
         {petData ? (
             <Card className="shadow-lg">

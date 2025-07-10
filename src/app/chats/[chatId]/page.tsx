@@ -15,7 +15,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Send, User, ArrowLeft } from 'lucide-react';
+import { Send, User } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useLoading } from '@/contexts/loading-context';
 
@@ -140,13 +140,8 @@ export default function ChatPage({ setPageTitle }: ChatPageProps) {
   };
 
   return (
-    <Card className="h-full flex flex-col shadow-xl rounded-none sm:rounded-lg">
+    <Card className="h-full flex flex-col shadow-xl rounded-none sm:rounded-lg -m-2 sm:-m-4 md:-m-6">
         <CardHeader className="border-b flex flex-row items-center gap-2 p-3 sm:p-4">
-            <Link href="/chats" passHref>
-                <Button variant="ghost" size="icon" aria-label="Back to conversations">
-                    <ArrowLeft />
-                </Button>
-            </Link>
             {otherUser ? (
                 <Link href={`/profile/${otherUser.id}`} className="flex items-center gap-3 group">
                     <Avatar>
