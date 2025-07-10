@@ -32,7 +32,11 @@ interface OwnerData {
   dataAiHint: string;
 }
 
-export default function UserProfilePage() {
+interface UserProfilePageProps {
+    setPageTitle?: (title: string) => void;
+}
+
+export default function UserProfilePage({ setPageTitle }: UserProfilePageProps) {
   const params = useParams();
   const router = useRouter();
   const { toast } = useToast();
@@ -42,6 +46,7 @@ export default function UserProfilePage() {
   const [isLoading, setIsLoading] = useState(true);
   const [petData, setPetData] = useState<PetData | null>(null);
   const [ownerData, setOwnerData] = useState<OwnerData | null>(null);
+  const [headerTitle, setHeaderTitle] = useState<string>("Loading Profile...");
 
   const fetchProfileData = useCallback(async () => {
     if (!userId) return;
@@ -57,9 +62,15 @@ export default function UserProfilePage() {
       ]);
       
       if (userDocSnap.exists()) {
-        setOwnerData(userDocSnap.data() as OwnerData);
+        const data = userDocSnap.data() as OwnerData;
+        setOwnerData(data);
+        const title = data.name ? `${data.name}'s Profile` : "User Profile";
+        setHeaderTitle(title);
+        if(setPageTitle) setPageTitle(title);
       } else {
         toast({ variant: "destructive", title: "Error", description: "This user profile does not exist." });
+        setHeaderTitle("Profile Not Found");
+        if(setPageTitle) setPageTitle("Profile Not Found");
         router.push('/'); // Redirect if user not found
         return;
       }
@@ -77,19 +88,23 @@ export default function UserProfilePage() {
     } finally {
       setIsLoading(false);
     }
-  }, [userId, router, toast]);
+  }, [userId, router, toast, setPageTitle]);
 
   useEffect(() => {
     fetchProfileData();
   }, [fetchProfileData]);
   
-  const pageTitle = isLoading ? "Loading Profile..." : ownerData?.name ? `${ownerData.name}'s Profile` : "Profile Not Found";
+  useEffect(() => {
+      if(setPageTitle) {
+          setPageTitle(headerTitle);
+      }
+  }, [headerTitle, setPageTitle]);
+  
   const isOwnProfile = user?.uid === userId;
 
   if (isLoading) {
     return (
         <div className="space-y-8">
-            <h1 className="font-headline text-2xl font-bold tracking-tight sm:text-3xl md:text-4xl">{pageTitle}</h1>
             <div className="text-center">
                  <Loader2 className="h-16 w-16 animate-spin text-primary mx-auto" />
             </div>
@@ -104,7 +119,6 @@ export default function UserProfilePage() {
   if (!ownerData) {
       return (
           <div className="space-y-4">
-             <h1 className="font-headline text-2xl font-bold tracking-tight sm:text-3xl md:text-4xl">{pageTitle}</h1>
             <Button variant="outline" onClick={() => router.back()}>
                 <ArrowLeft className="mr-2 h-4 w-4" /> Go Back
             </Button>
@@ -115,14 +129,11 @@ export default function UserProfilePage() {
 
   return (
     <div className="space-y-8">
-       <div className="flex flex-col items-start justify-between gap-4 md:flex-row md:items-center">
-          <h1 className="font-headline text-2xl font-bold tracking-tight sm:text-3xl md:text-4xl">{pageTitle}</h1>
-          {!isOwnProfile && (
-            <Button variant="outline" onClick={() => router.back()}>
+       {!isOwnProfile && (
+            <Button variant="outline" onClick={() => router.back()} className="md:hidden">
               <ArrowLeft className="mr-2 h-4 w-4" /> Go Back
             </Button>
           )}
-       </div>
       
       <div className="grid grid-cols-1 gap-8 md:grid-cols-2">
         {petData ? (

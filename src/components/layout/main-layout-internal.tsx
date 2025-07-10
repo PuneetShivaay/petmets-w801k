@@ -101,16 +101,14 @@ function SidebarNavigationInternal() {
   );
 }
 
-function HeaderContentInternal() {
+function HeaderContentInternal({ title: dynamicTitle }: { title?: string }) {
     const pathname = usePathname();
     const { user } = useAuth();
     let title: string | undefined;
     
     if (user) {
-        if (pathname.startsWith('/profile/')) {
-            title = undefined; 
-        } else if (pathname.startsWith('/chats/')) {
-            title = undefined;
+        if (pathname.startsWith('/profile/') || pathname.startsWith('/chats/')) {
+            title = dynamicTitle; // Use the dynamic title passed from the page
         } else {
              title = navItems.find(item => item.href === pathname)?.title || 'PetMets Dashboard';
         }
@@ -139,7 +137,7 @@ function HeaderContentInternal() {
     return (
         <div className="flex items-center gap-4">
             <SidebarTrigger />
-             <h1 className="font-headline text-xl font-semibold truncate">
+             <h1 className="font-headline text-xl font-semibold truncate sm:block">
                 {renderTitle(title)}
             </h1>
         </div>
@@ -183,10 +181,21 @@ function LogoutButtonInternal() {
 function MainLayoutChild({ children }: { children: React.ReactNode }) {
   const { user } = useAuth();
   const pathname = usePathname();
-  const isChatPage = pathname.startsWith('/chats/');
   const { isMobile } = useSidebar();
+  const [pageTitle, setPageTitle] = React.useState<string | undefined>(undefined);
 
+  const isChatPage = pathname.startsWith('/chats/');
   const showHeader = isMobile ? !isChatPage : true;
+  
+  // This allows child pages to set the header title.
+  // We clone the child element and pass a `setPageTitle` prop to it.
+  const childrenWithProps = React.Children.map(children, child => {
+    if (React.isValidElement(child)) {
+        // @ts-ignore
+      return React.cloneElement(child, { setPageTitle });
+    }
+    return child;
+  });
 
   return (
     <>
@@ -208,7 +217,7 @@ function MainLayoutChild({ children }: { children: React.ReactNode }) {
       <SidebarInset className="flex flex-col">
         {showHeader && (
           <header className="sticky top-0 z-10 flex h-16 items-center justify-between gap-4 border-b bg-background px-4">
-            <HeaderContentInternal />
+            <HeaderContentInternal title={pageTitle} />
           </header>
         )}
         <main
@@ -217,7 +226,7 @@ function MainLayoutChild({ children }: { children: React.ReactNode }) {
             isChatPage && isMobile ? "p-0" : "p-2 sm:p-4 md:p-6"
           )}
         >
-          {children}
+          {childrenWithProps}
         </main>
       </SidebarInset>
     </>

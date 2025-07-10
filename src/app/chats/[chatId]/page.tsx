@@ -33,7 +33,11 @@ interface OtherUser {
     name: string;
 }
 
-export default function ChatPage() {
+interface ChatPageProps {
+    setPageTitle?: (title: string) => void;
+}
+
+export default function ChatPage({ setPageTitle }: ChatPageProps) {
   const { user } = useAuth();
   const { hideLoading } = useLoading();
   const params = useParams();
@@ -71,19 +75,23 @@ export default function ChatPage() {
                 const userDoc = await getDoc(doc(db, 'users', otherUserId));
                 if (userDoc.exists()) {
                     const data = userDoc.data();
-                    setOtherUser({
+                    const otherUserData = {
                         id: otherUserId,
                         name: data.name || 'Pet Owner',
                         avatar: data.avatar || 'https://i.imgur.com/83AAQ1X.png',
                         dataAiHint: data.dataAiHint || 'paw print logo'
-                    });
+                    };
+                    setOtherUser(otherUserData);
+                    if (setPageTitle) {
+                        setPageTitle(`Chat with ${otherUserData.name}`);
+                    }
                 }
             }
         }
     };
     fetchChatInfo();
 
-  }, [chatId, user]);
+  }, [chatId, user, setPageTitle]);
 
   useEffect(() => {
     if (!chatId) return;
