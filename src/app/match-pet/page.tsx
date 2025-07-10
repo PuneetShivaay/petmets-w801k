@@ -16,7 +16,8 @@ import { Heart, Search, Loader2, Check } from "lucide-react";
 
 // Define a type for the pet data we'll fetch
 interface Pet {
-  id: string; // The pet's document ID
+  id: string; // Composite ID: ownerId-petId
+  petId: string; // The pet's document ID
   ownerId: string; // The owner's UID
   name: string;
   breed: string;
@@ -29,8 +30,8 @@ export default function MatchPetPage() {
   const { toast } = useToast();
   const [pets, setPets] = useState<Pet[]>([]);
   const [loading, setLoading] = useState(true);
-  const [matchRequests, setMatchRequests] = useState<Record<string, boolean>>({}); // key: petId, value: true if requested
-  const [submitting, setSubmitting] = useState<string | null>(null); // Stores the ID of the pet being requested
+  const [matchRequests, setMatchRequests] = useState<Record<string, boolean>>({}); // key: composite petId, value: true if requested
+  const [submitting, setSubmitting] = useState<string | null>(null); // Stores the composite ID of the pet being requested
 
   const fetchPets = useCallback(async () => {
     if (!user) {
@@ -50,9 +51,11 @@ export default function MatchPetPage() {
         // The ownerId is the document ID of the user, which is the 2nd part of the path (index 1)
         // e.g., users/{ownerId}/pets/{petId}
         const ownerId = pathParts[1];
+        const petId = petDoc.id;
         
         return {
-          id: petDoc.id,
+          id: `${ownerId}-${petId}`, // Create a unique composite ID
+          petId: petId,
           ownerId: ownerId,
           name: data.name || "Unnamed Pet",
           breed: data.breed || "Unknown Breed",
@@ -99,7 +102,7 @@ export default function MatchPetPage() {
             requesterId: user.uid,
             requesterEmail: user.email,
             targetOwnerId: targetPet.ownerId,
-            targetPetId: targetPet.id,
+            targetPetId: targetPet.petId,
             targetPetName: targetPet.name,
             status: "pending",
             createdAt: serverTimestamp(),
