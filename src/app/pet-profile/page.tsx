@@ -6,7 +6,7 @@ import { useForm, type SubmitHandler } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { updateProfile } from "firebase/auth";
-import { doc, getDoc, setDoc } from "firebase/firestore";
+import { doc, getDoc, setDoc, serverTimestamp } from "firebase/firestore";
 
 import { PageHeader } from "@/components/page-header";
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
@@ -46,8 +46,17 @@ const defaultPetData = {
     bio: "Loves long walks in the park and playing fetch. A very good boy indeed!",
 };
 
+const defaultOwnerData = {
+    name: "Pet Owner",
+    email: "loading...",
+    phone: "",
+    address: "",
+    avatar: "https://placehold.co/128x128.png",
+    dataAiHint: "friendly person",
+};
+
 export default function PetProfilePage() {
-  const { user, isLoading: authLoading } = useAuth();
+  const { user } = useAuth();
   const { toast } = useToast();
 
   const [pageLoading, setPageLoading] = useState(true);
@@ -57,49 +66,23 @@ export default function PetProfilePage() {
   const [isSubmittingOwner, setIsSubmittingOwner] = useState(false);
 
   const [petData, setPetData] = useState(defaultPetData);
-  const [ownerData, setOwnerData] = useState({
-    name: "Pet Owner",
-    email: "loading...",
-    phone: "",
-    address: "",
-    avatar: "https://placehold.co/128x128.png",
-    dataAiHint: "friendly person",
-  });
+  const [ownerData, setOwnerData] = useState(defaultOwnerData);
 
   const { register: registerPet, handleSubmit: handlePetSubmit, reset: resetPetForm, formState: { errors: petErrors } } = useForm<PetFormData>({
     resolver: zodResolver(petSchema),
-    defaultValues: petData,
   });
 
   const { register: registerOwner, handleSubmit: handleOwnerSubmit, reset: resetOwnerForm, formState: { errors: ownerErrors } } = useForm<OwnerFormData>({
     resolver: zodResolver(ownerSchema),
-    defaultValues: { name: "Pet Owner", phone: "", address: "" },
   });
 
   useEffect(() => {
-    if (authLoading) return;
     if (!user) {
       setPageLoading(false);
       return;
     }
 
     const fetchProfileData = async () => {
-      // Set initial state immediately for a better UX, especially for new users
-      const initialOwnerData = {
-        name: user.displayName || "Pet Owner",
-        email: user.email || "No email provided",
-        phone: "",
-        address: "",
-        avatar: "https://placehold.co/128x128.png",
-        dataAiHint: "friendly person",
-      };
-      setOwnerData(initialOwnerData);
-      setPetData(defaultPetData);
-      resetOwnerForm({ name: initialOwnerData.name, phone: initialOwnerData.phone, address: initialOwnerData.address });
-      resetPetForm(defaultPetData);
-      setPageLoading(false); // Assume fast load, remove skeleton immediately
-
-      // Now, fetch the actual data from Firestore to get the most up-to-date info
       try {
         const userDocRef = doc(db, "users", user.uid);
         const petDocRef = doc(db, "users", user.uid, "pets", "main-pet");
@@ -108,27 +91,31 @@ export default function PetProfilePage() {
           getDoc(userDocRef),
           getDoc(petDocRef)
         ]);
-        
+
+        let finalOwnerData = { ...defaultOwnerData, email: user.email!, name: user.displayName || defaultOwnerData.name };
         if (userDocSnap.exists()) {
-          const fetchedOwnerData = { ...initialOwnerData, ...userDocSnap.data() };
-          setOwnerData(fetchedOwnerData);
-          resetOwnerForm({ name: fetchedOwnerData.name, phone: fetchedOwnerData.phone, address: fetchedOwnerData.address });
+          finalOwnerData = { ...finalOwnerData, ...userDocSnap.data() };
         }
+        setOwnerData(finalOwnerData);
+        resetOwnerForm({ name: finalOwnerData.name, phone: finalOwnerData.phone, address: finalOwnerData.address });
         
+        let finalPetData = { ...defaultPetData };
         if (petDocSnap.exists()) {
-          const fetchedPetData = { ...defaultPetData, ...petDocSnap.data() };
-          setPetData(fetchedPetData);
-          resetPetForm(fetchedPetData);
+          finalPetData = { ...finalPetData, ...petDocSnap.data() };
         }
+        setPetData(finalPetData);
+        resetPetForm(finalPetData);
 
       } catch (error) {
         console.error("Error fetching profile data:", error);
-        toast({ variant: "destructive", title: "Error", description: "Could not fetch profile data." });
+        toast({ variant: "destructive", title: "Error", description: "Could not fetch profile data. The client might be offline." });
+      } finally {
+        setPageLoading(false);
       }
     };
 
     fetchProfileData();
-  }, [user, authLoading, resetPetForm, resetOwnerForm, toast]);
+  }, [user, resetPetForm, resetOwnerForm, toast]);
 
   const onPetSubmit: SubmitHandler<PetFormData> = async (data) => {
     if (!user) {
@@ -138,13 +125,12 @@ export default function PetProfilePage() {
     setIsSubmittingPet(true);
     try {
       const petDocRef = doc(db, "users", user.uid, "pets", "main-pet");
-      const dataToSave = { ...petData, ...data };
+      // Merge with existing petData to not lose avatar etc.
+      const dataToSave = { ...petData, ...data }; 
       
       await setDoc(petDocRef, dataToSave, { merge: true });
       
       setPetData(dataToSave);
-      resetPetForm(dataToSave);
-
       toast({ title: "Success", description: "Pet details updated." });
       setIsEditingPet(false);
     } catch (error) {
@@ -167,13 +153,11 @@ export default function PetProfilePage() {
       }
 
       const userDocRef = doc(db, "users", user.uid);
-      const dataToSave = { ...ownerData, ...data, email: user.email };
+      const dataToSave = { ...ownerData, ...data };
 
       await setDoc(userDocRef, dataToSave, { merge: true });
       
       setOwnerData(dataToSave);
-      resetOwnerForm({ name: dataToSave.name, phone: dataToSave.phone, address: dataToSave.address });
-
       toast({ title: "Success", description: "Your profile has been updated." });
       setIsEditingOwner(false);
     } catch (error) {
@@ -184,7 +168,7 @@ export default function PetProfilePage() {
     }
   };
 
-  if (pageLoading || authLoading) {
+  if (pageLoading) {
     return (
         <div>
             <PageHeader
@@ -200,9 +184,9 @@ export default function PetProfilePage() {
   }
   
   if (!user) {
+      // This should theoretically not be reached due to AppLayout redirects, but is a good safeguard.
       return null;
   }
-
 
   return (
     <div>
@@ -258,7 +242,7 @@ export default function PetProfilePage() {
                   </div>
                   <div>
                     <span className="text-sm font-medium text-muted-foreground">Bio</span>
-                    <p className="text-base italic text-foreground">{petData.bio}</p>
+                    <p className="text-base italic text-foreground">{petData.bio || "No bio set."}</p>
                   </div>
                 </>
               )}
@@ -275,7 +259,7 @@ export default function PetProfilePage() {
                   </Button>
                 </div>
               ) : (
-                <Button type="button" variant="outline" className="w-full" onClick={() => setIsEditingPet(true)}>
+                <Button type="button" variant="outline" className="w-full" onClick={() => { resetPetForm(petData); setIsEditingPet(true); }}>
                   <Edit3 className="mr-2 h-4 w-4" /> Edit Pet Details
                 </Button>
               )}
@@ -354,7 +338,7 @@ export default function PetProfilePage() {
                   </Button>
                 </div>
               ) : (
-                <Button type="button" variant="outline" className="w-full" onClick={() => setIsEditingOwner(true)}>
+                <Button type="button" variant="outline" className="w-full" onClick={() => { resetOwnerForm({ name: ownerData.name, phone: ownerData.phone, address: ownerData.address }); setIsEditingOwner(true); }}>
                   <Edit3 className="mr-2 h-4 w-4" /> Edit Account Details
                 </Button>
               )}
@@ -374,3 +358,5 @@ export default function PetProfilePage() {
     </div>
   );
 }
+
+    
