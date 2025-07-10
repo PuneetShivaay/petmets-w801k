@@ -138,6 +138,7 @@ export default function LoginPage() {
         name: "Buddy",
         breed: "Golden Retriever",
         age: "3 years",
+        gender: "Male",
         avatar: "https://placehold.co/128x128.png",
         dataAiHint: "golden retriever",
         bio: "Loves long walks in the park and playing fetch. A very good boy indeed!",

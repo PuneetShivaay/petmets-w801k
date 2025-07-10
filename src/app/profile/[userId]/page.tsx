@@ -20,6 +20,7 @@ interface PetData {
   name: string;
   breed: string;
   age: string;
+  gender: string;
   bio: string;
   avatar: string;
   dataAiHint: string;
@@ -157,9 +158,15 @@ export default function UserProfilePage() {
                     </div>
                     </CardHeader>
                     <CardContent className="space-y-4">
-                        <div>
-                            <span className="text-sm font-medium text-muted-foreground">Age</span>
-                            <p className="text-base sm:text-lg">{petData.age}</p>
+                        <div className="grid grid-cols-2 gap-4">
+                            <div>
+                                <span className="text-sm font-medium text-muted-foreground">Age</span>
+                                <p className="text-base sm:text-lg">{petData.age}</p>
+                            </div>
+                             <div>
+                                <span className="text-sm font-medium text-muted-foreground">Gender</span>
+                                <p className="text-base sm:text-lg">{petData.gender}</p>
+                            </div>
                         </div>
                         <div>
                             <span className="text-sm font-medium text-muted-foreground">Bio</span>

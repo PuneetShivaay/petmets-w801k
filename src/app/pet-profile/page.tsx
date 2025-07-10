@@ -2,7 +2,7 @@
 "use client";
 
 import { useState, useEffect, useCallback, useRef } from "react";
-import { useForm, type SubmitHandler } from "react-hook-form";
+import { useForm, type SubmitHandler, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { updateProfile } from "firebase/auth";
@@ -17,6 +17,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 
 import { auth, db, storage } from "@/lib/firebase";
 import { useAuth } from "@/contexts/auth-context";
@@ -26,6 +27,7 @@ const petSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters.").max(50),
   breed: z.string().min(2, "Breed must be at least 2 characters.").max(50),
   age: z.string().min(1, "Age is required.").max(30),
+  gender: z.enum(["Male", "Female"], { required_error: "Please select your pet's gender." }),
   bio: z.string().max(200, "Bio cannot exceed 200 characters.").optional(),
 });
 type PetFormData = z.infer<typeof petSchema>;
@@ -41,6 +43,7 @@ const defaultPetData = {
     name: "Buddy",
     breed: "Golden Retriever",
     age: "3 years",
+    gender: "Male" as "Male" | "Female",
     avatar: "https://placehold.co/128x128.png",
     dataAiHint: "golden retriever",
     bio: "Loves long walks in the park and playing fetch. A very good boy indeed!",
@@ -73,7 +76,7 @@ export default function PetProfilePage() {
   const [petData, setPetData] = useState(defaultPetData);
   const [ownerData, setOwnerData] = useState(defaultOwnerData);
 
-  const { register: registerPet, handleSubmit: handlePetSubmit, reset: resetPetForm, formState: { errors: petErrors } } = useForm<PetFormData>({
+  const { control: petControl, register: registerPet, handleSubmit: handlePetSubmit, reset: resetPetForm, formState: { errors: petErrors } } = useForm<PetFormData>({
     resolver: zodResolver(petSchema),
   });
 
@@ -304,10 +307,36 @@ export default function PetProfilePage() {
             <CardContent className="space-y-4 p-4 pt-0">
               {isEditingPet ? (
                 <>
-                  <div className="space-y-1">
-                    <Label htmlFor="petAge">Age</Label>
-                    <Input id="petAge" {...registerPet("age")} />
-                    {petErrors.age && <p className="text-sm text-destructive">{petErrors.age.message}</p>}
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-1">
+                      <Label htmlFor="petAge">Age</Label>
+                      <Input id="petAge" {...registerPet("age")} />
+                      {petErrors.age && <p className="text-sm text-destructive">{petErrors.age.message}</p>}
+                    </div>
+                     <div className="space-y-1">
+                      <Label>Gender</Label>
+                      <Controller
+                        control={petControl}
+                        name="gender"
+                        render={({ field }) => (
+                          <RadioGroup
+                            onValueChange={field.onChange}
+                            defaultValue={field.value}
+                            className="flex items-center space-x-4 pt-2"
+                          >
+                            <div className="flex items-center space-x-2">
+                              <RadioGroupItem value="Male" id="male" />
+                              <Label htmlFor="male">Male</Label>
+                            </div>
+                            <div className="flex items-center space-x-2">
+                              <RadioGroupItem value="Female" id="female" />
+                              <Label htmlFor="female">Female</Label>
+                            </div>
+                          </RadioGroup>
+                        )}
+                      />
+                      {petErrors.gender && <p className="text-sm text-destructive">{petErrors.gender.message}</p>}
+                    </div>
                   </div>
                   <div className="space-y-1">
                     <Label htmlFor="petBio">Bio</Label>
@@ -317,9 +346,15 @@ export default function PetProfilePage() {
                 </>
               ) : (
                 <>
-                  <div>
-                    <span className="text-sm font-medium text-muted-foreground">Age</span>
-                    <p className="text-base sm:text-lg">{petData.age}</p>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <span className="text-sm font-medium text-muted-foreground">Age</span>
+                      <p className="text-base sm:text-lg">{petData.age}</p>
+                    </div>
+                     <div>
+                      <span className="text-sm font-medium text-muted-foreground">Gender</span>
+                      <p className="text-base sm:text-lg">{petData.gender}</p>
+                    </div>
                   </div>
                   <div>
                     <span className="text-sm font-medium text-muted-foreground">Bio</span>
