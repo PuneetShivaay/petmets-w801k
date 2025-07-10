@@ -130,7 +130,7 @@ export default function DashboardPage() {
             </CardHeader>
             <CardContent>
                 <Link href="/pet-profile" passHref>
-                    <Button>
+                    <Button size="sm">
                         Go to Profile <ArrowRight className="ml-2 h-4 w-4" />
                     </Button>
                 </Link>
