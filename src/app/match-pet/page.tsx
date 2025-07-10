@@ -14,7 +14,7 @@ import Image from "next/image";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Badge } from "@/components/ui/badge";
-import { Heart, Search, Loader2, Check, Bell, X } from "lucide-react";
+import { Heart, Search, Loader2, Check, Bell, X, Clock } from "lucide-react";
 
 // Define a type for the pet data we'll fetch
 interface Pet {
@@ -42,7 +42,6 @@ export default function MatchPetPage() {
   const [allPets, setAllPets] = useState<Pet[]>([]);
   const [displayPets, setDisplayPets] = useState<Pet[]>([]);
   const [loading, setLoading] = useState(true);
-  const [matchRequests, setMatchRequests] = useState<Record<string, boolean>>({}); // key: composite petId, value: true if requested
   const [submitting, setSubmitting] = useState<string | null>(null); // Stores the composite ID of the pet being requested
   
   const [incomingRequests, setIncomingRequests] = useState<MatchRequest[]>([]);
@@ -50,6 +49,7 @@ export default function MatchPetPage() {
   const [isUpdatingRequest, setIsUpdatingRequest] = useState<string | null>(null);
   
   const [matchedUserIds, setMatchedUserIds] = useState<Set<string>>(new Set());
+  const [pendingRequestPetIds, setPendingRequestPetIds] = useState<Set<string>>(new Set());
 
 
   const fetchPets = useCallback(async () => {
@@ -158,6 +158,30 @@ export default function MatchPetPage() {
 
     return () => unsubscribe();
   }, [user]);
+
+  // Listen for outgoing match requests sent by the current user that are pending
+  useEffect(() => {
+    if (!user) return;
+    
+    const sentRequestsQuery = query(
+      collection(db, "matchRequests"),
+      where("requesterId", "==", user.uid),
+      where("status", "==", "pending")
+    );
+
+    const unsubscribe = onSnapshot(sentRequestsQuery, (snapshot) => {
+        const newPendingIds = new Set<string>();
+        snapshot.forEach(doc => {
+            const data = doc.data();
+            const compositePetId = `${data.targetOwnerId}-${data.targetPetId}`;
+            newPendingIds.add(compositePetId);
+        });
+        setPendingRequestPetIds(newPendingIds);
+    });
+
+    return () => unsubscribe();
+  }, [user]);
+
   
   const handleMatchRequest = async (targetPet: Pet) => {
     if (!user) {
@@ -180,8 +204,7 @@ export default function MatchPetPage() {
             createdAt: serverTimestamp(),
         });
         
-        setMatchRequests(prev => ({ ...prev, [targetPet.id]: true }));
-        
+        // No need to manually update state here, the onSnapshot listener will do it.
         toast({ title: "Match Request Sent!", description: `Your request to match with ${targetPet.name} has been sent.` });
 
     } catch (error) {
@@ -232,6 +255,16 @@ export default function MatchPetPage() {
         setIsUpdatingRequest(null);
     }
   }
+  
+  const getButtonState = (pet: Pet) => {
+    if (submitting === pet.id) {
+        return { text: "Sending...", icon: Loader2, disabled: true, className: "animate-spin" };
+    }
+    if (pendingRequestPetIds.has(pet.id)) {
+        return { text: "Request Pending", icon: Clock, disabled: true, className: "" };
+    }
+    return { text: "Request Match", icon: Heart, disabled: false, className: "" };
+  };
 
   return (
     <div>
@@ -328,44 +361,39 @@ export default function MatchPetPage() {
         </Card>
       ) : (
         <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-          {displayPets.map((pet) => (
-            <Card key={pet.id} className="overflow-hidden rounded-lg shadow-lg">
-              <div className="relative h-60 w-full">
-                <Image 
-                  src={pet.image} 
-                  alt={pet.name} 
-                  fill
-                  sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                  style={{ objectFit: 'cover' }}
-                  data-ai-hint={pet.dataAiHint}
-                />
-              </div>
-              <CardHeader>
-                <CardTitle className="font-headline text-xl sm:text-2xl">{pet.name}</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-muted-foreground">{pet.breed}</p>
-                <Button 
-                    className="mt-4 w-full bg-accent text-accent-foreground hover:bg-accent/90"
-                    onClick={() => handleMatchRequest(pet)}
-                    disabled={submitting === pet.id || matchRequests[pet.id]}
-                >
-                    {submitting === pet.id ? (
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    ) : matchRequests[pet.id] ? (
-                        <Check className="mr-2 h-4 w-4" />
-                    ) : (
-                        <Heart className="mr-2 h-4 w-4" />
-                    )}
-                    {submitting === pet.id ? "Sending..." : matchRequests[pet.id] ? "Request Sent" : "Request Match"}
-                </Button>
-              </CardContent>
-            </Card>
-          ))}
+          {displayPets.map((pet) => {
+            const buttonState = getButtonState(pet);
+            return (
+                <Card key={pet.id} className="overflow-hidden rounded-lg shadow-lg">
+                <div className="relative h-60 w-full">
+                    <Image 
+                    src={pet.image} 
+                    alt={pet.name} 
+                    fill
+                    sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                    style={{ objectFit: 'cover' }}
+                    data-ai-hint={pet.dataAiHint}
+                    />
+                </div>
+                <CardHeader>
+                    <CardTitle className="font-headline text-xl sm:text-2xl">{pet.name}</CardTitle>
+                </CardHeader>
+                <CardContent>
+                    <p className="text-muted-foreground">{pet.breed}</p>
+                    <Button 
+                        className="mt-4 w-full bg-accent text-accent-foreground hover:bg-accent/90"
+                        onClick={() => handleMatchRequest(pet)}
+                        disabled={buttonState.disabled}
+                    >
+                        <buttonState.icon className={`mr-2 h-4 w-4 ${buttonState.className}`} />
+                        {buttonState.text}
+                    </Button>
+                </CardContent>
+                </Card>
+            );
+        })}
         </div>
       )}
     </div>
   );
 }
-
-    
