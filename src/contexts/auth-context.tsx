@@ -32,26 +32,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [isClient, setIsClient] = useState(false);
 
   useEffect(() => {
-    // This effect runs only on the client, after the component has mounted.
-    // This prevents hydration errors by ensuring server and client renders match initially.
-    setIsClient(true);
+    setIsClient(true); // Component has mounted
 
-    const checkAuthAndFirestore = async () => {
-      // Wait for Firestore to be ready first.
+    const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
+      // First, wait for Firestore to be ready.
       await isFirestoreReady();
-      
-      // onAuthStateChanged returns an unsubscribe function
-      const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
-        setUser(currentUser);
-        setIsLoading(false);
-      });
-      
-      // Cleanup subscription on unmount
-      return () => unsubscribe();
-    };
+      // Then, set the user and mark loading as complete.
+      setUser(currentUser);
+      setIsLoading(false);
+    });
 
-    checkAuthAndFirestore();
+    // Cleanup subscription on unmount
+    return () => unsubscribe();
   }, []);
+
 
   const userSignOut = useCallback(async () => {
     await firebaseSignOut(auth);
@@ -64,14 +58,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     userSignOut,
   }), [user, isLoading, userSignOut]);
 
-  // The AuthProvider is now the strict gatekeeper.
-  // It will show a loader and prevent any children from rendering
-  // until the initial authentication check is complete.
-  // The isClient check prevents the loader from rendering on the server.
   return (
     <AuthContext.Provider value={value}>
-      {isLoading && isClient && <InitialAuthLoader />}
-      {children}
+      {isLoading && isClient ? <InitialAuthLoader /> : children}
     </AuthContext.Provider>
   );
 }

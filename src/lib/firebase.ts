@@ -1,7 +1,7 @@
 
 import { initializeApp, getApps, getApp, type FirebaseApp } from "firebase/app";
 import { getAuth, type Auth } from "firebase/auth";
-import { getFirestore, type Firestore } from "firebase/firestore";
+import { getFirestore, type Firestore, enableIndexedDbPersistence } from "firebase/firestore";
 import { getStorage, type FirebaseStorage } from "firebase/storage";
 
 const firebaseConfig = {
@@ -15,43 +15,37 @@ const firebaseConfig = {
 };
 
 const app: FirebaseApp = !getApps().length ? initializeApp(firebaseConfig) : getApp();
-
 const auth: Auth = getAuth(app);
-
-// Configure Firestore with cache settings to enable IndexedDB persistence.
-// The enableIndexedDbPersistence() method is deprecated.
-const db: Firestore = getFirestore(app, {
-  cache: {
-    kind: "indexeddb",
-    // You can add other cache settings here if needed.
-  },
-});
+const db: Firestore = getFirestore(app);
 const storage: FirebaseStorage = getStorage(app);
 
 // Promise to track Firestore persistence setup.
-// The way to properly wait for cache initialization might be different
-// with the new cache API. Consult the Firebase documentation for the
-// recommended approach.
 let firestoreReadyPromise: Promise<void> | null = null;
-
 if (typeof window !== 'undefined') {
-  // With the new cache API, you might not need to explicitly wait for
-  // a persistence promise like before. The SDK might handle this internally,
-  // or provide a different way to check readiness.
-  // For now, we'll resolve immediately as a placeholder, but you should
-  // verify the correct approach in the Firebase documentation if you
-  // rely on waiting for offline persistence.
-  firestoreReadyPromise = Promise.resolve();
+  firestoreReadyPromise = enableIndexedDbPersistence(db)
+    .catch((err) => {
+        if (err.code === 'failed-precondition') {
+            console.warn(
+                'Firestore persistence failed: Multiple tabs open, persistence can only be enabled in one tab at a a time.'
+            );
+        } else if (err.code === 'unimplemented') {
+            console.warn(
+                'Firestore persistence failed: The current browser does not support all of the features required to enable persistence.'
+            );
+        }
+        return Promise.resolve(); // Non-fatal, let the app continue online.
+    });
 }
 
 /**
- * A function that returns a promise that resolves when Firestore is ready.
+ * A function that returns a promise that resolves when Firestore persistence has been set up.
+ * This is the signal that the database is ready for read/write operations.
  */
 export function isFirestoreReady(): Promise<void> {
     if (firestoreReadyPromise) {
         return firestoreReadyPromise;
     }
-    // For server-side rendering or environments without window, resolve immediately.
+    // For server-side rendering or environments without persistence, resolve immediately.
     return Promise.resolve();
 }
 

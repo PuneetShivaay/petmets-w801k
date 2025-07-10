@@ -14,33 +14,40 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
   const { hideLoading: hidePageTransitionLoading } = useLoading();
   const router = useRouter();
 
-  // The AuthProvider now guarantees that authIsLoading will be false before this component renders.
-  // The primary job of this useEffect is now just to handle routing logic.
+  // This effect now only runs after authIsLoading is false.
   useEffect(() => {
-    // This hook now only handles hiding the loader after page navigations.
+    // Hide the page transition loader on navigation.
     hidePageTransitionLoading();
 
-    // Since authIsLoading is guaranteed to be false here, we can safely perform redirects.
-    if (user && pathname === '/login') {
-      router.push('/');
-    } else if (!user && pathname !== '/login') {
-      router.push('/login');
+    // If auth is resolved (not loading), we can safely perform redirects.
+    if (!authIsLoading) {
+        if (user && pathname === '/login') {
+            router.push('/');
+        } else if (!user && pathname !== '/login') {
+            router.push('/login');
+        }
     }
-  }, [user, pathname, router, hidePageTransitionLoading]);
+  }, [user, authIsLoading, pathname, router, hidePageTransitionLoading]);
 
-  // If we are on the login page (and not logged in), render it outside the main layout.
-  // The check `!user` is safe because `authIsLoading` is false.
+  // The AuthProvider now guarantees that this component and its children
+  // will not render until authentication is resolved.
+  // So, if authIsLoading is true, this component won't even be in the tree.
+
+  if (authIsLoading) {
+      // This path is now handled by the AuthProvider's loader, so we render nothing here.
+      return null;
+  }
+
+  // If auth is resolved and the user is not logged in, but on the login page.
   if (!user && pathname === '/login') {
     return <main className="h-full min-h-screen">{children}</main>;
   }
 
-  // If the user is logged in, show the main layout.
-  // We can be confident `user` is not null here.
+  // If auth is resolved and the user is logged in.
   if (user) {
     return <MainLayoutInternal>{children}</MainLayoutInternal>;
   }
-
-  // If no other condition is met (e.g., routing is in progress, or on login page while still auth'd briefly),
-  // return null to prevent rendering anything until the redirect completes.
+  
+  // This will be shown briefly during the redirect from a protected page to /login
   return null;
 }
