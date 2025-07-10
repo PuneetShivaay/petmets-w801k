@@ -2,7 +2,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { collection, collectionGroup, getDocs, doc, setDoc, serverTimestamp, query, where, onSnapshot, updateDoc, deleteDoc } from "firebase/firestore";
+import { collection, collectionGroup, getDocs, doc, setDoc, serverTimestamp, query, where, onSnapshot, updateDoc, writeBatch } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { useAuth } from "@/contexts/auth-context";
 import { useToast } from "@/hooks/use-toast";
@@ -152,19 +152,37 @@ export default function MatchPetPage() {
     }
   };
 
-  const handleRequestResponse = async (requestId: string, status: 'accepted' | 'declined') => {
-    setIsUpdatingRequest(requestId);
+  const handleRequestResponse = async (request: MatchRequest, status: 'accepted' | 'declined') => {
+    if (!user) return;
+    setIsUpdatingRequest(request.id);
     try {
-        const requestRef = doc(db, "matchRequests", requestId);
-        await updateDoc(requestRef, { status: status });
+        const batch = writeBatch(db);
+        const requestRef = doc(db, "matchRequests", request.id);
         
+        batch.update(requestRef, { status: status });
+
+        if (status === 'accepted') {
+            const chatId = [user.uid, request.requesterId].sort().join('_');
+            const chatRef = doc(db, 'chats', chatId);
+
+            batch.set(chatRef, {
+                participants: [user.uid, request.requesterId],
+                participantEmails: [user.email, request.requesterEmail],
+                createdAt: serverTimestamp(),
+                lastMessage: 'Chat started!',
+                lastMessageTimestamp: serverTimestamp(),
+            }, { merge: true });
+        }
+        
+        await batch.commit();
+
         toast({
             title: `Request ${status}`,
             description: `You have ${status} the match request.`
         });
-        // The real-time listener will automatically remove it from the list.
+
     } catch (error) {
-        console.error(`Error updating request ${requestId}:`, error);
+        console.error(`Error updating request ${request.id}:`, error);
         toast({
             variant: "destructive",
             title: "Update Failed",
@@ -214,7 +232,7 @@ export default function MatchPetPage() {
                             size="sm" 
                             variant="outline" 
                             className="h-8 px-2 flex-1"
-                            onClick={() => handleRequestResponse(req.id, 'accepted')}
+                            onClick={() => handleRequestResponse(req, 'accepted')}
                             disabled={isUpdatingRequest === req.id}
                           >
                              {isUpdatingRequest === req.id ? <Loader2 className="h-4 w-4 animate-spin"/> : <Check className="h-4 w-4 text-green-500" />}
@@ -224,7 +242,7 @@ export default function MatchPetPage() {
                             size="sm" 
                             variant="destructive"
                             className="h-8 px-2 flex-1"
-                            onClick={() => handleRequestResponse(req.id, 'declined')}
+                            onClick={() => handleRequestResponse(req, 'declined')}
                              disabled={isUpdatingRequest === req.id}
                            >
                             {isUpdatingRequest === req.id ? <Loader2 className="h-4 w-4 animate-spin"/> : <X className="h-4 w-4"/>}
@@ -309,7 +327,3 @@ export default function MatchPetPage() {
     </div>
   );
 }
-
-    
-
-    

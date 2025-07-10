@@ -14,7 +14,8 @@ import {
   LayoutDashboard,
   LogIn,
   LogOut,
-  PawPrint as PetProfileIcon, 
+  PetProfileIcon,
+  MessageSquare,
 } from 'lucide-react';
 
 export interface NavItem {
@@ -42,6 +43,11 @@ export const navItems: NavItem[] = [
     title: 'Match Your Pet',
     href: '/match-pet',
     icon: HeartHandshake,
+  },
+  {
+    title: 'Pet Chats',
+    href: '/chats',
+    icon: MessageSquare,
   },
   {
     title: 'Pet Playzone',
