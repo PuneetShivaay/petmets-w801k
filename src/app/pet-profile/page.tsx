@@ -58,17 +58,16 @@ const defaultOwnerData = {
 };
 
 export default function PetProfilePage() {
-  const { user, isLoading: isAuthLoading } = useAuth();
+  const { user } = useAuth();
   const { toast } = useToast();
   const petAvatarInputRef = useRef<HTMLInputElement>(null);
 
-  const [isPageLoading, setIsPageLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(true);
   const [isEditingPet, setIsEditingPet] = useState(false);
   const [isEditingOwner, setIsEditingOwner] = useState(false);
   const [isSubmittingPet, setIsSubmittingPet] = useState(false);
   const [isSubmittingOwner, setIsSubmittingOwner] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
-
 
   const [petData, setPetData] = useState(defaultPetData);
   const [ownerData, setOwnerData] = useState(defaultOwnerData);
@@ -83,7 +82,7 @@ export default function PetProfilePage() {
 
   const fetchProfileData = useCallback(async () => {
     if (!user) return;
-
+    setIsLoading(true);
     try {
       const userDocRef = doc(db, "users", user.uid);
       const petDocRef = doc(db, "users", user.uid, "pets", "main-pet");
@@ -110,19 +109,18 @@ export default function PetProfilePage() {
 
     } catch (error) {
       console.error("Error fetching profile data:", error);
-      toast({ variant: "destructive", title: "Error", description: `Could not fetch profile data. Please check your connection.` });
+      toast({ variant: "destructive", title: "Error", description: `Could not fetch profile data. ${(error as Error).message}` });
     } finally {
-      setIsPageLoading(false);
+      setIsLoading(false);
     }
   }, [user, resetOwnerForm, resetPetForm, toast]);
 
   useEffect(() => {
-    if (!isAuthLoading && user) {
+    // The AppLayout now guarantees user is available here, so we can fetch directly.
+    if (user) {
       fetchProfileData();
-    } else if (!isAuthLoading && !user) {
-      setIsPageLoading(false);
     }
-  }, [user, isAuthLoading, fetchProfileData]);
+  }, [user, fetchProfileData]);
 
   const onPetSubmit: SubmitHandler<PetFormData> = async (data) => {
     if (!user) {
@@ -132,6 +130,7 @@ export default function PetProfilePage() {
     setIsSubmittingPet(true);
     try {
       const petDocRef = doc(db, "users", user.uid, "pets", "main-pet");
+      // Merge with existing data to prevent overwriting the avatar
       const dataToSave = { ...petData, ...data }; 
       
       await setDoc(petDocRef, dataToSave, { merge: true });
@@ -159,6 +158,7 @@ export default function PetProfilePage() {
       }
 
       const userDocRef = doc(db, "users", user.uid);
+      // Merge with existing data to avoid overwriting email, etc.
       const dataToSave = { ...ownerData, ...data };
 
       await setDoc(userDocRef, dataToSave, { merge: true });
@@ -179,7 +179,6 @@ export default function PetProfilePage() {
       return;
     }
     const file = event.target.files[0];
-    // Simple validation for image type and size
     if (!file.type.startsWith('image/')) {
         toast({ variant: 'destructive', title: 'Invalid File Type', description: 'Please select an image file.' });
         return;
@@ -208,8 +207,7 @@ export default function PetProfilePage() {
     }
   };
 
-
-  if (isPageLoading) {
+  if (isLoading) {
     return (
         <div>
             <PageHeader
@@ -225,7 +223,9 @@ export default function PetProfilePage() {
   }
   
   if (!user) {
-      return null;
+    // This case should be handled by AppLayout redirecting to /login,
+    // but as a fallback, we can render nothing.
+    return null;
   }
 
   return (
@@ -256,7 +256,7 @@ export default function PetProfilePage() {
                       type="button"
                       size="icon"
                       variant="outline"
-                      className="absolute -bottom-2 -right-2 h-8 w-8 rounded-full bg-background group-hover:flex items-center justify-center hidden"
+                      className="absolute -bottom-2 -right-2 h-8 w-8 rounded-full bg-background flex items-center justify-center group-hover:flex"
                       onClick={() => petAvatarInputRef.current?.click()}
                       disabled={isUploading}
                       aria-label="Upload new pet avatar"

@@ -9,7 +9,6 @@ import { useAuth } from "@/contexts/auth-context";
 import { GlobalLoader } from "@/components/global-loader";
 import { useEffect } from 'react';
 
-
 export function AppLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const { user, isLoading: authIsLoading } = useAuth();
@@ -20,36 +19,31 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
     // Hide page transition loader when pathname changes (navigation completes)
     hidePageTransitionLoading();
   }, [pathname, hidePageTransitionLoading]);
+  
+  // This is the new, stricter loading guard.
+  // It uses the isLoading flag from our improved AuthProvider.
+  if (authIsLoading) {
+    return <GlobalLoader />;
+  }
 
-  // Auth is now handled by the AuthProvider, which shows a loader and prevents this component
-  // from rendering until auth is resolved. This makes the logic here much cleaner.
-  // We no longer need to check `authIsLoading`.
+  // Auth is resolved, now handle redirects.
+  if (user && pathname === '/login') {
+    // We don't need to show a loader here, because the redirect will be very fast
+    // and the AuthProvider already handled the initial load.
+    router.push('/');
+    return <GlobalLoader />; // Show loader while redirecting
+  }
+  
+  if (!user && pathname !== '/login') {
+    router.push('/login');
+    return <GlobalLoader />; // Show loader while redirecting
+  }
 
-  useEffect(() => {
-    // Perform redirects once auth state is known.
-    if (user && pathname === '/login') {
-      showPageTransitionLoading();
-      router.push('/');
-    } else if (!user && pathname !== '/login') {
-      showPageTransitionLoading();
-      router.push('/login');
-    }
-  }, [pathname, user, router, showPageTransitionLoading]);
-
-  // If we are on the login page and the user is not logged in.
+  // If we are on the login page, render it outside the main layout.
   if (pathname === '/login') {
-    // If user *is* logged in, the useEffect above will redirect them.
-    // In the meantime, show a loader to prevent the login form from flashing.
-    if (user) return <GlobalLoader />;
     return <main className="h-full min-h-screen">{children}</main>;
   }
   
-  // If user is not logged in and trying to access a protected route,
-  // the useEffect will redirect. Show a loader during this process.
-  if (!user) {
-     return <GlobalLoader />;
-  }
-
-  // If we've passed all checks, the user is logged in and not on the login page.
+  // For any other page, the user must be logged in. Render the full layout.
   return <MainLayoutInternal>{children}</MainLayoutInternal>;
 }
