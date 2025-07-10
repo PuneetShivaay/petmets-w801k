@@ -140,7 +140,7 @@ export default function UserProfilePage() {
          </Button>
          <h1 className="font-semibold text-lg truncate">{`${ownerData.name}'s Profile`}</h1>
       </header>
-      <main className="flex-1 overflow-y-auto p-4 space-y-8">
+      <main className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-8">
         <div className="grid grid-cols-1 gap-8 md:grid-cols-2">
             {petData ? (
                 <Card className="shadow-lg">

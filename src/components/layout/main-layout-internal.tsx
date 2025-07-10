@@ -42,9 +42,6 @@ function MainLayoutChild({ children }: { children: React.ReactNode }) {
   const { user, userSignOut } = useAuth();
   const { toast } = useToast();
 
-  const [pageTitle, setPageTitle] = React.useState<string | undefined>(undefined);
-  const [otherUser, setOtherUser] = React.useState<OtherUser | null>(null);
-
   const handleLinkClick = () => {
     showLoading();
     if (isMobile) {
@@ -81,14 +78,6 @@ function MainLayoutChild({ children }: { children: React.ReactNode }) {
   
   const isDynamicPage = pathname.startsWith('/chats/') || pathname.startsWith('/profile/');
   const headerIsVisible = !isDynamicPage;
-
-  const childrenWithProps = React.Children.map(children, child => {
-    if (React.isValidElement(child)) {
-        // @ts-ignore
-      return React.cloneElement(child, { setPageTitle, setOtherUser });
-    }
-    return child;
-  });
 
   return (
     <>
@@ -143,37 +132,19 @@ function MainLayoutChild({ children }: { children: React.ReactNode }) {
         )}
       </Sidebar>
       <div className="flex-1 flex flex-col">
-        {headerIsVisible ? (
+        {headerIsVisible && (
             <header className="sticky top-0 z-10 flex h-16 items-center justify-between gap-4 border-b bg-background px-4">
                 <div className="flex w-full items-center gap-2">
                     <SidebarTrigger />
                     <h1 className="font-headline text-lg sm:text-xl font-semibold truncate">
-                        {pageTitle || defaultTitle}
+                        {defaultTitle}
                     </h1>
                 </div>
             </header>
-          ) : (
-            isDynamicPage && (
-              <header className="sticky top-0 z-10 flex h-16 items-center justify-start gap-3 border-b bg-background px-4">
-                  <SidebarTrigger className="sm:hidden" />
-                  <Button variant="ghost" size="icon" className="h-9 w-9" onClick={handleGoBack}>
-                      <ArrowLeft className="h-5 w-5" />
-                  </Button>
-                   {otherUser && (
-                     <div className="flex items-center gap-3 overflow-hidden">
-                       <Avatar className="h-9 w-9">
-                           <AvatarImage src={otherUser.avatar} data-ai-hint={otherUser.dataAiHint} />
-                           <AvatarFallback><User /></AvatarFallback>
-                       </Avatar>
-                       <span className="font-semibold text-lg truncate">{otherUser.name}</span>
-                     </div>
-                   )}
-              </header>
-            )
           )}
         <main className={cn("flex-1 overflow-auto", isDynamicPage && "h-screen")}>
-          <div className="p-4 sm:p-6">
-            {childrenWithProps}
+          <div className={cn(!isDynamicPage && "p-4 sm:p-6")}>
+            {children}
           </div>
         </main>
       </div>
