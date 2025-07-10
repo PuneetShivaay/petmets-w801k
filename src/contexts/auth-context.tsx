@@ -32,7 +32,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [isClient, setIsClient] = useState(false);
 
   useEffect(() => {
-    setIsClient(true); // Component has mounted
+    // This effect runs only on the client, after the initial render.
+    setIsClient(true); 
 
     const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
       // First, wait for Firestore to be ready.
@@ -58,9 +59,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     userSignOut,
   }), [user, isLoading, userSignOut]);
 
+  // Always render children to prevent hydration mismatch.
+  // The loader will be rendered on top of the children only on the client-side when loading.
   return (
     <AuthContext.Provider value={value}>
-      {isLoading && isClient ? <InitialAuthLoader /> : children}
+      {isClient && isLoading && <InitialAuthLoader />}
+      {children}
     </AuthContext.Provider>
   );
 }
