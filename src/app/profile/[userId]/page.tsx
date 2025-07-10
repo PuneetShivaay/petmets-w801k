@@ -188,6 +188,7 @@ export default function UserProfilePage({ setPageTitle }: UserProfilePageProps) 
                 <div className="flex items-center gap-2">
                     <Phone className="h-5 w-5 text-muted-foreground" />
                     <p className="text-base sm:text-lg">{ownerData.phone || "Not set"}</p>
+
                 </div>
                 <div className="flex items-start gap-2">
                     <Home className="h-5 w-5 text-muted-foreground mt-1" />
