@@ -32,7 +32,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [isClient, setIsClient] = useState(false);
 
   useEffect(() => {
-    // This effect runs only on the client, after the initial render.
+    // This effect runs only on the client, after the initial render,
+    // which is what we want for client-side-only logic.
     setIsClient(true); 
 
     const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
