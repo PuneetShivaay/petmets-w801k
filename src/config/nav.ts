@@ -31,12 +31,12 @@ export interface NavItem {
 export const navItems: NavItem[] = [
     {
     title: 'Dashboard',
-    href: '/dashboard',
+    href: '/',
     icon: LayoutDashboard,
   },
   {
     title: 'Match Your Pet',
-    href: '/',
+    href: '/match',
     icon: HeartHandshake,
   },
   {
