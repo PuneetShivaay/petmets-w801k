@@ -25,6 +25,7 @@ interface UserProfile {
     avatar: string;
     dataAiHint: string;
     name: string;
+    petName?: string;
 }
 
 export default function ChatsListPage() {
@@ -43,12 +44,15 @@ export default function ChatsListPage() {
 
       const profilePromises = idsToFetch.map(async (id) => {
           const userDoc = await getDoc(doc(db, 'users', id));
+          const petDoc = await getDoc(doc(db, 'users', id, 'pets', 'main-pet'));
           if (userDoc.exists()) {
               const data = userDoc.data();
+              const petData = petDoc.exists() ? petDoc.data() : {};
               newProfiles[id] = {
                   name: data.name || 'Pet Owner',
                   avatar: data.avatar || 'https://i.imgur.com/83AAQ1X.png',
-                  dataAiHint: data.dataAiHint || 'paw print logo'
+                  dataAiHint: data.dataAiHint || 'paw print logo',
+                  petName: petData.name,
               };
           }
       });
@@ -109,7 +113,7 @@ export default function ChatsListPage() {
 
   return (
     <div className="space-y-6">
-       <p className="text-lg text-muted-foreground text-center">Talk with other pet owners you've matched with.</p>
+       <p className="text-muted-foreground text-center">Talk with other pet owners you've matched with.</p>
       <Card>
         <CardContent className="p-0">
           {isLoadingChats ? (
@@ -132,7 +136,7 @@ export default function ChatsListPage() {
                           <AvatarFallback><User /></AvatarFallback>
                       </Avatar>
                       <div className="flex-grow overflow-hidden">
-                          <p className="font-semibold truncate">{profile?.name || 'Loading...'}</p>
+                          <p className="font-semibold truncate">{profile?.name || 'Loading...'}{profile?.petName && ` - ${profile.petName}`}</p>
                           <p className="text-sm text-muted-foreground truncate">{chat.lastMessage}</p>
                       </div>
                       {chat.lastMessageTimestamp && (

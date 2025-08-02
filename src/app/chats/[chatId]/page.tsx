@@ -32,6 +32,7 @@ interface OtherUser {
     avatar: string;
     dataAiHint: string;
     name: string;
+    petName?: string;
 }
 
 export default function ChatPage() {
@@ -71,13 +72,16 @@ export default function ChatPage() {
             const otherUserId = chatData.participants.find((p: string) => p !== user.uid);
             if (otherUserId) {
                 const userDoc = await getDoc(doc(db, 'users', otherUserId));
+                const petDoc = await getDoc(doc(db, 'users', otherUserId, 'pets', 'main-pet'));
                 if (userDoc.exists()) {
                     const data = userDoc.data();
+                    const petData = petDoc.exists() ? petDoc.data() : {};
                     setOtherUser({
                         id: otherUserId,
                         name: data.name || 'Pet Owner',
                         avatar: data.avatar || 'https://i.imgur.com/83AAQ1X.png',
-                        dataAiHint: data.dataAiHint || 'paw print logo'
+                        dataAiHint: data.dataAiHint || 'paw print logo',
+                        petName: petData.name
                     });
                 }
             }
@@ -150,7 +154,7 @@ export default function ChatPage() {
                      <AvatarImage src={otherUser.avatar} data-ai-hint={otherUser.dataAiHint} />
                      <AvatarFallback><User /></AvatarFallback>
                  </Avatar>
-                 <span className="font-semibold text-lg truncate">{otherUser.name}</span>
+                 <span className="font-semibold text-lg truncate">{otherUser.name}{otherUser.petName && ` - ${otherUser.petName}`}</span>
              </Link>
          ) : (
              <div className="flex items-center gap-3">
