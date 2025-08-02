@@ -26,6 +26,7 @@ interface UserProfile {
     dataAiHint: string;
     name: string;
     petName?: string;
+    petBreed?: string;
 }
 
 export default function ChatsListPage() {
@@ -53,6 +54,7 @@ export default function ChatsListPage() {
                   avatar: data.avatar || 'https://i.imgur.com/83AAQ1X.png',
                   dataAiHint: data.dataAiHint || 'paw print logo',
                   petName: petData.name,
+                  petBreed: petData.breed,
               };
           }
       });
@@ -136,8 +138,13 @@ export default function ChatsListPage() {
                           <AvatarFallback><User /></AvatarFallback>
                       </Avatar>
                       <div className="flex-grow overflow-hidden">
-                          <p className="font-semibold truncate">{profile?.name || 'Loading...'}{profile?.petName && ` - ${profile.petName}`}</p>
-                          <p className="text-sm text-muted-foreground truncate">{chat.lastMessage}</p>
+                          <div>
+                            <p className="font-semibold truncate">{profile?.name || 'Loading...'}</p>
+                             {profile?.petName && (
+                                <p className="text-sm text-muted-foreground truncate">{profile.petName} - {profile.petBreed}</p>
+                             )}
+                          </div>
+                          <p className="text-sm text-muted-foreground truncate mt-1">{chat.lastMessage}</p>
                       </div>
                       {chat.lastMessageTimestamp && (
                            <p className="text-xs text-muted-foreground self-start shrink-0">

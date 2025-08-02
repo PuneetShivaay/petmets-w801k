@@ -33,6 +33,7 @@ interface OtherUser {
     dataAiHint: string;
     name: string;
     petName?: string;
+    petBreed?: string;
 }
 
 export default function ChatPage() {
@@ -81,7 +82,8 @@ export default function ChatPage() {
                         name: data.name || 'Pet Owner',
                         avatar: data.avatar || 'https://i.imgur.com/83AAQ1X.png',
                         dataAiHint: data.dataAiHint || 'paw print logo',
-                        petName: petData.name
+                        petName: petData.name,
+                        petBreed: petData.breed,
                     });
                 }
             }
@@ -154,12 +156,20 @@ export default function ChatPage() {
                      <AvatarImage src={otherUser.avatar} data-ai-hint={otherUser.dataAiHint} />
                      <AvatarFallback><User /></AvatarFallback>
                  </Avatar>
-                 <span className="font-semibold text-lg truncate">{otherUser.name}{otherUser.petName && ` - ${otherUser.petName}`}</span>
+                 <div className="overflow-hidden">
+                    <p className="font-semibold text-base truncate">{otherUser.name}</p>
+                    {otherUser.petName && (
+                        <p className="text-sm text-muted-foreground truncate">{otherUser.petName} - {otherUser.petBreed}</p>
+                    )}
+                 </div>
              </Link>
          ) : (
              <div className="flex items-center gap-3">
                  <Skeleton className="h-9 w-9 rounded-full" />
-                 <Skeleton className="h-6 w-32" />
+                 <div className="space-y-1">
+                    <Skeleton className="h-5 w-24" />
+                    <Skeleton className="h-4 w-32" />
+                 </div>
              </div>
          )}
       </header>
