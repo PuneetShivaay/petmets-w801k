@@ -2,7 +2,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { collection, collectionGroup, getDocs, doc, setDoc, serverTimestamp, query, where, onSnapshot, writeBatch } from "firebase/firestore";
+import { collection, collectionGroup, getDocs, doc, setDoc, serverTimestamp, query, where, onSnapshot, writeBatch, getDoc } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { useAuth } from "@/contexts/auth-context";
 import { useToast } from "@/hooks/use-toast";
@@ -30,6 +30,7 @@ interface Pet {
 interface MatchRequest {
     id: string;
     requesterId: string;
+    requesterName: string;
     requesterEmail: string;
     targetPetName: string;
     status: 'pending' | 'accepted' | 'declined';
@@ -160,12 +161,21 @@ export default function MatchPetPage() {
       where("status", "==", "pending")
     );
 
-    const unsubscribe = onSnapshot(requestsQuery, (snapshot) => {
-      const requests = snapshot.docs.map(doc => ({
+    const unsubscribe = onSnapshot(requestsQuery, async (snapshot) => {
+      const requestsData = snapshot.docs.map(doc => ({
         id: doc.id,
         ...doc.data(),
-      } as MatchRequest));
-      setIncomingRequests(requests);
+      }));
+
+      const enhancedRequests = await Promise.all(
+        requestsData.map(async (req) => {
+          const userDoc = await getDoc(doc(db, "users", req.requesterId));
+          const requesterName = userDoc.exists() ? userDoc.data().name : req.requesterEmail;
+          return { ...req, requesterName } as MatchRequest;
+        })
+      );
+      
+      setIncomingRequests(enhancedRequests);
     });
 
     return () => unsubscribe();
@@ -318,7 +328,7 @@ export default function MatchPetPage() {
                   incomingRequests.map(req => (
                     <div key={req.id} className="rounded-md border p-3 flex flex-col gap-2">
                       <div>
-                        <p className="text-sm font-medium truncate">From: {req.requesterEmail}</p>
+                        <p className="text-sm font-medium truncate">From: {req.requesterName}</p>
                         <p className="text-sm text-muted-foreground">For: {req.targetPetName}</p>
                       </div>
                       <div className="flex gap-2 justify-end">
