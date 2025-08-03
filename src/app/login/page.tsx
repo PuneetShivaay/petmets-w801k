@@ -107,7 +107,8 @@ export default function LoginPage() {
           console.error("Login error:", error.message);
       }
       setFormError(message);
-      setIsSubmitting(false);
+    } finally {
+        setIsSubmitting(false);
     }
   };
 
@@ -166,7 +167,8 @@ export default function LoginPage() {
           console.error("Sign up error:", error);
       }
       setFormError(message);
-      setIsSubmitting(false);
+    } finally {
+        setIsSubmitting(false);
     }
   };
 
@@ -359,3 +361,5 @@ export default function LoginPage() {
     </div>
   );
 }
+
+    

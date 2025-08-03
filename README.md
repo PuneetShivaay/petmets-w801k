@@ -1,5 +1,5 @@
 # PetMets - Your All-in-One Pet Companion App
-
+This code is related to app.petmets.in
 PetMets is a modern, comprehensive web application designed to connect pet owners with a wide range of pet-related services and with each other. From finding the perfect playdate companion to managing your pet's health records, PetMets aims to be the ultimate digital assistant for every pet owner.
 
 This project is built with a modern, scalable, and AI-powered tech stack, leveraging the best of Next.js for the frontend and Firebase for the backend.
