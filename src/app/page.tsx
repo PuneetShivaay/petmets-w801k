@@ -4,7 +4,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useAuth } from "@/contexts/auth-context";
-import { collection, query, where, onSnapshot, doc, getDoc, getCountFromServer } from "firebase/firestore";
+import { collection, query, where, onSnapshot, doc, getDoc } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -19,10 +19,9 @@ interface StatCardProps {
   icon: React.ElementType;
   href: string;
   actionText: string;
-  isLoading: boolean;
 }
 
-function StatCard({ title, value, description, icon: Icon, href, actionText, isLoading }: StatCardProps) {
+function StatCard({ title, value, description, icon: Icon, href, actionText }: StatCardProps) {
   return (
     <Card className="shadow-lg">
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -30,17 +29,8 @@ function StatCard({ title, value, description, icon: Icon, href, actionText, isL
         <Icon className="h-4 w-4 text-muted-foreground" />
       </CardHeader>
       <CardContent>
-        {isLoading ? (
-          <>
-            <Skeleton className="h-8 w-1/4 mt-1" />
-            <Skeleton className="h-4 w-3/4 mt-2" />
-          </>
-        ) : (
-          <>
-            <div className="text-2xl font-bold">{value}</div>
-            <p className="text-xs text-muted-foreground">{description}</p>
-          </>
-        )}
+        <div className="text-2xl font-bold">{value}</div>
+        <p className="text-xs text-muted-foreground">{description}</p>
         <Link href={href} passHref>
           <Button variant="outline" size="sm" className="mt-4 w-full sm:w-auto">
             {actionText} <ArrowRight className="ml-2 h-4 w-4" />
@@ -49,6 +39,22 @@ function StatCard({ title, value, description, icon: Icon, href, actionText, isL
       </CardContent>
     </Card>
   );
+}
+
+function StatCardSkeleton() {
+    return (
+        <Card className="shadow-lg">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <Skeleton className="h-5 w-2/5" />
+                <Skeleton className="h-4 w-4" />
+            </CardHeader>
+            <CardContent>
+                <Skeleton className="h-8 w-1/4 mt-1" />
+                <Skeleton className="h-4 w-3/4 mt-2" />
+                <Skeleton className="h-9 w-[120px] mt-4" />
+            </CardContent>
+        </Card>
+    );
 }
 
 export default function DashboardPage() {
@@ -152,33 +158,42 @@ export default function DashboardPage() {
       )}
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-        <StatCard
-          title="Pending Match Requests"
-          value={pendingRequests}
-          description="Awaiting your response."
-          icon={Bell}
-          href="/match"
-          actionText="Review Requests"
-          isLoading={loadingRequests}
-        />
-        <StatCard
-          title="Matched Profiles"
-          value={matchedProfilesCount}
-          description="Connections you have made."
-          icon={HeartHandshake}
-          href="/chats"
-          actionText="View Chats"
-          isLoading={loadingMatches}
-        />
-        <StatCard
-          title="Upcoming Booking"
-          value={upcomingBooking?.service || "None"}
-          description={upcomingBooking ? `Scheduled for ${upcomingBooking.date}` : "No upcoming appointments."}
-          icon={Calendar}
-          href="/bookings"
-          actionText="View Bookings"
-          isLoading={loadingBookings}
-        />
+        {loadingRequests ? (
+          <StatCardSkeleton />
+        ) : (
+          <StatCard
+            title="Pending Match Requests"
+            value={pendingRequests}
+            description="Awaiting your response."
+            icon={Bell}
+            href="/match"
+            actionText="Review Requests"
+          />
+        )}
+        {loadingMatches ? (
+          <StatCardSkeleton />
+        ) : (
+          <StatCard
+            title="Matched Profiles"
+            value={matchedProfilesCount}
+            description="Connections you have made."
+            icon={HeartHandshake}
+            href="/chats"
+            actionText="View Chats"
+          />
+        )}
+        {loadingBookings ? (
+          <StatCardSkeleton />
+        ) : (
+          <StatCard
+            title="Upcoming Booking"
+            value={upcomingBooking?.service || "None"}
+            description={upcomingBooking ? `Scheduled for ${upcomingBooking.date}` : "No upcoming appointments."}
+            icon={Calendar}
+            href="/bookings"
+            actionText="View Bookings"
+          />
+        )}
         <Card className="shadow-lg lg:col-span-1">
              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium">Quick Actions</CardTitle>
