@@ -7,7 +7,7 @@ import { db } from "@/lib/firebase";
 import { useAuth } from "@/contexts/auth-context";
 import { useToast } from "@/hooks/use-toast";
 
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import Image from "next/image";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -288,14 +288,14 @@ export default function MatchPetPage() {
           <Input 
             type="search"
             placeholder="Filter by pet name or breed..."
-            className="pl-10 border-accent focus:ring-accent"
+            className="pl-10"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
         </div>
         <Popover open={isPopoverOpen} onOpenChange={setIsPopoverOpen}>
           <PopoverTrigger asChild>
-            <Button variant="outline" className="relative shrink-0 border-accent hover:bg-accent/10 focus:ring-accent">
+            <Button variant="outline" className="relative shrink-0">
               <Bell className="mr-2 h-5 w-5" />
               <span>Notifications</span>
               {incomingRequests.length > 0 && (

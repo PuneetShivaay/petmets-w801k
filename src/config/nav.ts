@@ -16,6 +16,7 @@ import {
   LogOut,
   User,
   MessageSquare,
+  Bell,
 } from 'lucide-react';
 
 export interface NavItem {
@@ -37,7 +38,7 @@ export const navItems: NavItem[] = [
   {
     title: 'Match Your Pet',
     href: '/match',
-    icon: HeartHandshake,
+    icon: Bell, // Changed from HeartHandshake
   },
   {
     title: 'Pet Profile',
