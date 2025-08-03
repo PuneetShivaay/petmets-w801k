@@ -90,12 +90,6 @@ export default function LoginPage() {
     } catch (error: any) {
       let message = "An unexpected error occurred. Please try again.";
       switch (error.code) {
-        case "auth/user-not-found":
-          message = "No account found with this email address. Please sign up.";
-          break;
-        case "auth/wrong-password":
-          message = "Incorrect password. Please try again.";
-          break;
         case "auth/invalid-credential":
             message = "Invalid email or password. Please check your credentials and try again.";
             break;
@@ -104,7 +98,7 @@ export default function LoginPage() {
           break;
         default:
           message = "Failed to login. Please try again.";
-          console.error("Login error:", error.message);
+          console.error("Login error:", error.message, "Code:", error.code);
       }
       setFormError(message);
     } finally {
@@ -362,4 +356,5 @@ export default function LoginPage() {
   );
 }
 
+    
     
