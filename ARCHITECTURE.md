@@ -1,4 +1,5 @@
 # PetMets Technical Architecture
+App.petmets.in code
 
 This document provides a detailed overview of the technical architecture, data structures, and core logic of the PetMets application. It is intended for developers working on the codebase.
 
