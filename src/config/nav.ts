@@ -18,6 +18,7 @@ import {
   MessageSquare,
   Bell,
   Camera,
+  Heart,
 } from 'lucide-react';
 
 export interface NavItem {
@@ -40,6 +41,11 @@ export const navItems: NavItem[] = [
     title: 'Match Your Pet',
     href: '/match',
     icon: Bell, // Changed from HeartHandshake
+  },
+   {
+    title: 'Adoption',
+    href: '/adoption',
+    icon: Heart,
   },
   {
     title: 'Pet Profile',
