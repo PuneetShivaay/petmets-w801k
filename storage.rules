@@ -3,27 +3,27 @@ rules_version = '2';
 
 service firebase.storage {
   match /b/{bucket}/o {
-    // Allow public read on user/pet avatars for profile viewing
-    match /users/{userId}/{allPaths=**} {
-      allow read;
-    }
-    
-    // Allow a user to write to their own avatar paths
-    match /users/{userId}/{path=**} {
-      allow write: if request.auth != null && request.auth.uid == userId;
+    // Default deny all
+    match /{allPaths=**} {
+      allow read, write: if false;
     }
 
-    // Allow public read on adoption images
-    match /adoption-listings/{fileName} {
-      allow read;
+    // Allow users to read/write their own owner avatar
+    match /users/{userId}/owner/avatar.jpg {
+      allow read: if true;
+      allow write: if request.auth != null && request.auth.uid == userId;
     }
     
-    // Allow any authenticated user to upload images to the adoption-listings path.
-    // Restrict file size to 5MB and ensure it's an image.
+    // Allow users to read/write their own pet avatar
+    match /users/{userId}/pets/main-pet/avatar.jpg {
+       allow read: if true;
+       allow write: if request.auth != null && request.auth.uid == userId;
+    }
+
+    // Allow any authenticated user to upload to adoption-listings
     match /adoption-listings/{fileName} {
-      allow write: if request.auth != null
-                    && request.resource.size < 5 * 1024 * 1024
-                    && request.resource.contentType.matches('image/.*');
+      allow read: if true; // Allow public read access for all listing images
+      allow write: if request.auth != null;
     }
   }
 }
