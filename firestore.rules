@@ -1,0 +1,53 @@
+
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Users Collection
+    // - Allow anyone to create their own user document upon signup.
+    // - Allow users to read/update their own document.
+    // - Allow any authenticated user to read public user profiles.
+    match /users/{userId} {
+      allow create: if request.auth != null && request.auth.uid == userId;
+      allow read: if request.auth != null;
+      allow update: if request.auth != null && request.auth.uid == userId;
+    }
+
+    // Pets Subcollection
+    // - Allow users to manage their own pet's subcollection.
+    match /users/{userId}/pets/{petId} {
+      allow read: if request.auth != null;
+      allow create, update, delete: if request.auth != null && request.auth.uid == userId;
+    }
+    
+    // Match Requests Collection
+    // - Allow authenticated users to create match requests.
+    // - Allow involved users to read/update the request status.
+    match /matchRequests/{requestId} {
+      allow read, update: if request.auth != null && resource.data.targetOwnerId == request.auth.uid || resource.data.requesterId == request.auth.uid;
+      allow create: if request.auth != null && request.resource.data.requesterId == request.auth.uid;
+    }
+
+    // Chats Collection
+    // - Allow participants of a chat to read and write messages.
+    match /chats/{chatId} {
+      allow read, update, write: if request.auth != null && request.auth.uid in resource.data.participants;
+
+      // Messages Subcollection
+      match /messages/{messageId} {
+        allow read, create: if request.auth != null && get(/databases/$(database)/documents/chats/$(chatId)).data.participants.hasAny([request.auth.uid]);
+      }
+    }
+
+    // Adoption Listings Collection
+    // - Allow any authenticated user to create a listing.
+    // - Allow public read access for all adoption listings.
+    // - Allow the owner of a listing to update or delete it.
+    match /adoptionListings/{listingId} {
+        allow read;
+        allow create: if request.auth != null;
+        allow update, delete: if request.auth != null && resource.data.ownerId == request.auth.uid;
+    }
+  }
+}

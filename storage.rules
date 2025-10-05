@@ -3,18 +3,27 @@ rules_version = '2';
 
 service firebase.storage {
   match /b/{bucket}/o {
-    // Rules for user-specific files (avatars, etc.)
+    // Allow public read on user/pet avatars for profile viewing
     match /users/{userId}/{allPaths=**} {
       allow read;
+    }
+    
+    // Allow a user to write to their own avatar paths
+    match /users/{userId}/{path=**} {
       allow write: if request.auth != null && request.auth.uid == userId;
     }
 
-    // Rules for adoption listings
+    // Allow public read on adoption images
     match /adoption-listings/{fileName} {
-      allow read; // Allow anyone to read adoption images
-      allow write: if request.auth != null &&
-                      request.resource.size < 5 * 1024 * 1024 && // Max 5MB
-                      request.resource.contentType.matches('image/.*');
+      allow read;
+    }
+    
+    // Allow any authenticated user to upload images to the adoption-listings path.
+    // Restrict file size to 5MB and ensure it's an image.
+    match /adoption-listings/{fileName} {
+      allow write: if request.auth != null
+                    && request.resource.size < 5 * 1024 * 1024
+                    && request.resource.contentType.matches('image/.*');
     }
   }
 }
