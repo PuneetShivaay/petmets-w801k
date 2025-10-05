@@ -17,6 +17,7 @@ import {
   User,
   MessageSquare,
   Bell,
+  Camera,
 } from 'lucide-react';
 
 export interface NavItem {
@@ -74,6 +75,11 @@ export const navItems: NavItem[] = [
     title: 'Pet Boarding',
     href: '/boarding',
     icon: Hotel,
+  },
+  {
+    title: 'Pet Photography',
+    href: '/photography',
+    icon: Camera,
   },
   {
     title: 'Service Providers',
