@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect, useCallback, useRef } from "react";
@@ -6,7 +5,7 @@ import { useForm, type SubmitHandler } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { doc, getDoc, setDoc, serverTimestamp } from "firebase/firestore";
-import { ref as storageRef, uploadBytes, getDownloadURL, deleteObject } from "firebase/storage";
+import { ref as storageRef, uploadBytes, getDownloadURL } from "firebase/storage";
 import Image from "next/image";
 
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
@@ -121,6 +120,7 @@ export default function BusinessProfilePage() {
     const file = event.target.files[0];
     
     setIsUploading(true);
+    // Explicit standardized path
     const filePath = `service_providers/${user.uid}/profile_${Date.now()}.jpg`;
     const avatarRef = storageRef(storage, filePath);
     
@@ -160,6 +160,7 @@ export default function BusinessProfilePage() {
 
     const file = event.target.files[0];
     setIsUploadingGallery(true);
+    // Standardized path for gallery
     const filePath = `service_providers/${user.uid}/gallery/${Date.now()}_${file.name}`;
     const fileRef = storageRef(storage, filePath);
 
@@ -175,7 +176,13 @@ export default function BusinessProfilePage() {
       toast({ title: 'Success', description: 'Photo added to gallery.' });
     } catch (error: any) {
       console.error("Gallery upload failed:", error);
-      toast({ variant: 'destructive', title: 'Upload Failed', description: error.message });
+      // Construct a contextual error for the global emitter
+      const contextualError = new FirestorePermissionError({
+          path: filePath,
+          operation: 'create',
+          requestResourceData: { fileName: file.name },
+      });
+      errorEmitter.emit('permission-error', contextualError);
     } finally {
       setIsUploadingGallery(false);
       if (galleryInputRef.current) galleryInputRef.current.value = "";
@@ -186,14 +193,10 @@ export default function BusinessProfilePage() {
     if (!user) return;
     
     try {
-      // 1. Remove from Firestore
       const newGallery = (providerData?.gallery || []).filter((url: string) => url !== imageUrl);
       const providerDocRef = doc(db, "service_providers", user.uid);
       await setDoc(providerDocRef, { gallery: newGallery }, { merge: true });
       
-      // 2. Optional: Delete from Storage if you want to be tidy
-      // This is slightly complex as you need the storage path from the URL
-      // For now, we update the state and the document.
       setProviderData((prev: any) => ({ ...prev, gallery: newGallery }));
       toast({ title: 'Success', description: 'Photo removed from gallery.' });
     } catch (error: any) {
