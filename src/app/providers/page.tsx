@@ -1,8 +1,7 @@
-
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { collection, query, onSnapshot, addDoc, serverTimestamp, orderBy, where } from "firebase/firestore";
+import { collection, query, onSnapshot, doc, setDoc, serverTimestamp, orderBy, where } from "firebase/firestore";
 import { ref as storageRef, uploadBytes, getDownloadURL } from "firebase/storage";
 import { db, storage } from "@/lib/firebase";
 import { useAuth } from "@/contexts/auth-context";
@@ -57,17 +56,19 @@ export default function ServiceProvidersPage() {
   const [isRegisterOpen, setIsRegisterOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [imageFile, setImageFile] = useState<File | null>(null);
-  const imageInputRef = useRef<HTMLInputElement>(null);
 
   const { register, handleSubmit, reset, formState: { errors } } = useForm<ProviderFormData>({
     resolver: zodResolver(providerSchema),
   });
 
   useEffect(() => {
-    const q = query(collection(db, "providers"), orderBy("createdAt", "desc"));
+    const q = query(collection(db, "service_providers"), orderBy("createdAt", "desc"));
     const unsubscribe = onSnapshot(q, (snapshot) => {
       const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Provider));
       setProviders(data);
+      setLoading(false);
+    }, (error) => {
+      console.error("Error fetching providers:", error);
       setLoading(false);
     });
     return () => unsubscribe();
@@ -80,7 +81,11 @@ export default function ServiceProvidersPage() {
     }
     if (searchTerm) {
       const lower = searchTerm.toLowerCase();
-      result = result.filter(p => p.name.toLowerCase().includes(lower) || p.bio.toLowerCase().includes(lower) || p.location.toLowerCase().includes(lower));
+      result = result.filter(p => 
+        p.name.toLowerCase().includes(lower) || 
+        p.bio.toLowerCase().includes(lower) || 
+        p.location.toLowerCase().includes(lower)
+      );
     }
     setFilteredProviders(result);
   }, [providers, searchTerm, serviceFilter]);
@@ -105,11 +110,12 @@ export default function ServiceProvidersPage() {
 
     setIsSubmitting(true);
     try {
-      const imgRef = storageRef(storage, `providers/${user.uid}_${Date.now()}`);
+      const imgRef = storageRef(storage, `service_providers/${user.uid}/profile_${Date.now()}.jpg`);
       const snapshot = await uploadBytes(imgRef, imageFile);
       const url = await getDownloadURL(snapshot.ref);
 
-      await addDoc(collection(db, "providers"), {
+      const providerRef = doc(db, "service_providers", user.uid);
+      await setDoc(providerRef, {
         ...data,
         userId: user.uid,
         image: url,
@@ -126,7 +132,7 @@ export default function ServiceProvidersPage() {
       toast({ 
         variant: "destructive", 
         title: "Registration Failed", 
-        description: error.message || "An unexpected error occurred. Please try again." 
+        description: error.message || "An unexpected error occurred." 
       });
     } finally {
       setIsSubmitting(false);
@@ -161,7 +167,7 @@ export default function ServiceProvidersPage() {
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-1">
                   <Label htmlFor="service">Service Type</Label>
-                  <Select onValueChange={(v) => register("service").onChange({ target: { value: v, name: "service" } })}>
+                  <Select onValueChange={(v) => reset({ ...register("service"), service: v as any })}>
                     <SelectTrigger>
                       <SelectValue placeholder="Select service" />
                     </SelectTrigger>
@@ -182,7 +188,7 @@ export default function ServiceProvidersPage() {
               </div>
               <div className="space-y-1">
                 <Label htmlFor="bio">Service Description</Label>
-                <Textarea id="bio" {...register("bio")} rows={4} placeholder="Describe your experience and what you offer..." />
+                <Textarea id="bio" {...register("bio")} rows={4} placeholder="Describe your experience..." />
                 {errors.bio && <p className="text-xs text-destructive">{errors.bio.message}</p>}
               </div>
               <DialogFooter>
@@ -233,7 +239,7 @@ export default function ServiceProvidersPage() {
           <div className="col-span-full text-center py-12">
             <PawPrint className="mx-auto h-12 w-12 text-muted-foreground" />
             <p className="mt-4 text-lg font-medium">No Providers Found</p>
-            <p className="text-sm text-muted-foreground">Try adjusting your filters or be the first to register!</p>
+            <p className="text-sm text-muted-foreground">Try adjusting your filters or register as a provider!</p>
           </div>
         ) : (
           filteredProviders.map((provider) => (

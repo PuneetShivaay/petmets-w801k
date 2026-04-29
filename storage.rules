@@ -1,33 +1,21 @@
-
 rules_version = '2';
-
 service firebase.storage {
   match /b/{bucket}/o {
-    // Default deny all
-    match /{allPaths=**} {
-      allow read, write: if false;
-    }
-
-    // Allow users to read/write their own owner avatar
-    match /users/{userId}/owner/avatar.jpg {
+    
+    // User profile images
+    match /users/{userId}/{allPaths=**} {
       allow read: if true;
       allow write: if request.auth != null && request.auth.uid == userId;
     }
-    
-    // Allow users to read/write their own pet avatar
-    match /users/{userId}/pets/main-pet/avatar.jpg {
-       allow read: if true;
-       allow write: if request.auth != null && request.auth.uid == userId;
-    }
 
-    // Allow any authenticated user to upload to adoption-listings
-    match /adoption-listings/{fileName} {
+    // Service provider images
+    match /service_providers/{providerId}/{allPaths=**} {
       allow read: if true;
-      allow write: if request.auth != null;
+      allow write: if request.auth != null && request.auth.uid == providerId;
     }
 
-    // Allow authenticated users to upload provider photos
-    match /providers/{fileName} {
+    // Adoption listings
+    match /adoption-listings/{allPaths=**} {
       allow read: if true;
       allow write: if request.auth != null;
     }

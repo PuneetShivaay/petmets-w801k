@@ -2,33 +2,6 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    /**
-     * PETMETS SECURITY RULES PHILOSOPHY
-     * 
-     * Core Philosophy: This ruleset enforces a strict user-ownership and provider-ownership model. 
-     * Access is primarily governed by the hierarchical structure of the data, ensuring that 
-     * private user data is only accessible to the owner, while service information is public 
-     * for discovery but protected for modification.
-     * 
-     * Data Structure: Data is organized into two main branches:
-     * 1. /users/{userId}: Contains all private user data, including profiles, pets, documents, and bookings.
-     * 2. /service_providers/{providerId} & /service_types: Contains public-facing service information.
-     * 
-     * Key Security Decisions:
-     * - User Listing: Listing of users is strictly prohibited to prevent data scraping.
-     * - Denormalization: Critical IDs (like userId and serviceProviderId) are required within 
-     *   documents (e.g., Bookings, PetDocuments) to allow for performant, atomic security checks 
-     *   without multiple document lookups (get() calls).
-     * - Shared Access: Bookings utilize a shared-access model where both the Customer (userId) 
-     *   and the Service Provider (serviceProviderId) can view and update the status of an appointment.
-     * 
-     * Prototyping Mode: These rules prioritize strong authorization (WHO can access) over 
-     * strict schema validation (WHAT the data looks like). This allows for rapid iteration 
-     * on features while keeping user data secure.
-     */
-
-    // --- Global Helper Functions ---
-
     function isSignedIn() {
       return request.auth != null;
     }
@@ -41,39 +14,18 @@ service cloud.firestore {
       return resource != null && isOwner(userId);
     }
 
-    // --- Collection Rules ---
-
-    /**
-     * @description Rules for user profiles. Only the user can read or modify their own profile.
-     * @path /users/{userId}
-     * @allow Authenticated user with matching UID (get, list, create, update, delete)
-     * @deny Any user attempting to access another user's profile.
-     * @principle Self-creation and ownership-based access.
-     */
+    // --- Users and Pets ---
     match /users/{userId} {
-      allow get, list: if isOwner(userId);
-      allow create: if isOwner(userId) && request.resource.data.id == userId;
+      allow get: if true;
+      allow list: if isOwner(userId);
+      allow create: if isOwner(userId);
       allow update, delete: if isExistingOwner(userId);
 
-      /**
-       * @description Rules for pets belonging to a user.
-       * @path /users/{userId}/pets/{petId}
-       * @allow User owner (get, list, create, update, delete)
-       * @deny Unauthenticated users or other pet owners.
-       * @principle Path-based ownership and relational integrity.
-       */
       match /pets/{petId} {
-        allow get, list: if isOwner(userId);
-        allow create: if isOwner(userId) && request.resource.data.userId == userId;
+        allow get, list: if true;
+        allow create: if isOwner(userId);
         allow update, delete: if isExistingOwner(userId);
 
-        /**
-         * @description Metadata for pet documents (vet records, etc.).
-         * @path /users/{userId}/pets/{petId}/documents/{documentId}
-         * @allow User owner (get, list, create, update, delete)
-         * @deny Anyone other than the pet's owner.
-         * @principle Authorization independence via nested path.
-         */
         match /documents/{documentId} {
           allow get, list: if isOwner(userId);
           allow create: if isOwner(userId);
@@ -81,62 +33,52 @@ service cloud.firestore {
         }
       }
 
-      /**
-       * @description Bookings for pet services. Shared between the customer and provider.
-       * @path /users/{userId}/bookings/{bookingId}
-       * @allow Customer (userId) or Service Provider (serviceProviderId) (get, list, update)
-       * @allow Customer only (create, delete)
-       * @deny Unrelated third parties.
-       * @principle Shared access model for collaborative entities.
-       */
       match /bookings/{bookingId} {
-        function isParticipant() {
-          return isOwner(userId) || (isSignedIn() && request.auth.uid == resource.data.serviceProviderId);
-        }
-
-        allow get, list: if isParticipant();
-        allow create: if isOwner(userId) && request.resource.data.userId == userId;
-        allow update: if isParticipant() && resource != null;
-        allow delete: if isExistingOwner(userId);
+        allow get, list: if isOwner(userId) || (isSignedIn() && resource.data.serviceProviderId == request.auth.uid);
+        allow create: if isOwner(userId);
+        allow update, delete: if isOwner(userId) || (isSignedIn() && resource.data.serviceProviderId == request.auth.uid);
       }
     }
 
-    /**
-     * @description Public service categories used for discovery.
-     * @path /service_types/{serviceTypeId}
-     * @allow Public read access (get, list)
-     * @deny All writes (reserved for administrators).
-     * @principle Publicly readable lookup data.
-     */
-    match /service_types/{serviceTypeId} {
+    // --- Service Providers ---
+    match /service_providers/{providerId} {
       allow get, list: if true;
-      allow create, update, delete: if false;
-    }
+      allow create: if isOwner(providerId);
+      allow update, delete: if isExistingOwner(providerId);
 
-    /**
-     * @description Profiles for service providers.
-     * @path /service_providers/{serviceProviderId}
-     * @allow Public read access (get, list)
-     * @allow Provider owner (create, update, delete)
-     * @deny Other users attempting to modify provider profiles.
-     * @principle Public read with owner-only writes.
-     */
-    match /service_providers/{serviceProviderId} {
-      allow get, list: if true;
-      allow create: if isOwner(serviceProviderId);
-      allow update, delete: if isExistingOwner(serviceProviderId);
-
-      /**
-       * @description Specific service offerings (packages) by a provider.
-       * @path /service_providers/{serviceProviderId}/offerings/{offeringId}
-       * @allow Public read access (get, list)
-       * @allow Provider owner (create, update, delete)
-       * @principle Resource-specific provider control.
-       */
       match /offerings/{offeringId} {
         allow get, list: if true;
-        allow create: if isOwner(serviceProviderId) && request.resource.data.serviceProviderId == serviceProviderId;
-        allow update, delete: if isExistingOwner(serviceProviderId);
+        allow create, update, delete: if isOwner(providerId);
+      }
+    }
+
+    match /service_types/{typeId} {
+      allow get, list: if true;
+      allow write: if false; // Admin only
+    }
+
+    // --- Adoption Listings ---
+    match /adoptionListings/{listingId} {
+      allow get, list: if true;
+      allow create: if isSignedIn();
+      allow update, delete: if isSignedIn() && resource.data.ownerId == request.auth.uid;
+    }
+
+    // --- Chats and Match Requests ---
+    match /matchRequests/{requestId} {
+      allow get, list: if isSignedIn() && (request.auth.uid == resource.data.requesterId || request.auth.uid == resource.data.targetOwnerId);
+      allow create: if isSignedIn();
+      allow update, delete: if isSignedIn() && (request.auth.uid == resource.data.requesterId || request.auth.uid == resource.data.targetOwnerId);
+    }
+
+    match /chats/{chatId} {
+      allow get, list: if isSignedIn() && request.auth.uid in resource.data.participants;
+      allow create: if isSignedIn();
+      allow update: if isSignedIn() && request.auth.uid in resource.data.participants;
+      
+      match /messages/{messageId} {
+        allow get, list: if isSignedIn();
+        allow create: if isSignedIn();
       }
     }
   }

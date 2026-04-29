@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect } from "react";
@@ -26,9 +25,12 @@ export default function PetPhotographyPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const q = query(collection(db, "providers"), where("service", "==", "Photography"));
+    const q = query(collection(db, "service_providers"), where("service", "==", "Photography"));
     const unsubscribe = onSnapshot(q, (snapshot) => {
       setPhotographers(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Provider)));
+      setLoading(false);
+    }, (error) => {
+      console.error("Error fetching photography:", error);
       setLoading(false);
     });
     return () => unsubscribe();

@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect } from "react";
@@ -7,7 +6,7 @@ import { db } from "@/lib/firebase";
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import Image from "next/image";
-import { PawPrint, ShieldCheck, Star, MapPin, Loader2 } from "lucide-react";
+import { PawPrint, Star, MapPin } from "lucide-react";
 import Link from "next/link";
 import { Skeleton } from "@/components/ui/skeleton";
 
@@ -26,9 +25,12 @@ export default function PetWalkersPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const q = query(collection(db, "providers"), where("service", "==", "Walking"));
+    const q = query(collection(db, "service_providers"), where("service", "==", "Walking"));
     const unsubscribe = onSnapshot(q, (snapshot) => {
       setWalkers(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Provider)));
+      setLoading(false);
+    }, (error) => {
+      console.error("Error fetching walkers:", error);
       setLoading(false);
     });
     return () => unsubscribe();
