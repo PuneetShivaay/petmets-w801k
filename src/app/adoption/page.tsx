@@ -18,7 +18,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Heart, PlusCircle, Loader2, Upload, MapPin } from "lucide-react";
+import { Heart, PlusCircle, Loader2, MapPin } from "lucide-react";
 
 // Schema for the adoption listing form
 const adoptionListingSchema = z.object({
@@ -107,7 +107,8 @@ export default function AdoptionPage() {
     setIsSubmitting(true);
     try {
       // 1. Upload image to Firebase Storage
-      const imageRef = storageRef(storage, `adoption-listings/${user.uid}_${Date.now()}_${imageFile.name}`);
+      const fileName = `${user.uid}_${Date.now()}_${imageFile.name}`;
+      const imageRef = storageRef(storage, `adoption-listings/${fileName}`);
       const snapshot = await uploadBytes(imageRef, imageFile);
       const downloadURL = await getDownloadURL(snapshot.ref);
 
@@ -117,7 +118,7 @@ export default function AdoptionPage() {
         ownerId: user.uid,
         ownerEmail: user.email,
         image: downloadURL,
-        dataAiHint: `${data.breed} pet`, // Simple AI hint for the image
+        dataAiHint: `${data.breed} pet`,
         createdAt: serverTimestamp(),
       });
       
