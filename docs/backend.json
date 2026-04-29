@@ -1,0 +1,576 @@
+{
+  "entities": {
+    "User": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "User",
+      "type": "object",
+      "description": "Represents a user of the PetMets application, storing their profile information.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the User entity."
+        },
+        "firstName": {
+          "type": "string",
+          "description": "The first name of the user."
+        },
+        "lastName": {
+          "type": "string",
+          "description": "The last name of the user."
+        },
+        "email": {
+          "type": "string",
+          "description": "The email address of the user, used for contact and notifications.",
+          "format": "email"
+        },
+        "phone": {
+          "type": "string",
+          "description": "The phone number of the user."
+        },
+        "profileImageUrl": {
+          "type": "string",
+          "description": "URL to the user's profile picture.",
+          "format": "uri"
+        },
+        "address": {
+          "type": "string",
+          "description": "The street address of the user."
+        },
+        "city": {
+          "type": "string",
+          "description": "The city where the user resides."
+        },
+        "state": {
+          "type": "string",
+          "description": "The state where the user resides."
+        },
+        "zipCode": {
+          "type": "string",
+          "description": "The zip code of the user's address."
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "Timestamp when the user account was created.",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "description": "Timestamp when the user account was last updated.",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "id",
+        "firstName",
+        "lastName",
+        "email",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "Pet": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Pet",
+      "type": "object",
+      "description": "Represents a pet owned by a user, storing its profile and basic information.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the Pet entity."
+        },
+        "userId": {
+          "type": "string",
+          "description": "Reference to the User who owns this pet. (Relationship: User 1:N Pet)"
+        },
+        "name": {
+          "type": "string",
+          "description": "The name of the pet."
+        },
+        "species": {
+          "type": "string",
+          "description": "The species of the pet (e.g., 'Dog', 'Cat', 'Bird')."
+        },
+        "breed": {
+          "type": "string",
+          "description": "The breed of the pet, if applicable."
+        },
+        "dateOfBirth": {
+          "type": "string",
+          "description": "The date of birth of the pet.",
+          "format": "date"
+        },
+        "gender": {
+          "type": "string",
+          "description": "The gender of the pet (e.g., 'Male', 'Female', 'Unknown')."
+        },
+        "description": {
+          "type": "string",
+          "description": "General description or temperament notes for the pet."
+        },
+        "profileImageUrl": {
+          "type": "string",
+          "description": "URL to the pet's profile picture.",
+          "format": "uri"
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "Timestamp when the pet's record was created.",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "description": "Timestamp when the pet's record was last updated.",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "id",
+        "userId",
+        "name",
+        "species",
+        "gender",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "ServiceProvider": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "ServiceProvider",
+      "type": "object",
+      "description": "Represents a professional individual or business offering pet services.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the ServiceProvider entity."
+        },
+        "name": {
+          "type": "string",
+          "description": "The name of the service provider or business."
+        },
+        "description": {
+          "type": "string",
+          "description": "A detailed description of the services offered by the provider."
+        },
+        "contactEmail": {
+          "type": "string",
+          "description": "The primary email address for contacting the service provider.",
+          "format": "email"
+        },
+        "contactPhone": {
+          "type": "string",
+          "description": "The primary phone number for contacting the service provider."
+        },
+        "address": {
+          "type": "string",
+          "description": "The street address of the service provider's location."
+        },
+        "city": {
+          "type": "string",
+          "description": "The city where the service provider is located."
+        },
+        "state": {
+          "type": "string",
+          "description": "The state where the service provider is located."
+        },
+        "zipCode": {
+          "type": "string",
+          "description": "The zip code of the service provider's address."
+        },
+        "profileImageUrl": {
+          "type": "string",
+          "description": "URL to the service provider's profile or business logo image.",
+          "format": "uri"
+        },
+        "websiteUrl": {
+          "type": "string",
+          "description": "URL to the service provider's official website.",
+          "format": "uri"
+        },
+        "averageRating": {
+          "type": "number",
+          "description": "The average rating received by the service provider from user reviews."
+        },
+        "totalReviews": {
+          "type": "number",
+          "description": "The total number of reviews received by the service provider."
+        },
+        "isVerified": {
+          "type": "boolean",
+          "description": "Indicates whether the service provider has been verified by the platform (e.g., background checks, certifications)."
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "Timestamp when the service provider's profile was created.",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "description": "Timestamp when the service provider's profile was last updated.",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "description",
+        "contactEmail",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "ServiceType": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "ServiceType",
+      "type": "object",
+      "description": "Defines a generic category of pet services offered within the application.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the ServiceType entity."
+        },
+        "name": {
+          "type": "string",
+          "description": "The name of the service type (e.g., 'Pet Walking', 'Pet Grooming', 'Pet Training', 'Pet Boarding', 'Pet Photoshoot')."
+        },
+        "description": {
+          "type": "string",
+          "description": "A general description of what this service type entails."
+        },
+        "iconUrl": {
+          "type": "string",
+          "description": "URL to an icon representing this service type for UI display.",
+          "format": "uri"
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "description"
+      ]
+    },
+    "ServiceOffering": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "ServiceOffering",
+      "type": "object",
+      "description": "Represents a specific service package offered by a particular ServiceProvider under a given ServiceType.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the ServiceOffering entity."
+        },
+        "serviceProviderId": {
+          "type": "string",
+          "description": "Reference to the ServiceProvider offering this service. (Relationship: ServiceProvider 1:N ServiceOffering)"
+        },
+        "serviceTypeId": {
+          "type": "string",
+          "description": "Reference to the general ServiceType this offering falls under. (Relationship: ServiceType 1:N ServiceOffering)"
+        },
+        "title": {
+          "type": "string",
+          "description": "A specific title for this service offering (e.g., 'Standard Dog Walk (30 min)', 'Full Grooming Package - Large Dog')."
+        },
+        "description": {
+          "type": "string",
+          "description": "Detailed description of what is included in this specific service offering."
+        },
+        "price": {
+          "type": "number",
+          "description": "The price of this service offering."
+        },
+        "durationMinutes": {
+          "type": "number",
+          "description": "The approximate duration of the service offering in minutes, if applicable."
+        },
+        "isAvailable": {
+          "type": "boolean",
+          "description": "Indicates whether this service offering is currently available for booking."
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "Timestamp when this service offering was created.",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "description": "Timestamp when this service offering was last updated.",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "id",
+        "serviceProviderId",
+        "serviceTypeId",
+        "title",
+        "description",
+        "price",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "Booking": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Booking",
+      "type": "object",
+      "description": "Represents a scheduled appointment for a pet service, linking a user, pet, and specific service offering.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the Booking entity."
+        },
+        "userId": {
+          "type": "string",
+          "description": "Reference to the User who made the booking. (Relationship: User 1:N Booking)"
+        },
+        "petId": {
+          "type": "string",
+          "description": "Reference to the Pet for whom the service is booked. (Relationship: Pet 1:N Booking)"
+        },
+        "serviceOfferingId": {
+          "type": "string",
+          "description": "Reference to the specific ServiceOffering being booked. (Relationship: ServiceOffering 1:N Booking)"
+        },
+        "appointmentDateTime": {
+          "type": "string",
+          "description": "The date and time of the scheduled appointment.",
+          "format": "date-time"
+        },
+        "status": {
+          "type": "string",
+          "description": "The current status of the booking (e.g., 'Pending', 'Confirmed', 'Completed', 'Cancelled')."
+        },
+        "specialInstructions": {
+          "type": "string",
+          "description": "Any specific instructions or notes for the service provider related to this booking."
+        },
+        "priceAtBooking": {
+          "type": "number",
+          "description": "The price recorded at the time of booking for transparency and record-keeping."
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "Timestamp when the booking was created.",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "description": "Timestamp when the booking was last updated.",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "id",
+        "userId",
+        "petId",
+        "serviceOfferingId",
+        "appointmentDateTime",
+        "status",
+        "priceAtBooking",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "PetDocument": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "PetDocument",
+      "type": "object",
+      "description": "Stores metadata and references for digital documents related to a specific pet, such as vet records or vaccination cards.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the PetDocument entity."
+        },
+        "petId": {
+          "type": "string",
+          "description": "Reference to the Pet this document belongs to. (Relationship: Pet 1:N PetDocument)"
+        },
+        "documentType": {
+          "type": "string",
+          "description": "The category or type of the document (e.g., 'Vaccination Record', 'Vet Bill', 'Health Record')."
+        },
+        "title": {
+          "type": "string",
+          "description": "A user-friendly title for the document (e.g., 'Annual Rabies Vaccine 2023')."
+        },
+        "fileUrl": {
+          "type": "string",
+          "description": "URL to the actual document file stored in an external storage system.",
+          "format": "uri"
+        },
+        "uploadDate": {
+          "type": "string",
+          "description": "Timestamp when the document was uploaded.",
+          "format": "date-time"
+        },
+        "suggestedTags": {
+          "type": "array",
+          "description": "AI-suggested tags to help classify and search for the document.",
+          "items": {
+            "type": "string"
+          }
+        },
+        "notes": {
+          "type": "string",
+          "description": "Additional notes or remarks about the document."
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "Timestamp when the document record was created.",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "description": "Timestamp when the document record was last updated.",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "id",
+        "petId",
+        "documentType",
+        "title",
+        "fileUrl",
+        "uploadDate",
+        "createdAt",
+        "updatedAt"
+      ]
+    }
+  },
+  "auth": {
+    "providers": [
+      "password",
+      "anonymous"
+    ]
+  },
+  "firestore": {
+    "structure": [
+      {
+        "path": "/users/{userId}",
+        "definition": {
+          "entityName": "User",
+          "schema": {
+            "$ref": "#/backend/entities/User"
+          },
+          "description": "Stores individual user profiles. Access is restricted to the owner matching `request.auth.uid`."
+        }
+      },
+      {
+        "path": "/users/{userId}/pets/{petId}",
+        "definition": {
+          "entityName": "Pet",
+          "schema": {
+            "$ref": "#/backend/entities/Pet"
+          },
+          "description": "Stores pet profiles belonging to a specific user. The 'userId' field in the document matches the path's 'userId' for authorization. Includes denormalized 'userId' for authorization independence.",
+          "params": [
+            {
+              "name": "userId",
+              "description": "The unique ID of the owner user."
+            },
+            {
+              "name": "petId",
+              "description": "The unique ID of the pet."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/users/{userId}/pets/{petId}/documents/{documentId}",
+        "definition": {
+          "entityName": "PetDocument",
+          "schema": {
+            "$ref": "#/backend/entities/PetDocument"
+          },
+          "description": "Stores metadata for digital documents (e.g., vet records) associated with a specific pet. Includes denormalized 'userId' from the parent user for authorization independence, alongside 'petId' from the parent pet.",
+          "params": [
+            {
+              "name": "userId",
+              "description": "The unique ID of the owner user."
+            },
+            {
+              "name": "petId",
+              "description": "The unique ID of the pet."
+            },
+            {
+              "name": "documentId",
+              "description": "The unique ID of the pet document."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/service_types/{serviceTypeId}",
+        "definition": {
+          "entityName": "ServiceType",
+          "schema": {
+            "$ref": "#/backend/entities/ServiceType"
+          },
+          "description": "Stores generic categories of pet services. These are publicly readable and generally admin-managed.",
+          "params": [
+            {
+              "name": "serviceTypeId",
+              "description": "The unique ID of the service type."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/service_providers/{serviceProviderId}",
+        "definition": {
+          "entityName": "ServiceProvider",
+          "schema": {
+            "$ref": "#/backend/entities/ServiceProvider"
+          },
+          "description": "Stores profiles of service providers. Publicly readable for discovery; writable only by the service provider whose 'id' matches `request.auth.uid`.",
+          "params": [
+            {
+              "name": "serviceProviderId",
+              "description": "The unique ID of the service provider."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/service_providers/{serviceProviderId}/offerings/{offeringId}",
+        "definition": {
+          "entityName": "ServiceOffering",
+          "schema": {
+            "$ref": "#/backend/entities/ServiceOffering"
+          },
+          "description": "Stores specific service packages offered by a service provider. Publicly readable for booking; writable only by the parent service provider. Includes denormalized 'serviceProviderId' for authorization independence.",
+          "params": [
+            {
+              "name": "serviceProviderId",
+              "description": "The unique ID of the service provider."
+            },
+            {
+              "name": "offeringId",
+              "description": "The unique ID of the service offering."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/users/{userId}/bookings/{bookingId}",
+        "definition": {
+          "entityName": "Booking",
+          "schema": {
+            "$ref": "#/backend/entities/Booking"
+          },
+          "description": "Stores bookings made by a user for their pet with a service provider. Readable/writable by the 'userId' owner and by the 'serviceProviderId' involved. Includes denormalized 'userId' and 'serviceProviderId' for authorization independence.",
+          "params": [
+            {
+              "name": "userId",
+              "description": "The unique ID of the user who made the booking."
+            },
+            {
+              "name": "bookingId",
+              "description": "The unique ID of the booking."
+            }
+          ]
+        }
+      }
+    ],
+    "reasoning": "The recommended Firestore structure prioritizes Authorization Independence and Structural Segregation to ensure robust, debuggable security rules and efficient querying. \n\n**Authorization Independence (Strategy A) and QAPs (Strategy B & C):**\n\n1.  **User-Owned Data (`/users/{userId}`, `/users/{userId}/pets/{petId}`, `/users/{userId}/pets/{petId}/documents/{documentId}`):**\n    *   User-specific data (profile, pets, pet documents, bookings) is nested under `/users/{userId}`. This structure inherently ensures that `request.auth.uid` can be directly compared against `userId` in the path, fulfilling Path-Based ownership (Strategy C). This enables highly efficient and secure `list` operations (QAPs) because a user can only query for data within their own `/users/{userId}/...` subtree.\n    *   **Denormalization for PetDocument:** The `PetDocument` entity schema originally only contains `petId`. For Authorization Independence and robust security rules, `userId` *must* be denormalized into each `PetDocument` document. This allows security rules to directly check `resource.data.userId == request.auth.uid` without requiring a `get()` call to its parent `pet` or `user` document, thus enabling atomic operations and simplifying rule logic.\n\n2.  **Public/Global Data (`/service_types`, `/service_providers`):**\n    *   `ServiceType` entities are global lookups, publicly readable, and managed by administrators. They reside in a top-level collection (`/service_types`) to segregate them from user-specific or provider-specific data, aligning with Structural Segregation (Strategy B).\n    *   `ServiceProvider` profiles are also top-level (`/service_providers`) to allow public discovery (`Service Provider Discovery` feature). Access is managed by `request.auth.uid == serviceProviderId` for writes, making `serviceProviderId` implicitly the owner for self-management, and public for reads. This enables QAPs for discovering providers.\n\n3.  **Provider-Owned Offerings (`/service_providers/{serviceProviderId}/offerings/{offeringId}`):**\n    *   Service offerings are nested under their respective `ServiceProvider`. The `ServiceOffering` schema already includes `serviceProviderId`, which is a crucial denormalization for Authorization Independence. Rules can directly check `resource.data.serviceProviderId == request.auth.uid` for provider management, and the collection path itself enables efficient listing of offerings for a specific provider.\n\n4.  **Collaborative Data (Bookings):**\n    *   Bookings, while made by a user for their pet, also involve a `ServiceProvider`. To facilitate access for both the `userId` (customer) and `serviceProviderId` (vendor) without `get()` calls, the `serviceProviderId` *must* be denormalized into the `Booking` document. This allows rules to check `request.auth.uid == resource.data.userId` for the customer and `request.auth.uid == resource.data.serviceProviderId` for the provider, ensuring Authorization Independence for a collaborative entity (Strategy A & C).\n\n**QAPs (Query as Authorization Patterns):**\n*   By embedding owner IDs (like `userId` in `/users/{userId}/pets/{petId}`) directly into the path and denormalizing them into sub-documents when necessary (like `userId` in `PetDocument`, `serviceProviderId` in `Booking`), rules can enforce `request.auth.uid == userId` (from path) or `request.auth.uid == resource.data.ownerId`. This ensures that `list` queries are automatically filtered by security rules, only returning documents the authenticated user has access to. For example, `db.collection('users').doc(uid).collection('pets').get()` is inherently secure, and `db.collectionGroup('pets').where('userId', '==', uid).get()` is also secure if `userId` is present in the document. This approach makes rules simple and the security predictable.\n\n**Addressing the Storage Error:**\n*   The reported Firebase Storage error `providers/...` indicates a mismatch between the expected storage path and the security rules or the application's access patterns. The proposed data structure for service providers and their assets uses a consistent `/service_providers/{serviceProviderId}/...` prefix. It is recommended that the application's storage paths for service provider images (and any other related assets) be updated to align with `service_providers/{serviceProviderId}/profileImages/{imageId}`. Similarly, user and pet images/documents should follow `users/{userId}/profileImages/{imageId}`, `users/{userId}/pets/{petId}/profileImages/{imageId}`, and `users/{userId}/pets/{petId}/documents/{documentId}/file_name` respectively. This explicit and consistent path structure in storage will enable straightforward and secure storage rules (e.g., `match /service_providers/{serviceProviderId}/profileImages/{imageId} { allow write: if request.auth.uid == serviceProviderId; }`). The current error indicates that the user attempting to access `providers/0hbpLqkv9CVK7EhMMBZQThXtIi82_1777501031825` does not have the necessary permissions based on the existing (or lack of) storage rules for that specific path format. Aligning paths to the proposed structure will resolve this by providing a clear authorization context."
+  }
+}
