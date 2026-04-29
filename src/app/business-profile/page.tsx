@@ -12,16 +12,18 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter }
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { Briefcase, Edit3, Save, XCircle, Loader2, Upload, Star, MapPin, Scissors, Dog, GraduationCap, Hotel, Camera } from "lucide-react";
+import { Briefcase, Edit3, Save, XCircle, Loader2, Upload, Star, MapPin } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
-import { auth, db, storage } from "@/lib/firebase";
+import { db, storage } from "@/lib/firebase";
 import { useAuth } from "@/contexts/auth-context";
 import { useToast } from "@/hooks/use-toast";
+import { errorEmitter } from "@/firebase/error-emitter";
+import { FirestorePermissionError } from "@/firebase/errors";
 
 const providerSchema = z.object({
   name: z.string().min(2, "Business name is required.").max(50),
@@ -61,11 +63,10 @@ export default function BusinessProfilePage() {
       }
     } catch (error) {
       console.error("Error fetching provider data:", error);
-      toast({ variant: "destructive", title: "Error", description: "Could not load business details." });
     } finally {
       setIsLoading(false);
     }
-  }, [user, reset, toast]);
+  }, [user, reset]);
 
   useEffect(() => {
     fetchProviderData();
@@ -74,27 +75,32 @@ export default function BusinessProfilePage() {
   const onSubmit: SubmitHandler<ProviderFormData> = async (data) => {
     if (!user) return;
     setIsSubmitting(true);
-    try {
-      const providerDocRef = doc(db, "service_providers", user.uid);
-      const dataToSave = {
-        ...data,
-        userId: user.uid,
-        updatedAt: serverTimestamp(),
-        // Keep existing image/rating if they exist
-        image: providerData?.image || "https://placehold.co/600x400.png",
-        rating: providerData?.rating || 5.0,
-      };
-      
-      await setDoc(providerDocRef, dataToSave, { merge: true });
-      setProviderData(dataToSave);
-      toast({ title: "Success", description: "Business details updated." });
-      setIsEditing(false);
-    } catch (error) {
-      console.error("Failed to update business details:", error);
-      toast({ variant: "destructive", title: "Error", description: "Failed to save changes." });
-    } finally {
-      setIsSubmitting(false);
-    }
+    
+    const providerDocRef = doc(db, "service_providers", user.uid);
+    const dataToSave = {
+      ...data,
+      userId: user.uid,
+      updatedAt: serverTimestamp(),
+      image: providerData?.image || "https://placehold.co/600x400.png",
+      rating: providerData?.rating || 5.0,
+    };
+    
+    setDoc(providerDocRef, dataToSave, { merge: true })
+      .then(() => {
+        setProviderData(dataToSave);
+        toast({ title: "Success", description: "Business details updated." });
+        setIsEditing(false);
+      })
+      .catch((err) => {
+        errorEmitter.emit('permission-error', new FirestorePermissionError({
+          path: providerDocRef.path,
+          operation: 'update',
+          requestResourceData: dataToSave,
+        }));
+      })
+      .finally(() => {
+        setIsSubmitting(false);
+      });
   };
 
   const handleAvatarUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -102,19 +108,34 @@ export default function BusinessProfilePage() {
     const file = event.target.files[0];
     
     setIsUploading(true);
+    const filePath = `service_providers/${user.uid}/profile_${Date.now()}.jpg`;
+    const avatarRef = storageRef(storage, filePath);
+    
     try {
-      const avatarRef = storageRef(storage, `service_providers/${user.uid}/profile_${Date.now()}.jpg`);
       const snapshot = await uploadBytes(avatarRef, file);
       const downloadURL = await getDownloadURL(snapshot.ref);
 
       const providerDocRef = doc(db, "service_providers", user.uid);
-      await setDoc(providerDocRef, { image: downloadURL }, { merge: true });
-
-      setProviderData((prev: any) => ({ ...prev, image: downloadURL }));
-      toast({ title: 'Success', description: 'Business photo updated.' });
-    } catch (error) {
+      setDoc(providerDocRef, { image: downloadURL }, { merge: true })
+        .then(() => {
+          setProviderData((prev: any) => ({ ...prev, image: downloadURL }));
+          toast({ title: 'Success', description: 'Business photo updated.' });
+        })
+        .catch((err) => {
+           errorEmitter.emit('permission-error', new FirestorePermissionError({
+            path: providerDocRef.path,
+            operation: 'update',
+            requestResourceData: { image: downloadURL },
+          }));
+        });
+    } catch (error: any) {
       console.error("Avatar upload failed:", error);
-      toast({ variant: 'destructive', title: 'Upload Failed', description: 'Could not upload image.' });
+      // Surface Storage permission error context if available
+      toast({ 
+        variant: 'destructive', 
+        title: 'Upload Failed', 
+        description: error.message || 'Could not upload image. Check permissions.' 
+      });
     } finally {
       setIsUploading(false);
     }

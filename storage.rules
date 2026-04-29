@@ -10,9 +10,11 @@ service firebase.storage {
     }
 
     // Service provider images
+    // Using a slightly more permissive write rule for the providerId folder 
+    // to ensure authenticated users can upload their own business photos.
     match /service_providers/{providerId}/{allPaths=**} {
       allow read: if true;
-      allow write: if request.auth != null && request.auth.uid == providerId;
+      allow write: if request.auth != null && (request.auth.uid == providerId || request.auth.uid == resource.data.userId);
     }
 
     // Adoption listings images
