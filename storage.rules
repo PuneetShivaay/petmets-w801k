@@ -1,3 +1,4 @@
+
 rules_version = '2';
 service firebase.storage {
   match /b/{bucket}/o {
@@ -13,7 +14,6 @@ service firebase.storage {
     }
 
     // Service provider specific folders
-    // We match both with and without the recursive allPaths to be safe
     match /service_providers/{providerId}/{allPaths=**} {
       allow write: if request.auth != null && request.auth.uid == providerId;
     }

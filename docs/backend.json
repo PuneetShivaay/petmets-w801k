@@ -134,6 +134,11 @@
           "type": "string",
           "description": "URL to profile image."
         },
+        "gallery": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Array of URLs showcasing the provider's work."
+        },
         "rating": {
           "type": "number",
           "description": "Average rating."
