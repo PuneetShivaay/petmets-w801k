@@ -2,7 +2,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { collection, query, onSnapshot, orderBy } from "firebase/firestore";
+import { collection, query, onSnapshot, orderBy, addDoc, serverTimestamp } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { useAuth } from "@/contexts/auth-context";
 import { useToast } from "@/hooks/use-toast";
@@ -13,9 +13,10 @@ import Image from "next/image";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { PawPrint, Star, Search, MapPin, Mail, Phone, Image as ImageIcon } from "lucide-react";
+import { PawPrint, Star, Search, MapPin, Mail, Loader2, Image as ImageIcon } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
+import { Badge } from "@/components/ui/badge";
 
 interface Provider {
   id: string;
@@ -33,12 +34,13 @@ interface Provider {
 }
 
 export default function ServiceProvidersPage() {
-  const { user, isLoading: authLoading } = useAuth();
+  const { user } = useAuth();
   const { toast } = useToast();
   
   const [providers, setProviders] = useState<Provider[]>([]);
   const [filteredProviders, setFilteredProviders] = useState<Provider[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isBooking, setIsBooking] = useState<string | null>(null);
   
   const [searchTerm, setSearchTerm] = useState("");
   const [serviceFilter, setServiceFilter] = useState("all");
@@ -71,6 +73,42 @@ export default function ServiceProvidersPage() {
     }
     setFilteredProviders(result);
   }, [providers, searchTerm, serviceFilter]);
+
+  const handleBookSession = async (provider: Provider) => {
+    if (!user) {
+      toast({ variant: "destructive", title: "Authentication Required", description: "Please log in to book a session." });
+      return;
+    }
+
+    setIsBooking(provider.id);
+    try {
+      const bookingsColRef = collection(db, "users", user.uid, "bookings");
+      
+      // Simple logic: Book for 3 days from now by default for this MVP demo
+      const bookingDate = new Date();
+      bookingDate.setDate(bookingDate.getDate() + 3);
+
+      await addDoc(bookingsColRef, {
+        serviceProviderId: provider.id,
+        serviceProviderName: provider.name,
+        serviceType: provider.service,
+        status: "pending",
+        date: bookingDate.toISOString().split('T')[0],
+        time: "10:00 AM",
+        createdAt: serverTimestamp(),
+      });
+
+      toast({
+        title: "Booking Requested!",
+        description: `Your session with ${provider.name} has been scheduled for ${bookingDate.toLocaleDateString()}.`,
+      });
+    } catch (error) {
+      console.error("Booking error:", error);
+      toast({ variant: "destructive", title: "Booking Failed", description: "Could not create the booking. Please try again." });
+    } finally {
+      setIsBooking(null);
+    }
+  };
 
   return (
     <div className="space-y-6">
@@ -157,7 +195,7 @@ export default function ServiceProvidersPage() {
                 <Dialog>
                     <DialogTrigger asChild>
                         <Button className="w-full bg-accent hover:bg-accent/90">
-                            <PawPrint className="mr-2 h-4 w-4" /> View Details & Contact
+                            <PawPrint className="mr-2 h-4 w-4" /> View Details & Book
                         </Button>
                     </DialogTrigger>
                     <DialogContent className="max-w-2xl max-h-[90vh] flex flex-col p-0 overflow-hidden">
@@ -210,7 +248,14 @@ export default function ServiceProvidersPage() {
                             </div>
                             
                             <div className="mt-8 flex justify-end">
-                                <Button className="w-full sm:w-auto px-8">Book a Session</Button>
+                                <Button 
+                                  className="w-full sm:w-auto px-8" 
+                                  onClick={() => handleBookSession(provider)}
+                                  disabled={isBooking === provider.id}
+                                >
+                                  {isBooking === provider.id && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                                  Book a Session
+                                </Button>
                             </div>
                           </div>
                         </ScrollArea>

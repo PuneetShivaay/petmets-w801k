@@ -1,19 +1,72 @@
 
+"use client";
+
+import { useState, useEffect } from "react";
+import { collection, query, orderBy, onSnapshot, doc, deleteDoc } from "firebase/firestore";
+import { db } from "@/lib/firebase";
+import { useAuth } from "@/contexts/auth-context";
+import { useToast } from "@/hooks/use-toast";
+
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { CalendarPlus, CheckCircle, History, ListChecks } from "lucide-react";
+import { CalendarPlus, CheckCircle, History, ListChecks, Loader2, Trash2 } from "lucide-react";
 import Link from "next/link";
+import { Skeleton } from "@/components/ui/skeleton";
+
+interface Booking {
+  id: string;
+  serviceProviderName: string;
+  serviceType: string;
+  date: string;
+  time: string;
+  status: string;
+}
 
 export default function BookingManagementPage() {
-  const upcomingBookings = [
-    { id: 1, service: "Grooming with Happy Paws", date: "2024-08-15", time: "10:00 AM" },
-    { id: 2, service: "Walk with Sarah M.", date: "2024-08-16", time: "04:00 PM" },
-  ];
-  const pastBookings = [
-    { id: 3, service: "Training session with Alex P.", date: "2024-07-20", time: "02:00 PM", status: "Completed" },
-  ];
+  const { user } = useAuth();
+  const { toast } = useToast();
+  
+  const [bookings, setBookings] = useState<Booking[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [isDeleting, setIsDeleting] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!user) return;
+
+    const bookingsRef = collection(db, "users", user.uid, "bookings");
+    const q = query(bookingsRef, orderBy("date", "asc"));
+
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Booking));
+      setBookings(data);
+      setLoading(false);
+    }, (error) => {
+      console.error("Error fetching bookings:", error);
+      setLoading(false);
+    });
+
+    return () => unsubscribe();
+  }, [user]);
+
+  const handleCancelBooking = async (bookingId: string) => {
+    if (!user) return;
+    setIsDeleting(bookingId);
+    try {
+      await deleteDoc(doc(db, "users", user.uid, "bookings", bookingId));
+      toast({ title: "Booking Cancelled", description: "The appointment has been removed." });
+    } catch (error) {
+      console.error("Delete error:", error);
+      toast({ variant: "destructive", title: "Error", description: "Could not cancel the booking." });
+    } finally {
+      setIsDeleting(null);
+    }
+  };
+
+  const today = new Date().toISOString().split('T')[0];
+  const upcomingBookings = bookings.filter(b => b.date >= today);
+  const pastBookings = bookings.filter(b => b.date < today);
 
   return (
     <div className="space-y-6">
@@ -39,21 +92,39 @@ export default function BookingManagementPage() {
                   <CardTitle className="text-lg sm:text-xl">Upcoming Appointments</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  {upcomingBookings.length > 0 ? (
+                  {loading ? (
+                    <div className="space-y-4">
+                      <Skeleton className="h-24 w-full" />
+                      <Skeleton className="h-24 w-full" />
+                    </div>
+                  ) : upcomingBookings.length > 0 ? (
                     <ul className="space-y-4">
                       {upcomingBookings.map((booking) => (
-                        <li key={booking.id} className="rounded-md border p-3 shadow-sm">
-                          <h3 className="font-semibold">{booking.service}</h3>
-                          <p className="text-sm text-muted-foreground">Date: {booking.date} at {booking.time}</p>
-                          <div className="mt-2 flex flex-wrap gap-2">
-                            <Button variant="outline" size="sm" className="mr-2">Reschedule</Button>
-                            <Button variant="destructive" size="sm">Cancel</Button>
+                        <li key={booking.id} className="rounded-md border p-4 shadow-sm bg-card transition-all hover:shadow-md">
+                          <div className="flex justify-between items-start">
+                            <div>
+                              <h3 className="font-bold text-lg">{booking.serviceType} with {booking.serviceProviderName}</h3>
+                              <p className="text-sm text-muted-foreground mt-1">Date: {booking.date} at {booking.time}</p>
+                              <Badge variant="outline" className="mt-2 capitalize">{booking.status}</Badge>
+                            </div>
+                            <Button 
+                              variant="destructive" 
+                              size="sm" 
+                              onClick={() => handleCancelBooking(booking.id)}
+                              disabled={isDeleting === booking.id}
+                            >
+                              {isDeleting === booking.id ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
+                              <span className="ml-2 hidden sm:inline">Cancel</span>
+                            </Button>
                           </div>
                         </li>
                       ))}
                     </ul>
                   ) : (
-                    <p className="text-muted-foreground">No upcoming bookings.</p>
+                    <div className="py-12 text-center text-muted-foreground">
+                       <Calendar className="mx-auto h-12 w-12 opacity-20 mb-2" />
+                       <p>No upcoming bookings.</p>
+                    </div>
                   )}
                 </CardContent>
               </Card>
@@ -64,21 +135,28 @@ export default function BookingManagementPage() {
                   <CardTitle className="text-lg sm:text-xl">Past Appointments</CardTitle>
                 </CardHeader>
                 <CardContent>
-                {pastBookings.length > 0 ? (
+                {loading ? (
+                    <Skeleton className="h-24 w-full" />
+                ) : pastBookings.length > 0 ? (
                     <ul className="space-y-4">
                       {pastBookings.map((booking) => (
-                        <li key={booking.id} className="rounded-md border p-3 shadow-sm">
-                          <h3 className="font-semibold">{booking.service}</h3>
+                        <li key={booking.id} className="rounded-md border p-4 shadow-sm opacity-80">
+                          <h3 className="font-semibold">{booking.serviceType} with {booking.serviceProviderName}</h3>
                           <p className="text-sm text-muted-foreground">Date: {booking.date} at {booking.time}</p>
-                          <p className="text-sm text-green-600 flex items-center"><CheckCircle className="mr-1 h-4 w-4"/> {booking.status}</p>
-                          <div className="mt-2">
+                          <p className="text-sm text-green-600 flex items-center mt-2 font-medium">
+                            <CheckCircle className="mr-1 h-4 w-4"/> Completed
+                          </p>
+                          <div className="mt-4">
                             <Button variant="outline" size="sm">Leave Review</Button>
                           </div>
                         </li>
                       ))}
                     </ul>
                   ) : (
-                     <p className="text-muted-foreground">No past bookings.</p>
+                     <div className="py-12 text-center text-muted-foreground">
+                        <History className="mx-auto h-12 w-12 opacity-20 mb-2" />
+                        <p>No past bookings found.</p>
+                     </div>
                   )}
                 </CardContent>
               </Card>
@@ -94,7 +172,7 @@ export default function BookingManagementPage() {
               <Calendar
                 mode="single"
                 selected={new Date()}
-                className="rounded-md border shadow"
+                className="rounded-md border shadow w-full"
               />
             </CardContent>
           </Card>
