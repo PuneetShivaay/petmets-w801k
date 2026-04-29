@@ -108,6 +108,7 @@ export default function BusinessProfilePage() {
     const file = event.target.files[0];
     
     setIsUploading(true);
+    // Path MUST match storage.rules: /service_providers/{providerId}/{allPaths=**}
     const filePath = `service_providers/${user.uid}/profile_${Date.now()}.jpg`;
     const avatarRef = storageRef(storage, filePath);
     
@@ -130,12 +131,25 @@ export default function BusinessProfilePage() {
         });
     } catch (error: any) {
       console.error("Avatar upload failed:", error);
-      // Surface Storage permission error context if available
+      // Construct a meaningful error for the user
+      const isPermissionError = error.code === 'storage/unauthorized';
+      
       toast({ 
         variant: 'destructive', 
-        title: 'Upload Failed', 
-        description: error.message || 'Could not upload image. Check permissions.' 
+        title: isPermissionError ? 'Permission Denied' : 'Upload Failed', 
+        description: isPermissionError 
+          ? 'You do not have permission to upload this file. Please ensure you are logged in correctly.' 
+          : error.message || 'Could not upload image.' 
       });
+
+      if (isPermissionError) {
+          // Emit a permission error for potential agentive debugging if the listener is active
+          errorEmitter.emit('permission-error', new FirestorePermissionError({
+              path: filePath,
+              operation: 'write',
+              requestResourceData: { filename: file.name, size: file.size }
+          }));
+      }
     } finally {
       setIsUploading(false);
     }
