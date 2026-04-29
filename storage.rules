@@ -1,8 +1,9 @@
+
 rules_version = '2';
 service firebase.storage {
   match /b/{bucket}/o {
     
-    // User profile images
+    // User profile and pet images
     match /users/{userId}/{allPaths=**} {
       allow read: if true;
       allow write: if request.auth != null && request.auth.uid == userId;
@@ -14,7 +15,7 @@ service firebase.storage {
       allow write: if request.auth != null && request.auth.uid == providerId;
     }
 
-    // Adoption listings
+    // Adoption listings images
     match /adoption-listings/{allPaths=**} {
       allow read: if true;
       allow write: if request.auth != null;

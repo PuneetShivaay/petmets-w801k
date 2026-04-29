@@ -1,3 +1,4 @@
+
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
@@ -10,29 +11,18 @@ service cloud.firestore {
       return isSignedIn() && request.auth.uid == userId;
     }
 
-    function isExistingOwner(userId) {
-      return resource != null && isOwner(userId);
-    }
-
-    // --- Users and Pets ---
+    // --- Users ---
     match /users/{userId} {
       allow get: if true;
       allow list: if isOwner(userId);
       allow create: if isOwner(userId);
-      allow update, delete: if isExistingOwner(userId);
+      allow update, delete: if isOwner(userId);
 
       match /pets/{petId} {
         allow get, list: if true;
-        allow create: if isOwner(userId);
-        allow update, delete: if isExistingOwner(userId);
-
-        match /documents/{documentId} {
-          allow get, list: if isOwner(userId);
-          allow create: if isOwner(userId);
-          allow update, delete: if isExistingOwner(userId);
-        }
+        allow create, update, delete: if isOwner(userId);
       }
-
+      
       match /bookings/{bookingId} {
         allow get, list: if isOwner(userId) || (isSignedIn() && resource.data.serviceProviderId == request.auth.uid);
         allow create: if isOwner(userId);
@@ -44,7 +34,7 @@ service cloud.firestore {
     match /service_providers/{providerId} {
       allow get, list: if true;
       allow create: if isOwner(providerId);
-      allow update, delete: if isExistingOwner(providerId);
+      allow update, delete: if isOwner(providerId);
 
       match /offerings/{offeringId} {
         allow get, list: if true;
@@ -54,7 +44,7 @@ service cloud.firestore {
 
     match /service_types/{typeId} {
       allow get, list: if true;
-      allow write: if false; // Admin only
+      allow write: if false;
     }
 
     // --- Adoption Listings ---
@@ -77,8 +67,8 @@ service cloud.firestore {
       allow update: if isSignedIn() && request.auth.uid in resource.data.participants;
       
       match /messages/{messageId} {
-        allow get, list: if isSignedIn();
-        allow create: if isSignedIn();
+        allow get, list: if isSignedIn() && request.auth.uid in get(/databases/$(database)/documents/chats/$(chatId)).data.participants;
+        allow create: if isSignedIn() && request.auth.uid in get(/databases/$(database)/documents/chats/$(chatId)).data.participants;
       }
     }
   }

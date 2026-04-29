@@ -3,7 +3,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { useForm, type SubmitHandler } from "react-hook-form";
+import { useForm, type SubmitHandler, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { signInWithEmailAndPassword, createUserWithEmailAndPassword, sendPasswordResetEmail, updateProfile } from "firebase/auth";
@@ -20,6 +20,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter }
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogTrigger } from "@/components/ui/dialog";
 import { LogIn, UserPlus, Loader2, Eye, EyeOff } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 
 const loginSchema = z.object({
   email: z.string().email({ message: "Invalid email address" }),
@@ -31,6 +32,7 @@ const signUpSchema = z.object({
   email: z.string().email({ message: "Invalid email address" }),
   password: z.string().min(6, { message: "Password must be at least 6 characters" }),
   confirmPassword: z.string().min(6, { message: "Password must be at least 6 characters" }),
+  role: z.enum(["owner", "provider"], { required_error: "Please select an account type" }),
 }).refine((data) => data.password === data.confirmPassword, {
   message: "Passwords don't match",
   path: ["confirmPassword"],
@@ -64,8 +66,11 @@ export default function LoginPage() {
   const { register: registerLogin, handleSubmit: handleLoginSubmit, formState: { errors: loginErrors } } = useForm<LoginFormData>({
     resolver: zodResolver(loginSchema),
   });
-  const { register: registerSignUp, handleSubmit: handleSignUpSubmit, formState: { errors: signUpErrors } } = useForm<SignUpFormData>({
+  const { register: registerSignUp, handleSubmit: handleSignUpSubmit, control: signUpControl, formState: { errors: signUpErrors } } = useForm<SignUpFormData>({
     resolver: zodResolver(signUpSchema),
+    defaultValues: {
+      role: "owner"
+    }
   });
   const { register: registerForgotPassword, handleSubmit: handleForgotPasswordSubmit, formState: { errors: forgotPasswordErrors }, reset: resetForgotPasswordForm } = useForm<ForgotPasswordFormData>({
     resolver: zodResolver(forgotPasswordSchema),
@@ -73,8 +78,6 @@ export default function LoginPage() {
 
 
   useEffect(() => {
-    // This effect handles the redirect after the user state is confirmed.
-    // AppLayout will handle redirecting away from login if the user is already logged in.
     if (!authIsLoading && user) {
       router.push('/');
     }
@@ -86,7 +89,6 @@ export default function LoginPage() {
     setFormError(null);
     try {
       await signInWithEmailAndPassword(auth, data.email, data.password);
-      // The useEffect hook and AppLayout will handle the redirect.
     } catch (error: any) {
       let message = "An unexpected error occurred. Please try again.";
       switch (error.code) {
@@ -94,11 +96,10 @@ export default function LoginPage() {
             message = "Invalid email or password. Please check your credentials and try again.";
             break;
         case "auth/too-many-requests":
-          message = "Access to this account has been temporarily disabled due to too many failed login attempts. You can try again later or reset your password.";
+          message = "Access to this account has been temporarily disabled due to too many failed login attempts.";
           break;
         default:
           message = "Failed to login. Please try again.";
-          console.error("Login error:", error.message, "Code:", error.code);
       }
       setFormError(message);
     } finally {
@@ -113,52 +114,47 @@ export default function LoginPage() {
       const userCredential = await createUserWithEmailAndPassword(auth, data.email, data.password);
       const newUser = userCredential.user;
 
-      const defaultOwnerName = "Pet Owner";
-      await updateProfile(newUser, { displayName: defaultOwnerName });
+      const defaultName = data.role === 'owner' ? "Pet Owner" : "Service Provider";
+      await updateProfile(newUser, { displayName: defaultName });
 
       const userDocRef = doc(db, "users", newUser.uid);
-      const petDocRef = doc(db, "users", newUser.uid, "pets", "main-pet");
-
-      const defaultOwnerData = {
-        name: defaultOwnerName,
+      
+      const defaultUserData = {
+        name: defaultName,
         email: newUser.email,
+        role: data.role,
         phone: "",
         address: "",
-        avatar: "https://i.imgur.com/83AAQ1X.png",
-        dataAiHint: "paw print logo",
+        avatar: data.role === 'owner' ? "https://i.imgur.com/83AAQ1X.png" : "https://placehold.co/128x128.png",
+        dataAiHint: data.role === 'owner' ? "paw print logo" : "business logo",
         createdAt: serverTimestamp(),
       };
 
-      const defaultPetData = {
-        name: "Buddy",
-        breed: "Golden Retriever",
-        age: "3 years",
-        gender: "Male",
-        avatar: "https://placehold.co/128x128.png",
-        dataAiHint: "golden retriever",
-        bio: "Loves long walks in the park and playing fetch. A very good boy indeed!",
-        createdAt: serverTimestamp(),
-      };
+      await setDoc(userDocRef, defaultUserData);
 
-      await Promise.all([
-        setDoc(userDocRef, defaultOwnerData),
-        setDoc(petDocRef, defaultPetData),
-      ]);
+      if (data.role === 'owner') {
+        const petDocRef = doc(db, "users", newUser.uid, "pets", "main-pet");
+        const defaultPetData = {
+          name: "Buddy",
+          breed: "Golden Retriever",
+          age: "3 years",
+          gender: "Male",
+          avatar: "https://placehold.co/128x128.png",
+          dataAiHint: "golden retriever",
+          bio: "Loves long walks in the park and playing fetch. A very good boy indeed!",
+          createdAt: serverTimestamp(),
+        };
+        await setDoc(petDocRef, defaultPetData);
+      }
 
-      // No need to manually redirect here. The onAuthStateChanged listener
-      // in AuthProvider will detect the new user, and the useEffect hook in this
-      // component or the AppLayout will handle the redirect.
-      
-    } catch (error: any)
-{
+    } catch (error: any) {
       let message = "An unexpected error occurred. Please try again.";
       switch (error.code) {
         case 'auth/email-already-in-use':
-          message = 'An account with this email already exists. Please login or use a different email.';
+          message = 'An account with this email already exists.';
           break;
         default:
           message = 'Failed to sign up. Please try again.';
-          console.error("Sign up error:", error);
       }
       setFormError(message);
     } finally {
@@ -172,18 +168,15 @@ export default function LoginPage() {
     setForgotPasswordSuccess(null);
     try {
       await sendPasswordResetEmail(auth, data.email);
-      setForgotPasswordSuccess(`If an account exists for ${data.email}, a password reset link has been sent. Please check your inbox (and spam folder).`);
+      setForgotPasswordSuccess(`If an account exists, a reset link has been sent.`);
       resetForgotPasswordForm();
     } catch (error: any) {
-      console.error("Forgot password error:", error);
-      setForgotPasswordError("An unexpected error occurred. Please check your connection and try again.");
+      setForgotPasswordError("An unexpected error occurred.");
     } finally {
       setIsForgotPasswordSubmitting(false);
     }
   };
   
-  // This loader is for when the page is accessed directly and auth is still initializing.
-  // Or when navigating away after a successful login/signup.
   if (authIsLoading) {
     return (
       <div className="flex min-h-screen flex-col items-center justify-center bg-background p-4">
@@ -204,7 +197,7 @@ export default function LoginPage() {
             {isSignUp ? "Create Account" : "Welcome Back!"}
           </CardTitle>
           <CardDescription className="text-center">
-            {isSignUp ? "Enter your details to sign up." : <><span className="hidden sm:inline">Sign in to continue to </span><span className="font-semibold"><span className="text-primary">Pet</span><span className="text-accent">Mets</span></span>.</>}
+            {isSignUp ? "Enter your details to sign up." : "Sign in to continue to PetMets."}
           </CardDescription>
         </CardHeader>
         <form onSubmit={isSignUp ? handleSignUpSubmit(onSignUp) : handleLoginSubmit(onLogin)}>
@@ -214,6 +207,34 @@ export default function LoginPage() {
                 <AlertDescription>{formError}</AlertDescription>
               </Alert>
             )}
+
+            {isSignUp && (
+              <div className="space-y-3 pb-2">
+                <Label>I am a...</Label>
+                <Controller
+                  control={signUpControl}
+                  name="role"
+                  render={({ field }) => (
+                    <RadioGroup
+                      onValueChange={field.onChange}
+                      defaultValue={field.value}
+                      className="flex gap-4"
+                    >
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="owner" id="r-owner" />
+                        <Label htmlFor="r-owner" className="cursor-pointer">Pet Owner</Label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="provider" id="r-provider" />
+                        <Label htmlFor="r-provider" className="cursor-pointer">Service Provider</Label>
+                      </div>
+                    </RadioGroup>
+                  )}
+                />
+                {signUpErrors.role && <p className="text-sm text-destructive">{signUpErrors.role.message}</p>}
+              </div>
+            )}
+
             <div className="space-y-1">
               <Label htmlFor="email">Email Address</Label>
               <Input id="email" type="email" placeholder="you@example.com" {...(isSignUp ? registerSignUp("email") : registerLogin("email"))} />
@@ -233,7 +254,6 @@ export default function LoginPage() {
                   type="button"
                   onClick={() => setShowPassword((prev) => !prev)}
                   className="absolute inset-y-0 right-0 flex items-center pr-3 text-muted-foreground hover:text-foreground"
-                  aria-label={showPassword ? "Hide password" : "Show password"}
                 >
                   {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
                 </button>
@@ -255,7 +275,6 @@ export default function LoginPage() {
                     type="button"
                     onClick={() => setShowConfirmPassword((prev) => !prev)}
                     className="absolute inset-y-0 right-0 flex items-center pr-3 text-muted-foreground hover:text-foreground"
-                    aria-label={showConfirmPassword ? "Hide password" : "Show password"}
                   >
                     {showConfirmPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
                   </button>
@@ -265,14 +284,7 @@ export default function LoginPage() {
             )}
             {!isSignUp && (
               <div className="flex items-center justify-end">
-                <Dialog open={isForgotPasswordDialogOpen} onOpenChange={(open) => {
-                    setIsForgotPasswordDialogOpen(open);
-                    if (!open) {
-                        setForgotPasswordError(null);
-                        setForgotPasswordSuccess(null);
-                        resetForgotPasswordForm();
-                    }
-                }}>
+                <Dialog open={isForgotPasswordDialogOpen} onOpenChange={setIsForgotPasswordDialogOpen}>
                     <DialogTrigger asChild>
                         <Button variant="link" type="button" className="p-0 text-sm text-primary hover:underline h-auto">
                             Forgot password?
@@ -280,29 +292,18 @@ export default function LoginPage() {
                     </DialogTrigger>
                     <DialogContent className="sm:max-w-md">
                         <DialogHeader>
-                            <DialogTitle>Reset Your Password</DialogTitle>
+                            <DialogTitle>Reset Password</DialogTitle>
                             <DialogDescription>
-                                Enter your email address and we'll send you a link to reset your password.
+                                Enter your email to receive a reset link.
                             </DialogDescription>
                         </DialogHeader>
                         <form onSubmit={handleForgotPasswordSubmit(onForgotPassword)}>
                             <div className="grid gap-4 py-4">
-                                {forgotPasswordError && (
-                                  <Alert variant="destructive">
-                                    <AlertTitle>Error</AlertTitle>
-                                    <AlertDescription>{forgotPasswordError}</AlertDescription>
-                                  </Alert>
-                                )}
-                                {forgotPasswordSuccess && (
-                                  <Alert>
-                                    <AlertTitle>Success!</AlertTitle>
-                                    <AlertDescription>{forgotPasswordSuccess}</AlertDescription>
-                                  </Alert>
-                                )}
-
+                                {forgotPasswordError && <Alert variant="destructive"><AlertDescription>{forgotPasswordError}</AlertDescription></Alert>}
+                                {forgotPasswordSuccess && <Alert><AlertDescription>{forgotPasswordSuccess}</AlertDescription></Alert>}
                                 {!forgotPasswordSuccess && (
                                   <div className="space-y-1">
-                                      <Label htmlFor="forgot-email" className="text-left">Email Address</Label>
+                                      <Label htmlFor="forgot-email">Email</Label>
                                       <Input id="forgot-email" type="email" placeholder="you@example.com" {...registerForgotPassword("email")} />
                                       {forgotPasswordErrors.email && <p className="text-sm text-destructive">{forgotPasswordErrors.email.message}</p>}
                                   </div>
@@ -313,7 +314,7 @@ export default function LoginPage() {
                                 {!forgotPasswordSuccess && (
                                     <Button type="submit" disabled={isForgotPasswordSubmitting}>
                                         {isForgotPasswordSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                                        Send Reset Link
+                                        Send Link
                                     </Button>
                                 )}
                             </DialogFooter>
@@ -337,24 +338,6 @@ export default function LoginPage() {
           </CardFooter>
         </form>
       </Card>
-      <p className="mt-8 text-center text-sm text-muted-foreground">
-        By continuing, you agree to{' '}
-        <span className="font-semibold">
-          <span className="text-primary">Pet</span><span className="text-accent">Mets</span>
-        </span>
-        &apos;s{' '}
-        <a href="#" className="underline hover:text-primary">
-          Terms of Service
-        </a>{' '}
-        and{' '}
-        <a href="#" className="underline hover:text-primary">
-          Privacy Policy
-        </a>
-        .
-      </p>
     </div>
   );
 }
-
-    
-    
