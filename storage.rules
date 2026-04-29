@@ -22,7 +22,7 @@ service firebase.storage {
 
     // Allow any authenticated user to upload to adoption-listings
     match /adoption-listings/{fileName} {
-      allow read: if true; // Allow public read access for all listing images
+      allow read: if true;
       allow write: if request.auth != null;
     }
 

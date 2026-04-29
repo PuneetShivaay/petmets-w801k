@@ -121,9 +121,13 @@ export default function ServiceProvidersPage() {
       setIsRegisterOpen(false);
       reset();
       setImageFile(null);
-    } catch (error) {
-      console.error(error);
-      toast({ variant: "destructive", title: "Registration Failed", description: "Something went wrong." });
+    } catch (error: any) {
+      console.error("Registration failed:", error);
+      toast({ 
+        variant: "destructive", 
+        title: "Registration Failed", 
+        description: error.message || "An unexpected error occurred. Please try again." 
+      });
     } finally {
       setIsSubmitting(false);
     }
