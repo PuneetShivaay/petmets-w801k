@@ -10,7 +10,7 @@ import { db } from "@/lib/firebase";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ArrowRight, Bell, Calendar, FileText, User, HeartHandshake, AlertTriangle, MessageSquare } from "lucide-react";
+import { ArrowRight, Bell, Calendar, FileText, User, HeartHandshake, AlertTriangle, MessageSquare, Briefcase, Star, CheckCircle } from "lucide-react";
 
 interface StatCardProps {
   title: string;
@@ -58,73 +58,147 @@ function StatCardSkeleton() {
 }
 
 export default function DashboardPage() {
-  const { user } = useAuth();
+  const { user, userRole } = useAuth();
+  
+  // Owner Stats
   const [pendingRequests, setPendingRequests] = useState(0);
+  const [matchedProfilesCount, setMatchedProfilesCount] = useState(0);
   const [upcomingBooking, setUpcomingBooking] = useState<{service: string, date: string} | null>(null);
   const [isProfileComplete, setIsProfileComplete] = useState(true);
-  const [matchedProfilesCount, setMatchedProfilesCount] = useState(0);
   
-  const [loadingRequests, setLoadingRequests] = useState(true);
-  const [loadingBookings, setLoadingBookings] = useState(true);
-  const [loadingProfileCheck, setLoadingProfileCheck] = useState(true);
-  const [loadingMatches, setLoadingMatches] = useState(true);
+  // Provider Stats
+  const [pendingAppointments, setPendingAppointments] = useState(0);
+  const [completedServices, setCompletedServices] = useState(0);
+  const [averageRating, setAverageRating] = useState(5.0);
+  const [isBusinessListed, setIsBusinessListed] = useState(false);
+
+  const [loadingStats, setLoadingStats] = useState(true);
 
   useEffect(() => {
     if (!user) return;
 
-    // Check for profile completeness
-    const checkProfileCompleteness = async () => {
-        const userDocRef = doc(db, "users", user.uid);
-        const userDocSnap = await getDoc(userDocRef);
-        if (userDocSnap.exists()) {
-            const userData = userDocSnap.data();
-            // Profile is considered incomplete if phone or address is missing.
-            if (!userData.phone || !userData.address) {
-                setIsProfileComplete(false);
-            }
-        } else {
-            // If the user doc doesn't even exist, it's definitely not complete.
-            setIsProfileComplete(false);
-        }
-        setLoadingProfileCheck(false);
-    };
+    if (userRole === 'owner') {
+      const checkProfileCompleteness = async () => {
+          const userDocRef = doc(db, "users", user.uid);
+          const userDocSnap = await getDoc(userDocRef);
+          if (userDocSnap.exists()) {
+              const userData = userDocSnap.data();
+              if (!userData.phone || !userData.address) setIsProfileComplete(false);
+          } else {
+              setIsProfileComplete(false);
+          }
+      };
 
-    // Fetch pending match requests
-    const requestsQuery = query(
-      collection(db, "matchRequests"),
-      where("targetOwnerId", "==", user.uid),
-      where("status", "==", "pending")
+      const requestsQuery = query(
+        collection(db, "matchRequests"),
+        where("targetOwnerId", "==", user.uid),
+        where("status", "==", "pending")
+      );
+      const unsubscribeRequests = onSnapshot(requestsQuery, (snapshot) => setPendingRequests(snapshot.size));
+
+      const chatsQuery = query(collection(db, "chats"), where("participants", "array-contains", user.uid));
+      const unsubscribeChats = onSnapshot(chatsQuery, (snapshot) => setMatchedProfilesCount(snapshot.size));
+      
+      setUpcomingBooking({ id: 1, service: "Grooming with Happy Paws", date: "in 3 days" });
+      checkProfileCompleteness();
+      setLoadingStats(false);
+
+      return () => {
+        unsubscribeRequests();
+        unsubscribeChats();
+      };
+    } else if (userRole === 'provider') {
+      const checkBusinessListing = async () => {
+          const providerDocRef = doc(db, "service_providers", user.uid);
+          const providerDocSnap = await getDoc(providerDocRef);
+          if (providerDocSnap.exists()) {
+              setIsBusinessListed(true);
+              setAverageRating(providerDocSnap.data().rating || 5.0);
+          } else {
+              setIsBusinessListed(false);
+          }
+      };
+
+      // Mock provider stats for now
+      setPendingAppointments(3);
+      setCompletedServices(12);
+      checkBusinessListing();
+      setLoadingStats(false);
+    }
+  }, [user, userRole]);
+
+  if (userRole === 'provider') {
+    return (
+      <div className="space-y-6">
+        <div className="space-y-0.5">
+          <h2 className="text-2xl font-bold tracking-tight">Vendor Dashboard</h2>
+          <p className="text-muted-foreground">Manage your pet services and connect with owners.</p>
+        </div>
+
+        {!loadingStats && !isBusinessListed && (
+           <Card className="shadow-lg bg-primary/10 border-primary">
+              <CardHeader className="flex flex-row items-center gap-4">
+                  <AlertTriangle className="h-8 w-8 text-primary" />
+                  <div>
+                      <CardTitle className="text-xl sm:text-2xl">List Your Business</CardTitle>
+                      <CardDescription className="text-primary/90">
+                          Register as a provider to start receiving service requests and growing your business.
+                      </CardDescription>
+                  </div>
+              </CardHeader>
+              <CardContent>
+                  <Link href="/business-profile" passHref>
+                      <Button size="sm">
+                          Set Up Listing <ArrowRight className="ml-2 h-4 w-4" />
+                      </Button>
+                  </Link>
+              </CardContent>
+          </Card>
+        )}
+
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+          <StatCard
+            title="Pending Appointments"
+            value={pendingAppointments}
+            description="Requests awaiting confirmation."
+            icon={Calendar}
+            href="/bookings"
+            actionText="View Schedule"
+          />
+          <StatCard
+            title="Completed Services"
+            value={completedServices}
+            description="Successful pet care sessions."
+            icon={CheckCircle}
+            href="/bookings"
+            actionText="View History"
+          />
+          <StatCard
+            title="Average Rating"
+            value={averageRating.toFixed(1)}
+            description="Your reputation on PetMets."
+            icon={Star}
+            href="/business-profile"
+            actionText="View Profile"
+          />
+          <Card className="shadow-lg lg:col-span-1">
+               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">Vendor Actions</CardTitle>
+                  <Briefcase className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent className="flex flex-col space-y-2 pt-2">
+                   <p className="text-xs text-muted-foreground">Grow your presence.</p>
+                  <Link href="/business-profile" passHref><Button variant="secondary" className="w-full justify-start"><User className="mr-2 h-4 w-4" />Business Profile</Button></Link>
+                  <Link href="/chats" passHref><Button variant="secondary" className="w-full justify-start"><MessageSquare className="mr-2 h-4 w-4" />Customer Chats</Button></Link>
+                  <Link href="/adoption" passHref><Button variant="secondary" className="w-full justify-start"><Heart className="mr-2 h-4 w-4" />Pet Adoption</Button></Link>
+              </CardContent>
+          </Card>
+        </div>
+      </div>
     );
-    const unsubscribeRequests = onSnapshot(requestsQuery, (snapshot) => {
-      setPendingRequests(snapshot.size);
-      setLoadingRequests(false);
-    });
+  }
 
-    // Fetch matched profiles (active chats)
-    const chatsQuery = query(
-        collection(db, "chats"),
-        where("participants", "array-contains", user.uid)
-    );
-    const unsubscribeChats = onSnapshot(chatsQuery, (snapshot) => {
-        setMatchedProfilesCount(snapshot.size);
-        setLoadingMatches(false);
-    });
-    
-    // MOCK: Fetch upcoming booking
-    const mockUpcomingBookings = [
-        { id: 1, service: "Grooming with Happy Paws", date: "in 3 days" },
-    ];
-    setUpcomingBooking(mockUpcomingBookings[0] || null);
-    setLoadingBookings(false);
-
-    checkProfileCompleteness();
-
-    return () => {
-      unsubscribeRequests();
-      unsubscribeChats();
-    };
-  }, [user]);
-
+  // Owner Dashboard (Default)
   return (
     <div className="space-y-6">
       <div className="space-y-0.5">
@@ -136,14 +210,14 @@ export default function DashboardPage() {
         </p>
       </div>
 
-      {!loadingProfileCheck && !isProfileComplete && (
+      {!loadingStats && !isProfileComplete && (
          <Card className="shadow-lg bg-primary/10 border-primary">
             <CardHeader className="flex flex-row items-center gap-4">
                 <AlertTriangle className="h-8 w-8 text-primary" />
                 <div>
                     <CardTitle className="text-xl sm:text-2xl">Complete Your Profile</CardTitle>
                     <CardDescription className="text-primary/90">
-                        Fill out your pet and owner details to get the most out of PetMets and connect with others.
+                        Fill out your pet and owner details to get the most out of PetMets.
                     </CardDescription>
                 </div>
             </CardHeader>
@@ -158,7 +232,7 @@ export default function DashboardPage() {
       )}
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-        {loadingRequests ? (
+        {loadingStats ? (
           <StatCardSkeleton />
         ) : (
           <StatCard
@@ -170,7 +244,7 @@ export default function DashboardPage() {
             actionText="Review Requests"
           />
         )}
-        {loadingMatches ? (
+        {loadingStats ? (
           <StatCardSkeleton />
         ) : (
           <StatCard
@@ -182,7 +256,7 @@ export default function DashboardPage() {
             actionText="View Chats"
           />
         )}
-        {loadingBookings ? (
+        {loadingStats ? (
           <StatCardSkeleton />
         ) : (
           <StatCard

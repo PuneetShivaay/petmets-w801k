@@ -1,8 +1,6 @@
 
 import type { LucideIcon } from 'lucide-react';
 import {
-  Home,
-  HeartHandshake,
   Trees,
   Users,
   Dog,
@@ -13,12 +11,12 @@ import {
   CalendarDays,
   LayoutDashboard,
   LogIn,
-  LogOut,
   User,
   MessageSquare,
   Bell,
   Camera,
   Heart,
+  Briefcase,
 } from 'lucide-react';
 
 export interface NavItem {
@@ -28,91 +26,103 @@ export interface NavItem {
   label?: string;
   disabled?: boolean;
   external?: boolean;
-  isFooterAction?: boolean; // To distinguish logout for different placement
+  roles?: ('owner' | 'provider')[];
 }
 
 export const navItems: NavItem[] = [
-    {
+  {
     title: 'Dashboard',
     href: '/',
     icon: LayoutDashboard,
+    roles: ['owner', 'provider'],
   },
   {
     title: 'Match Your Pet',
     href: '/match',
-    icon: Bell, // Changed from HeartHandshake
+    icon: Bell,
+    roles: ['owner'],
   },
-   {
+  {
     title: 'Adoption',
     href: '/adoption',
     icon: Heart,
+    roles: ['owner', 'provider'],
   },
   {
     title: 'Pet Profile',
     href: '/pet-profile',
     icon: User,
+    roles: ['owner'],
+  },
+  {
+    title: 'My Business Listing',
+    href: '/business-profile',
+    icon: Briefcase,
+    roles: ['provider'],
   },
   {
     title: 'Pet Chats',
     href: '/chats',
     icon: MessageSquare,
+    roles: ['owner', 'provider'],
   },
   {
     title: 'Pet Playzone',
     href: '/playzone',
     icon: Trees,
+    roles: ['owner'],
   },
   {
     title: 'Pet Walkers',
     href: '/walkers',
     icon: Dog,
+    roles: ['owner'],
   },
   {
     title: 'Pet Training',
     href: '/training',
     icon: GraduationCap,
+    roles: ['owner'],
   },
   {
     title: 'Pet Grooming',
     href: '/grooming',
     icon: Scissors,
+    roles: ['owner'],
   },
   {
     title: 'Pet Boarding',
     href: '/boarding',
     icon: Hotel,
+    roles: ['owner'],
   },
   {
     title: 'Pet Photography',
     href: '/photography',
     icon: Camera,
+    roles: ['owner'],
   },
   {
     title: 'Service Providers',
     href: '/providers',
     icon: Users,
+    roles: ['owner'],
   },
   {
     title: 'Digital Records',
     href: '/records',
     icon: FileText,
+    roles: ['owner'],
   },
   {
     title: 'Bookings',
     href: '/bookings',
     icon: CalendarDays,
+    roles: ['owner', 'provider'],
   },
-  // Authentication related links
   {
     title: 'Login / Sign Up',
     href: '/login',
     icon: LogIn,
   },
-  // Logout is handled directly in the AppLayout footer for now
-  // {
-  //   title: 'Logout',
-  //   href: '/logout', // This would typically be an action, not a page
-  //   icon: LogOut,
-  //   isFooterAction: true,
-  // },
 ];

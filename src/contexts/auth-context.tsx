@@ -5,18 +5,19 @@ import type { ReactNode} from 'react';
 import { createContext, useContext, useEffect, useState, useMemo, useCallback } from 'react';
 import type { User } from 'firebase/auth';
 import { onAuthStateChanged, signOut as firebaseSignOut } from 'firebase/auth';
-import { auth, isFirestoreReady } from '@/lib/firebase';
+import { auth, db, isFirestoreReady } from '@/lib/firebase';
+import { doc, getDoc } from 'firebase/firestore';
 import { Loader2 } from 'lucide-react';
 
 interface AuthContextType {
   user: User | null;
+  userRole: 'owner' | 'provider' | null;
   isLoading: boolean;
   userSignOut: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-// This is a minimal loader component to be used ONLY during the initial auth check.
 function InitialAuthLoader() {
   return (
     <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-background/80 backdrop-blur-sm">
@@ -25,43 +26,49 @@ function InitialAuthLoader() {
   );
 }
 
-
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
+  const [userRole, setUserRole] = useState<'owner' | 'provider' | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isClient, setIsClient] = useState(false);
 
   useEffect(() => {
-    // This effect runs only on the client, after the initial render,
-    // which is what we want for client-side-only logic.
     setIsClient(true); 
 
     const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
-      // First, wait for Firestore to be ready.
       await isFirestoreReady();
-      // Then, set the user and mark loading as complete.
+      
+      if (currentUser) {
+        try {
+          const userDoc = await getDoc(doc(db, "users", currentUser.uid));
+          if (userDoc.exists()) {
+            setUserRole(userDoc.data().role || 'owner');
+          }
+        } catch (error) {
+          console.error("Error fetching user role:", error);
+        }
+      } else {
+        setUserRole(null);
+      }
+      
       setUser(currentUser);
       setIsLoading(false);
     });
 
-    // Cleanup subscription on unmount
     return () => unsubscribe();
   }, []);
-
 
   const userSignOut = useCallback(async () => {
     await firebaseSignOut(auth);
   }, []);
 
-
   const value = useMemo(() => ({
     user,
+    userRole,
     isLoading,
     userSignOut,
-  }), [user, isLoading, userSignOut]);
+  }), [user, userRole, isLoading, userSignOut]);
 
-  // Always render children to prevent hydration mismatch.
-  // The loader will be rendered on top of the children only on the client-side when loading.
   return (
     <AuthContext.Provider value={value}>
       {isClient && isLoading && <InitialAuthLoader />}

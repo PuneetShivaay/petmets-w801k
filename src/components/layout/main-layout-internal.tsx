@@ -21,25 +21,17 @@ import {
 } from "@/components/ui/sidebar";
 import { Button } from "@/components/ui/button"; 
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { LogOut, ArrowLeft, User } from "lucide-react";
+import { LogOut } from "lucide-react";
 import { useLoading } from "@/contexts/loading-context";
 import { useAuth } from "@/contexts/auth-context";
 import { useToast } from "@/hooks/use-toast";
-
-interface OtherUser {
-    id: string;
-    avatar: string;
-    dataAiHint: string;
-    name: string;
-}
 
 function MainLayoutChild({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
   const { isMobile, setOpenMobile } = useSidebar();
   const { showLoading } = useLoading();
-  const { user, userSignOut } = useAuth();
+  const { user, userRole, userSignOut } = useAuth();
   const { toast } = useToast();
 
   const handleLinkClick = () => {
@@ -49,11 +41,6 @@ function MainLayoutChild({ children }: { children: React.ReactNode }) {
     }
   };
 
-  const handleGoBack = () => {
-    showLoading();
-    router.back();
-  };
-  
   const handleLogoutClick = async () => {
     showLoading();
     try {
@@ -67,15 +54,19 @@ function MainLayoutChild({ children }: { children: React.ReactNode }) {
     }
   };
 
-
   const filteredNavItems = navItems.filter(item => {
-    if (item.href === '/login') return !user;
-    if (item.href === '/pet-profile') return !!user;
+    if (!user) return item.href === '/login';
+    if (item.href === '/login') return false;
+    
+    // Filter based on roles
+    if (item.roles && userRole) {
+      return item.roles.includes(userRole);
+    }
+    
     return true; 
   });
   
   const defaultTitle = navItems.find(item => item.href === pathname)?.title;
-  
   const isDynamicPage = pathname.startsWith('/chats/') || pathname.startsWith('/profile/');
   const headerIsVisible = !isDynamicPage;
 
