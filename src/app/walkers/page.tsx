@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect } from "react";
@@ -6,9 +7,10 @@ import { db } from "@/lib/firebase";
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import Image from "next/image";
-import { PawPrint, Star, MapPin } from "lucide-react";
+import { PawPrint, Star, MapPin, Mail, Phone } from "lucide-react";
 import Link from "next/link";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 
 interface Provider {
   id: string;
@@ -18,6 +20,8 @@ interface Provider {
   location: string;
   image: string;
   rating: number;
+  email?: string;
+  phone?: string;
 }
 
 export default function PetWalkersPage() {
@@ -74,7 +78,25 @@ export default function PetWalkersPage() {
                 </div>
               </CardContent>
               <CardFooter>
-                <Button variant="outline" className="w-full">View Profile & Book</Button>
+                 <Dialog>
+                    <DialogTrigger asChild>
+                        <Button variant="outline" className="w-full">View Details & Contact</Button>
+                    </DialogTrigger>
+                    <DialogContent>
+                        <DialogHeader>
+                            <DialogTitle>{walker.name}</DialogTitle>
+                        </DialogHeader>
+                        <div className="space-y-4 py-4">
+                            <div className="flex items-center gap-3">
+                                <Mail className="h-5 w-5 text-primary" />
+                                <div>
+                                    <p className="text-xs text-muted-foreground">Email</p>
+                                    <p className="font-medium">{walker.email || "Available via dashboard"}</p>
+                                </div>
+                            </div>
+                        </div>
+                    </DialogContent>
+                </Dialog>
               </CardFooter>
             </Card>
           ))

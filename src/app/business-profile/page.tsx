@@ -12,7 +12,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter }
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { Briefcase, Edit3, Save, XCircle, Loader2, Upload, Star, MapPin } from "lucide-react";
+import { Briefcase, Edit3, Save, XCircle, Loader2, Upload, Star, MapPin, Phone, Mail } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -80,6 +80,8 @@ export default function BusinessProfilePage() {
     const dataToSave = {
       ...data,
       userId: user.uid,
+      email: user.email,
+      // Note: In a real app, we'd fetch the latest phone from the User doc, but for MVP we use user object
       updatedAt: serverTimestamp(),
       image: providerData?.image || "https://placehold.co/600x400.png",
       rating: providerData?.rating || 5.0,
@@ -108,7 +110,6 @@ export default function BusinessProfilePage() {
     const file = event.target.files[0];
     
     setIsUploading(true);
-    // Path MUST match storage.rules: /service_providers/{providerId}/{allPaths=**}
     const filePath = `service_providers/${user.uid}/profile_${Date.now()}.jpg`;
     const avatarRef = storageRef(storage, filePath);
     
@@ -131,25 +132,15 @@ export default function BusinessProfilePage() {
         });
     } catch (error: any) {
       console.error("Avatar upload failed:", error);
-      // Construct a meaningful error for the user
       const isPermissionError = error.code === 'storage/unauthorized';
       
       toast({ 
         variant: 'destructive', 
         title: isPermissionError ? 'Permission Denied' : 'Upload Failed', 
         description: isPermissionError 
-          ? 'You do not have permission to upload this file. Please ensure you are logged in correctly.' 
+          ? 'You do not have permission to upload this file.' 
           : error.message || 'Could not upload image.' 
       });
-
-      if (isPermissionError) {
-          // Emit a permission error for potential agentive debugging if the listener is active
-          errorEmitter.emit('permission-error', new FirestorePermissionError({
-              path: filePath,
-              operation: 'write',
-              requestResourceData: { filename: file.name, size: file.size }
-          }));
-      }
     } finally {
       setIsUploading(false);
     }
@@ -207,9 +198,14 @@ export default function BusinessProfilePage() {
               <div className="flex items-center justify-center gap-1 mt-4">
                 <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
                 <span className="font-bold">{providerData?.rating?.toFixed(1) || "5.0"}</span>
-                <span className="text-muted-foreground text-sm">(0 reviews)</span>
               </div>
             </CardHeader>
+            <CardContent className="space-y-2 text-sm">
+                <div className="flex items-center gap-2 text-muted-foreground">
+                    <Mail className="h-4 w-4" />
+                    <span>{user?.email}</span>
+                </div>
+            </CardContent>
           </Card>
 
           <Card className="md:col-span-2 shadow-lg">
@@ -250,7 +246,7 @@ export default function BusinessProfilePage() {
                     </div>
                     <div className="space-y-1">
                       <Label htmlFor="bio">Service Description</Label>
-                      <Textarea id="bio" {...register("bio")} rows={5} placeholder="Describe your experience, facilities, and passion for pet care..." />
+                      <Textarea id="bio" {...register("bio")} rows={5} placeholder="Describe your experience..." />
                       {errors.bio && <p className="text-xs text-destructive">{errors.bio.message}</p>}
                     </div>
                   </>
@@ -268,16 +264,6 @@ export default function BusinessProfilePage() {
                         "{providerData?.bio}"
                       </p>
                     </div>
-                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
-                      <div className="p-3 border rounded-lg text-center">
-                        <h5 className="text-xs uppercase text-muted-foreground font-bold mb-1">Response Time</h5>
-                        <p className="font-medium">Under 1hr</p>
-                      </div>
-                      <div className="p-3 border rounded-lg text-center">
-                        <h5 className="text-xs uppercase text-muted-foreground font-bold mb-1">Member Since</h5>
-                        <p className="font-medium">2024</p>
-                      </div>
-                    </div>
                   </div>
                 )}
               </CardContent>
@@ -285,11 +271,11 @@ export default function BusinessProfilePage() {
                 {isEditing ? (
                   <>
                     <Button type="button" variant="ghost" onClick={() => { setIsEditing(false); reset(providerData); }}>
-                      <XCircle className="mr-2 h-4 w-4" /> Cancel
+                      Cancel
                     </Button>
                     <Button type="submit" disabled={isSubmitting}>
                       {isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
-                      Save Business Profile
+                      Save Profile
                     </Button>
                   </>
                 ) : null}
