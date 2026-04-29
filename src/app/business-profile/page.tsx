@@ -120,7 +120,6 @@ export default function BusinessProfilePage() {
     const file = event.target.files[0];
     
     setIsUploading(true);
-    // Explicit standardized path
     const filePath = `service_providers/${user.uid}/profile_${Date.now()}.jpg`;
     const avatarRef = storageRef(storage, filePath);
     
@@ -129,18 +128,10 @@ export default function BusinessProfilePage() {
       const downloadURL = await getDownloadURL(snapshot.ref);
 
       const providerDocRef = doc(db, "service_providers", user.uid);
-      setDoc(providerDocRef, { image: downloadURL }, { merge: true })
-        .then(() => {
-          setProviderData((prev: any) => ({ ...prev, image: downloadURL }));
-          toast({ title: 'Success', description: 'Business photo updated.' });
-        })
-        .catch((err) => {
-           errorEmitter.emit('permission-error', new FirestorePermissionError({
-            path: providerDocRef.path,
-            operation: 'update',
-            requestResourceData: { image: downloadURL },
-          }));
-        });
+      await setDoc(providerDocRef, { image: downloadURL }, { merge: true });
+      
+      setProviderData((prev: any) => ({ ...prev, image: downloadURL }));
+      toast({ title: 'Success', description: 'Business photo updated.' });
     } catch (error: any) {
       console.error("Avatar upload failed:", error);
       toast({ variant: 'destructive', title: 'Upload Failed', description: error.message });
@@ -160,7 +151,6 @@ export default function BusinessProfilePage() {
 
     const file = event.target.files[0];
     setIsUploadingGallery(true);
-    // Standardized path for gallery
     const filePath = `service_providers/${user.uid}/gallery/${Date.now()}_${file.name}`;
     const fileRef = storageRef(storage, filePath);
 
@@ -176,13 +166,7 @@ export default function BusinessProfilePage() {
       toast({ title: 'Success', description: 'Photo added to gallery.' });
     } catch (error: any) {
       console.error("Gallery upload failed:", error);
-      // Construct a contextual error for the global emitter
-      const contextualError = new FirestorePermissionError({
-          path: filePath,
-          operation: 'create',
-          requestResourceData: { fileName: file.name },
-      });
-      errorEmitter.emit('permission-error', contextualError);
+      toast({ variant: 'destructive', title: 'Upload Failed', description: error.message });
     } finally {
       setIsUploadingGallery(false);
       if (galleryInputRef.current) galleryInputRef.current.value = "";
@@ -252,7 +236,7 @@ export default function BusinessProfilePage() {
                   {isUploading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
                 </Button>
               </div>
-              <CardTitle className="text-xl">{providerData?.name || "Business Name"}</CardTitle>
+              <CardTitle className="text-xl font-headline">{providerData?.name || "Business Name"}</CardTitle>
               <Badge className="mt-2" variant="secondary">{providerData?.service || "Select Service"}</Badge>
               <div className="flex items-center justify-center gap-1 mt-4">
                 <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />

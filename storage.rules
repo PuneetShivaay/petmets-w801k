@@ -2,22 +2,22 @@ rules_version = '2';
 service firebase.storage {
   match /b/{bucket}/o {
     
-    // Allow public read access to all images
+    // Public read access for all files
     match /{allPaths=**} {
       allow read: if true;
     }
 
-    // Allow authenticated users to write to their own folders
-    // This covers /service_providers/{uid}/... and /users/{uid}/...
-    match /service_providers/{uid}/{allPaths=**} {
-      allow write: if request.auth != null && request.auth.uid == uid;
+    // Explicit rules for service providers
+    match /service_providers/{userId}/{allPaths=**} {
+      allow write: if request.auth != null && request.auth.uid == userId;
     }
 
-    match /users/{uid}/{allPaths=**} {
-      allow write: if request.auth != null && request.auth.uid == uid;
+    // Explicit rules for users/owners
+    match /users/{userId}/{allPaths=**} {
+      allow write: if request.auth != null && request.auth.uid == userId;
     }
 
-    // Adoption listings images - allow any authenticated user to create
+    // Adoption listings
     match /adoption-listings/{allPaths=**} {
       allow write: if request.auth != null;
     }
