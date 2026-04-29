@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect } from "react";
@@ -10,7 +9,7 @@ import { db } from "@/lib/firebase";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ArrowRight, Bell, Calendar, FileText, User, HeartHandshake, AlertTriangle, MessageSquare, Briefcase, Star, CheckCircle } from "lucide-react";
+import { ArrowRight, Bell, Calendar, FileText, User, HeartHandshake, AlertTriangle, MessageSquare, Briefcase, Star, CheckCircle, Heart } from "lucide-react";
 
 interface StatCardProps {
   title: string;
