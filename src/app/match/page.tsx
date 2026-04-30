@@ -2,7 +2,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { collection, getDocs, doc, setDoc, serverTimestamp, query, where, onSnapshot, writeBatch, getDoc } from "firebase/firestore";
+import { collection, getDocs, doc, setDoc, serverTimestamp, query, where, onSnapshot, writeBatch, getDoc, collectionGroup } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { useAuth } from "@/contexts/auth-context";
 import { useToast } from "@/hooks/use-toast";
@@ -14,10 +14,10 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { Heart, Search, Loader2, Check, Bell, X, Clock } from "lucide-react";
+import { Heart, Search, Loader2, Check, Bell, X, Clock, Info } from "lucide-react";
 
 interface Pet {
-  id: string; // The pet's document ID (which is the owner's UID)
+  id: string; 
   ownerId: string;
   name: string;
   breed: string;
@@ -58,22 +58,37 @@ export default function MatchPetPage() {
     }
     setLoading(true);
     try {
-      // Changed to top-level collection query to avoid index requirements
-      const petsCol = collection(db, "pets");
+      // Using collectionGroup("pets") to find all pet documents across any path.
+      // This is a robust way to handle both top-level and sub-collection pet data.
+      const petsCol = collectionGroup(db, "pets");
       const querySnapshot = await getDocs(petsCol);
 
       const petsList: Pet[] = querySnapshot.docs
         .map((petDoc) => {
             const data = petDoc.data();
+            // ownerId is either doc.id (for top-level) or data.userId (if stored explicitly)
+            // or we extract it from the path (e.g. /users/UID/pets/main-pet)
+            let ownerId = data.userId || petDoc.id;
+            
+            // If the document path indicates it's a subcollection of 'users', extract the UID
+            if (petDoc.ref.path.includes('users/')) {
+                const parts = petDoc.ref.path.split('/');
+                const usersIndex = parts.indexOf('users');
+                if (usersIndex !== -1 && parts[usersIndex + 1]) {
+                    ownerId = parts[usersIndex + 1];
+                }
+            }
+
             return {
               id: petDoc.id,
-              ownerId: petDoc.id,
+              ownerId: ownerId,
               name: data.name || "Unnamed Pet",
               breed: data.breed || "Unknown Breed",
               image: data.avatar || "https://placehold.co/300x300.png",
               dataAiHint: data.dataAiHint || "pet portrait",
             };
         })
+        // Filter out current user's pet so you don't match with yourself
         .filter(pet => pet.ownerId !== user.uid);
       
       setAllPets(petsList);
@@ -121,21 +136,18 @@ export default function MatchPetPage() {
   }, [user]);
 
   useEffect(() => {
-      if (allPets.length > 0) {
-          const filteredByMatch = allPets.filter(pet => !matchedUserIds.has(pet.ownerId));
-          
-          if (searchTerm.trim() === "") {
-            setDisplayPets(filteredByMatch);
-          } else {
-            const lowercasedTerm = searchTerm.toLowerCase();
-            const filteredBySearch = filteredByMatch.filter(pet => 
-              pet.name.toLowerCase().includes(lowercasedTerm) || 
-              pet.breed.toLowerCase().includes(lowercasedTerm)
-            );
-            setDisplayPets(filteredBySearch);
-          }
+      // Filtering happens on client side to avoid requiring complex composite indices
+      const filteredByMatch = allPets.filter(pet => !matchedUserIds.has(pet.ownerId));
+      
+      if (searchTerm.trim() === "") {
+        setDisplayPets(filteredByMatch);
       } else {
-        setDisplayPets([]);
+        const lowercasedTerm = searchTerm.toLowerCase();
+        const filteredBySearch = filteredByMatch.filter(pet => 
+          pet.name.toLowerCase().includes(lowercasedTerm) || 
+          pet.breed.toLowerCase().includes(lowercasedTerm)
+        );
+        setDisplayPets(filteredBySearch);
       }
   }, [allPets, matchedUserIds, searchTerm]);
 
@@ -265,7 +277,7 @@ export default function MatchPetPage() {
     if (submitting === pet.id) {
         return { text: "Sending...", icon: Loader2, disabled: true, className: "animate-spin" };
     }
-    if (pendingRequestPetIds.has(pet.id)) {
+    if (pendingRequestPetIds.has(pet.ownerId)) {
         return { text: "Request Pending", icon: Clock, disabled: true, className: "" };
     }
     return { text: "Request Match", icon: Heart, disabled: false, className: "" };
@@ -363,8 +375,12 @@ export default function MatchPetPage() {
       ) : displayPets.length === 0 ? (
         <Card className="text-center py-12 px-4">
             <CardContent>
+                <Info className="mx-auto h-12 w-12 text-muted-foreground opacity-20 mb-4" />
                 <p className="text-muted-foreground">No pets found matching your criteria.</p>
-                <p className="text-sm text-muted-foreground mt-2">Try adjusting your search or check back later!</p>
+                <p className="text-sm text-muted-foreground mt-2">
+                  Pets you've already matched with or your own pet are not shown here. 
+                  Try clearing your search filter if you have one applied.
+                </p>
             </CardContent>
         </Card>
       ) : (
