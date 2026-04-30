@@ -2,7 +2,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { collection, query, orderBy, onSnapshot, doc, deleteDoc } from "firebase/firestore";
+import { collection, query, where, orderBy, onSnapshot, doc, deleteDoc } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { useAuth } from "@/contexts/auth-context";
 import { useToast } from "@/hooks/use-toast";
@@ -14,9 +14,12 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { CalendarPlus, CheckCircle, History, ListChecks, Loader2, Trash2 } from "lucide-react";
 import Link from "next/link";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Badge } from "@/components/ui/badge";
 
 interface Booking {
   id: string;
+  ownerId: string;
+  serviceProviderId: string;
   serviceProviderName: string;
   serviceType: string;
   date: string;
@@ -25,7 +28,7 @@ interface Booking {
 }
 
 export default function BookingManagementPage() {
-  const { user } = useAuth();
+  const { user, userRole } = useAuth();
   const { toast } = useToast();
   
   const [bookings, setBookings] = useState<Booking[]>([]);
@@ -35,8 +38,13 @@ export default function BookingManagementPage() {
   useEffect(() => {
     if (!user) return;
 
-    const bookingsRef = collection(db, "users", user.uid, "bookings");
-    const q = query(bookingsRef, orderBy("date", "asc"));
+    // Fetch from top-level bookings collection
+    const fieldToFilter = userRole === 'provider' ? 'serviceProviderId' : 'ownerId';
+    const q = query(
+      collection(db, "bookings"),
+      where(fieldToFilter, "==", user.uid),
+      orderBy("date", "asc")
+    );
 
     const unsubscribe = onSnapshot(q, (snapshot) => {
       const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Booking));
@@ -48,13 +56,13 @@ export default function BookingManagementPage() {
     });
 
     return () => unsubscribe();
-  }, [user]);
+  }, [user, userRole]);
 
   const handleCancelBooking = async (bookingId: string) => {
     if (!user) return;
     setIsDeleting(bookingId);
     try {
-      await deleteDoc(doc(db, "users", user.uid, "bookings", bookingId));
+      await deleteDoc(doc(db, "bookings", bookingId));
       toast({ title: "Booking Cancelled", description: "The appointment has been removed." });
     } catch (error) {
       console.error("Delete error:", error);
@@ -65,18 +73,20 @@ export default function BookingManagementPage() {
   };
 
   const today = new Date().toISOString().split('T')[0];
-  const upcomingBookings = bookings.filter(b => b.date >= today);
-  const pastBookings = bookings.filter(b => b.date < today);
+  const upcomingBookings = bookings.filter(b => b.date >= today && b.status !== 'cancelled');
+  const pastBookings = bookings.filter(b => b.date < today || b.status === 'completed');
 
   return (
     <div className="space-y-6">
       <div className="flex flex-col items-center justify-between gap-4 md:flex-row">
-        <p className="text-muted-foreground md:max-w-2xl">View, schedule, and manage all your pet service appointments in one place. Stay organized and never miss an appointment.</p>
-        <Link href="/providers">
-          <Button className="bg-accent text-accent-foreground hover:bg-accent/90">
-            <CalendarPlus className="mr-2 h-4 w-4" /> Book New Service
-          </Button>
-        </Link>
+        <p className="text-muted-foreground md:max-w-2xl">View, schedule, and manage all pet service appointments in one place.</p>
+        {userRole === 'owner' && (
+          <Link href="/providers">
+            <Button className="bg-accent text-accent-foreground hover:bg-accent/90">
+              <CalendarPlus className="mr-2 h-4 w-4" /> Book New Service
+            </Button>
+          </Link>
+        )}
       </div>
 
       <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
@@ -84,12 +94,12 @@ export default function BookingManagementPage() {
           <Tabs defaultValue="upcoming">
             <TabsList className="grid w-full grid-cols-2">
               <TabsTrigger value="upcoming"><ListChecks className="mr-2 h-4 w-4 inline-block" />Upcoming</TabsTrigger>
-              <TabsTrigger value="past"><History className="mr-2 h-4 w-4 inline-block" />Past</TabsTrigger>
+              <TabsTrigger value="past"><History className="mr-2 h-4 w-4 inline-block" />History</TabsTrigger>
             </TabsList>
             <TabsContent value="upcoming">
               <Card>
                 <CardHeader>
-                  <CardTitle className="text-lg sm:text-xl">Upcoming Appointments</CardTitle>
+                  <CardTitle className="text-lg sm:text-xl">Active Appointments</CardTitle>
                 </CardHeader>
                 <CardContent>
                   {loading ? (
@@ -123,7 +133,7 @@ export default function BookingManagementPage() {
                   ) : (
                     <div className="py-12 text-center text-muted-foreground">
                        <Calendar className="mx-auto h-12 w-12 opacity-20 mb-2" />
-                       <p>No upcoming bookings.</p>
+                       <p>No active bookings.</p>
                     </div>
                   )}
                 </CardContent>
@@ -132,7 +142,7 @@ export default function BookingManagementPage() {
             <TabsContent value="past">
               <Card>
                 <CardHeader>
-                  <CardTitle className="text-lg sm:text-xl">Past Appointments</CardTitle>
+                  <CardTitle className="text-lg sm:text-xl">Past & Completed</CardTitle>
                 </CardHeader>
                 <CardContent>
                 {loading ? (
@@ -144,18 +154,15 @@ export default function BookingManagementPage() {
                           <h3 className="font-semibold">{booking.serviceType} with {booking.serviceProviderName}</h3>
                           <p className="text-sm text-muted-foreground">Date: {booking.date} at {booking.time}</p>
                           <p className="text-sm text-green-600 flex items-center mt-2 font-medium">
-                            <CheckCircle className="mr-1 h-4 w-4"/> Completed
+                            <CheckCircle className="mr-1 h-4 w-4"/> {booking.status === 'cancelled' ? 'Cancelled' : 'Completed'}
                           </p>
-                          <div className="mt-4">
-                            <Button variant="outline" size="sm">Leave Review</Button>
-                          </div>
                         </li>
                       ))}
                     </ul>
                   ) : (
                      <div className="py-12 text-center text-muted-foreground">
                         <History className="mx-auto h-12 w-12 opacity-20 mb-2" />
-                        <p>No past bookings found.</p>
+                        <p>No history found.</p>
                      </div>
                   )}
                 </CardContent>
@@ -166,7 +173,7 @@ export default function BookingManagementPage() {
         <div className="md:col-span-1">
           <Card>
             <CardHeader>
-              <CardTitle className="text-lg sm:text-xl">Calendar Overview</CardTitle>
+              <CardTitle className="text-lg sm:text-xl">Calendar</CardTitle>
             </CardHeader>
             <CardContent className="flex justify-center p-0 sm:p-4">
               <Calendar

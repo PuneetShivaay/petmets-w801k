@@ -4,7 +4,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useAuth } from "@/contexts/auth-context";
-import { collection, query, where, onSnapshot, doc, getDoc, collectionGroup } from "firebase/firestore";
+import { collection, query, where, onSnapshot, doc, getDoc } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -99,7 +99,12 @@ export default function DashboardPage() {
       const chatsQuery = query(collection(db, "chats"), where("participants", "array-contains", user.uid));
       const unsubscribeChats = onSnapshot(chatsQuery, (snapshot) => setMatchedProfilesCount(snapshot.size));
       
-      const bookingsQuery = query(collection(db, "users", user.uid, "bookings"), where("status", "==", "pending"));
+      // Fetch from top-level bookings
+      const bookingsQuery = query(
+        collection(db, "bookings"), 
+        where("ownerId", "==", user.uid),
+        where("status", "==", "pending")
+      );
       const unsubscribeBookings = onSnapshot(bookingsQuery, (snapshot) => {
           if (!snapshot.empty) {
               const b = snapshot.docs[0].data();
@@ -129,10 +134,8 @@ export default function DashboardPage() {
           }
       };
 
-      // Real provider stats fetching using collectionGroup or listening to bookings
-      // For MVP, we look for bookings where this provider is mentioned
-      const bookingsRef = collectionGroup(db, "bookings");
-      const providerBookingsQuery = query(bookingsRef, where("serviceProviderId", "==", user.uid));
+      // Fetch from top-level bookings for provider
+      const providerBookingsQuery = query(collection(db, "bookings"), where("serviceProviderId", "==", user.uid));
       
       const unsubscribeProviderBookings = onSnapshot(providerBookingsQuery, (snapshot) => {
           const pending = snapshot.docs.filter(d => d.data().status === 'pending').length;
@@ -299,6 +302,7 @@ export default function DashboardPage() {
                 <Link href="/pet-profile" passHref><Button variant="secondary" className="w-full justify-start"><User className="mr-2 h-4 w-4" />View Pet Profile</Button></Link>
                 <Link href="/records" passHref><Button variant="secondary" className="w-full justify-start"><FileText className="mr-2 h-4 w-4" />Manage Documents</Button></Link>
                 <Link href="/providers" passHref><Button variant="secondary" className="w-full justify-start"><Calendar className="mr-2 h-4 w-4" />Book New Service</Button></Link>
+                <Link href="/adoption" passHref><Button variant="secondary" className="w-full justify-start"><Heart className="mr-2 h-4 w-4" />Pet Adoption</Button></Link>
             </CardContent>
         </Card>
       </div>

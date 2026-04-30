@@ -156,34 +156,21 @@
         "createdAt"
       ]
     },
-    "AdoptionListing": {
+    "Booking": {
       "$schema": "http://json-schema.org/draft-07/schema#",
-      "title": "AdoptionListing",
+      "title": "Booking",
       "type": "object",
-      "description": "A pet listed for adoption.",
+      "description": "An appointment for a pet service.",
       "properties": {
-        "id": {
-          "type": "string"
-        },
-        "ownerId": {
-          "type": "string"
-        },
-        "name": {
-          "type": "string"
-        },
-        "breed": {
-          "type": "string"
-        },
-        "city": {
-          "type": "string"
-        },
-        "image": {
-          "type": "string"
-        },
-        "createdAt": {
-          "type": "string",
-          "format": "date-time"
-        }
+        "id": { "type": "string" },
+        "ownerId": { "type": "string" },
+        "serviceProviderId": { "type": "string" },
+        "serviceProviderName": { "type": "string" },
+        "serviceType": { "type": "string" },
+        "date": { "type": "string", "format": "date" },
+        "time": { "type": "string" },
+        "status": { "type": "string", "enum": ["pending", "accepted", "completed", "cancelled"] },
+        "createdAt": { "type": "string", "format": "date-time" }
       }
     }
   },
@@ -216,10 +203,10 @@
         }
       },
       {
-        "path": "/adoptionListings/{listingId}",
+        "path": "/bookings/{bookingId}",
         "definition": {
-          "entityName": "AdoptionListing",
-          "description": "Pets for adoption."
+          "entityName": "Booking",
+          "description": "Global service bookings."
         }
       }
     ]

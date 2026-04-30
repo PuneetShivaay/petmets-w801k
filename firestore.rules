@@ -1,3 +1,4 @@
+
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
@@ -21,12 +22,14 @@ service cloud.firestore {
         allow get, list: if true;
         allow create, update, delete: if isOwner(userId);
       }
-      
-      match /bookings/{bookingId} {
-        allow get, list: if isOwner(userId) || (isSignedIn() && resource.data.serviceProviderId == request.auth.uid);
-        allow create: if isOwner(userId);
-        allow update, delete: if isOwner(userId) || (isSignedIn() && resource.data.serviceProviderId == request.auth.uid);
-      }
+    }
+
+    // --- Bookings (Top-level) ---
+    match /bookings/{bookingId} {
+      allow get: if isSignedIn() && (request.auth.uid == resource.data.ownerId || request.auth.uid == resource.data.serviceProviderId);
+      allow list: if isSignedIn() && (request.auth.uid == resource.data.ownerId || request.auth.uid == resource.data.serviceProviderId);
+      allow create: if isSignedIn();
+      allow update, delete: if isSignedIn() && (request.auth.uid == resource.data.ownerId || request.auth.uid == resource.data.serviceProviderId);
     }
 
     // --- Service Providers ---
@@ -34,11 +37,6 @@ service cloud.firestore {
       allow get, list: if true;
       allow create: if isOwner(providerId);
       allow update, delete: if isOwner(providerId);
-
-      match /offerings/{offeringId} {
-        allow get, list: if true;
-        allow create, update, delete: if isOwner(providerId);
-      }
     }
 
     // --- Adoption Listings ---
@@ -48,13 +46,14 @@ service cloud.firestore {
       allow update, delete: if isSignedIn() && resource.data.ownerId == request.auth.uid;
     }
 
-    // --- Chats and Match Requests ---
+    // --- Match Requests ---
     match /matchRequests/{requestId} {
       allow get, list: if isSignedIn() && (request.auth.uid == resource.data.requesterId || request.auth.uid == resource.data.targetOwnerId);
       allow create: if isSignedIn();
       allow update, delete: if isSignedIn() && (request.auth.uid == resource.data.requesterId || request.auth.uid == resource.data.targetOwnerId);
     }
 
+    // --- Chats ---
     match /chats/{chatId} {
       allow get, list: if isSignedIn() && request.auth.uid in resource.data.participants;
       allow create: if isSignedIn();

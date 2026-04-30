@@ -82,13 +82,14 @@ export default function ServiceProvidersPage() {
 
     setIsBooking(provider.id);
     try {
-      const bookingsColRef = collection(db, "users", user.uid, "bookings");
+      // Save to top-level bookings collection
+      const bookingsColRef = collection(db, "bookings");
       
-      // Simple logic: Book for 3 days from now by default for this MVP demo
       const bookingDate = new Date();
       bookingDate.setDate(bookingDate.getDate() + 3);
 
       await addDoc(bookingsColRef, {
+        ownerId: user.uid,
         serviceProviderId: provider.id,
         serviceProviderName: provider.name,
         serviceType: provider.service,
