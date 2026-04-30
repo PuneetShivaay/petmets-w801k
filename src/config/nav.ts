@@ -106,7 +106,7 @@ export const navItems: NavItem[] = [
     title: 'Service Providers',
     href: '/providers',
     icon: Users,
-    roles: ['owner'],
+    roles: ['owner', 'provider'],
   },
   {
     title: 'Digital Records',

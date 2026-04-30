@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect, useCallback, useRef } from "react";
@@ -7,12 +8,13 @@ import { z } from "zod";
 import { doc, getDoc, setDoc, serverTimestamp } from "firebase/firestore";
 import { ref as storageRef, uploadBytes, getDownloadURL } from "firebase/storage";
 import Image from "next/image";
+import Link from "next/link";
 
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { Briefcase, Edit3, Save, Loader2, Upload, Star, MapPin, Mail, Image as ImageIcon, Trash2, Plus } from "lucide-react";
+import { Briefcase, Edit3, Save, Loader2, Upload, Star, MapPin, Mail, Image as ImageIcon, Trash2, Plus, ExternalLink } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -88,6 +90,7 @@ export default function BusinessProfilePage() {
     const providerDocRef = doc(db, "service_providers", user.uid);
     const dataToSave = {
       ...data,
+      id: user.uid,
       userId: user.uid,
       email: user.email,
       updatedAt: serverTimestamp(),
@@ -197,11 +200,20 @@ export default function BusinessProfilePage() {
     <div className="max-w-4xl mx-auto space-y-6 pb-12">
       <div className="flex items-center justify-between">
         <h2 className="text-2xl font-bold font-headline">Manage Your Business</h2>
-        {!isEditing && providerData && (
-          <Button onClick={() => setIsEditing(true)} variant="outline">
-            <Edit3 className="mr-2 h-4 w-4" /> Edit Profile
-          </Button>
-        )}
+        <div className="flex gap-2">
+            {!isEditing && providerData && (
+                <>
+                <Link href="/providers">
+                    <Button variant="outline" className="hidden sm:flex">
+                        <ExternalLink className="mr-2 h-4 w-4" /> View Public Listing
+                    </Button>
+                </Link>
+                <Button onClick={() => setIsEditing(true)} variant="outline">
+                    <Edit3 className="mr-2 h-4 w-4" /> Edit Profile
+                </Button>
+                </>
+            )}
+        </div>
       </div>
 
       {!providerData && !isEditing ? (

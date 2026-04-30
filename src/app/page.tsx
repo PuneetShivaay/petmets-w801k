@@ -1,15 +1,16 @@
+
 "use client";
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useAuth } from "@/contexts/auth-context";
-import { collection, query, where, onSnapshot, doc, getDoc } from "firebase/firestore";
+import { collection, query, where, onSnapshot, doc, getDoc, collectionGroup } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ArrowRight, Bell, Calendar, FileText, User, HeartHandshake, AlertTriangle, MessageSquare, Briefcase, Star, CheckCircle, Heart } from "lucide-react";
+import { ArrowRight, Bell, Calendar, FileText, User, HeartHandshake, AlertTriangle, MessageSquare, Briefcase, Star, CheckCircle, Heart, ExternalLink } from "lucide-react";
 
 interface StatCardProps {
   title: string;
@@ -98,13 +99,23 @@ export default function DashboardPage() {
       const chatsQuery = query(collection(db, "chats"), where("participants", "array-contains", user.uid));
       const unsubscribeChats = onSnapshot(chatsQuery, (snapshot) => setMatchedProfilesCount(snapshot.size));
       
-      setUpcomingBooking({ id: 1, service: "Grooming with Happy Paws", date: "in 3 days" });
+      const bookingsQuery = query(collection(db, "users", user.uid, "bookings"), where("status", "==", "pending"));
+      const unsubscribeBookings = onSnapshot(bookingsQuery, (snapshot) => {
+          if (!snapshot.empty) {
+              const b = snapshot.docs[0].data();
+              setUpcomingBooking({ service: b.serviceType, date: b.date });
+          } else {
+              setUpcomingBooking(null);
+          }
+      });
+
       checkProfileCompleteness();
       setLoadingStats(false);
 
       return () => {
         unsubscribeRequests();
         unsubscribeChats();
+        unsubscribeBookings();
       };
     } else if (userRole === 'provider') {
       const checkBusinessListing = async () => {
@@ -118,11 +129,22 @@ export default function DashboardPage() {
           }
       };
 
-      // Mock provider stats for now
-      setPendingAppointments(3);
-      setCompletedServices(12);
+      // Real provider stats fetching using collectionGroup or listening to bookings
+      // For MVP, we look for bookings where this provider is mentioned
+      const bookingsRef = collectionGroup(db, "bookings");
+      const providerBookingsQuery = query(bookingsRef, where("serviceProviderId", "==", user.uid));
+      
+      const unsubscribeProviderBookings = onSnapshot(providerBookingsQuery, (snapshot) => {
+          const pending = snapshot.docs.filter(d => d.data().status === 'pending').length;
+          const completed = snapshot.docs.filter(d => d.data().status === 'completed' || d.data().status === 'accepted').length;
+          setPendingAppointments(pending);
+          setCompletedServices(completed);
+      });
+
       checkBusinessListing();
       setLoadingStats(false);
+
+      return () => unsubscribeProviderBookings();
     }
   }, [user, userRole]);
 
@@ -141,7 +163,7 @@ export default function DashboardPage() {
                   <div>
                       <CardTitle className="text-xl sm:text-2xl">List Your Business</CardTitle>
                       <CardDescription className="text-primary/90">
-                          Register as a provider to start receiving service requests and growing your business.
+                          Register as a provider to start appearing in search results and receiving bookings.
                       </CardDescription>
                   </div>
               </CardHeader>
@@ -159,7 +181,7 @@ export default function DashboardPage() {
           <StatCard
             title="Pending Appointments"
             value={pendingAppointments}
-            description="Requests awaiting confirmation."
+            description="Requests awaiting your attention."
             icon={Calendar}
             href="/bookings"
             actionText="View Schedule"
@@ -167,7 +189,7 @@ export default function DashboardPage() {
           <StatCard
             title="Completed Services"
             value={completedServices}
-            description="Successful pet care sessions."
+            description="Total services provided to date."
             icon={CheckCircle}
             href="/bookings"
             actionText="View History"
@@ -175,21 +197,21 @@ export default function DashboardPage() {
           <StatCard
             title="Average Rating"
             value={averageRating.toFixed(1)}
-            description="Your reputation on PetMets."
+            description="Based on customer feedback."
             icon={Star}
             href="/business-profile"
             actionText="View Profile"
           />
           <Card className="shadow-lg lg:col-span-1">
                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Vendor Actions</CardTitle>
+                  <CardTitle className="text-sm font-medium">Quick Access</CardTitle>
                   <Briefcase className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent className="flex flex-col space-y-2 pt-2">
-                   <p className="text-xs text-muted-foreground">Grow your presence.</p>
+                   <p className="text-xs text-muted-foreground">Manage your presence.</p>
                   <Link href="/business-profile" passHref><Button variant="secondary" className="w-full justify-start"><User className="mr-2 h-4 w-4" />Business Profile</Button></Link>
+                  <Link href="/providers" passHref><Button variant="secondary" className="w-full justify-start"><ExternalLink className="mr-2 h-4 w-4" />Preview Listing</Button></Link>
                   <Link href="/chats" passHref><Button variant="secondary" className="w-full justify-start"><MessageSquare className="mr-2 h-4 w-4" />Customer Chats</Button></Link>
-                  <Link href="/adoption" passHref><Button variant="secondary" className="w-full justify-start"><Heart className="mr-2 h-4 w-4" />Pet Adoption</Button></Link>
               </CardContent>
           </Card>
         </div>
