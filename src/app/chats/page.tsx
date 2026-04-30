@@ -45,16 +45,27 @@ export default function ChatsListPage() {
 
       const profilePromises = idsToFetch.map(async (id) => {
           const userDoc = await getDoc(doc(db, 'users', id));
-          const petDoc = await getDoc(doc(db, 'users', id, 'pets', 'main-pet'));
+          // Updated to new top-level pets collection
+          const petDoc = await getDoc(doc(db, 'pets', id));
+          
           if (userDoc.exists()) {
               const data = userDoc.data();
-              const petData = petDoc.exists() ? petDoc.data() : {};
+              let petData = petDoc.exists() ? petDoc.data() : null;
+
+              // Fallback check for older path
+              if (!petData) {
+                  const oldPetDoc = await getDoc(doc(db, 'users', id, 'pets', 'main-pet'));
+                  if (oldPetDoc.exists()) {
+                      petData = oldPetDoc.data();
+                  }
+              }
+
               newProfiles[id] = {
                   name: data.name || 'Pet Owner',
                   avatar: data.avatar || 'https://i.imgur.com/83AAQ1X.png',
                   dataAiHint: data.dataAiHint || 'paw print logo',
-                  petName: petData.name,
-                  petBreed: petData.breed,
+                  petName: petData?.name,
+                  petBreed: petData?.breed,
               };
           }
       });
@@ -69,8 +80,7 @@ export default function ChatsListPage() {
     if (authIsLoading || !user) return;
 
     setIsLoadingChats(true);
-    // Simplified query to avoid needing a composite index.
-    // We will sort the results on the client side.
+    // Query to find all chats where the current user is a participant
     const q = query(
         collection(db, 'chats'), 
         where('participants', 'array-contains', user.uid)
@@ -87,7 +97,7 @@ export default function ChatsListPage() {
         data.participants.forEach((p: string) => allParticipantIds.add(p));
       });
       
-      // Sort on the client-side
+      // Sort on the client-side to ensure most recent messages are at the top
       chatsData.sort((a, b) => {
         const timeA = a.lastMessageTimestamp?.toDate() || new Date(0);
         const timeB = b.lastMessageTimestamp?.toDate() || new Date(0);

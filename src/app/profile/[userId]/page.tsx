@@ -58,7 +58,8 @@ export default function UserProfilePage() {
     setIsLoading(true);
     try {
       const userDocRef = doc(db, "users", userId);
-      const petDocRef = doc(db, "users", userId, "pets", "main-pet");
+      // Updated to top-level pets collection
+      const petDocRef = doc(db, "pets", userId);
 
       const [userDocSnap, petDocSnap] = await Promise.all([
         getDoc(userDocRef),
@@ -77,8 +78,14 @@ export default function UserProfilePage() {
       if (petDocSnap.exists()) {
         setPetData(petDocSnap.data() as PetData);
       } else {
-        // It's possible a user exists without a pet, handle gracefully
-        setPetData(null); 
+        // Fallback for older profiles
+        const oldPetDocRef = doc(db, "users", userId, "pets", "main-pet");
+        const oldPetDocSnap = await getDoc(oldPetDocRef);
+        if (oldPetDocSnap.exists()) {
+            setPetData(oldPetDocSnap.data() as PetData);
+        } else {
+            setPetData(null); 
+        }
       }
 
     } catch (error) {

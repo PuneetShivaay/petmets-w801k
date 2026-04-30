@@ -133,7 +133,8 @@ export default function LoginPage() {
       await setDoc(userDocRef, defaultUserData);
 
       if (data.role === 'owner') {
-        const petDocRef = doc(db, "users", newUser.uid, "pets", "main-pet");
+        // Updated to top-level pets collection
+        const petDocRef = doc(db, "pets", newUser.uid);
         const defaultPetData = {
           name: "Buddy",
           breed: "Golden Retriever",
@@ -196,9 +197,9 @@ export default function LoginPage() {
           <CardTitle className="font-headline text-center text-2xl sm:text-3xl">
             {isSignUp ? "Create Account" : "Welcome Back!"}
           </CardTitle>
-          <CardDescription className="text-center">
+          <CardTitle className="text-center">
             {isSignUp ? "Enter your details to sign up." : "Sign in to continue to PetMets."}
-          </CardDescription>
+          </CardTitle>
         </CardHeader>
         <form onSubmit={isSignUp ? handleSignUpSubmit(onSignUp) : handleLoginSubmit(onLogin)}>
           <CardContent className="space-y-4">
