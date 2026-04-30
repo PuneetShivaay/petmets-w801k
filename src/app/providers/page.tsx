@@ -1,12 +1,13 @@
-
 "use client";
 
 import { useState, useEffect, useMemo } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { collection, query, onSnapshot, addDoc, serverTimestamp } from "firebase/firestore";
+import { collection, query, onSnapshot, addDoc, serverTimestamp, doc } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { useAuth } from "@/contexts/auth-context";
 import { useToast } from "@/hooks/use-toast";
+import { errorEmitter } from "@/firebase/error-emitter";
+import { FirestorePermissionError } from "@/firebase/errors";
 
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -48,7 +49,6 @@ export default function ServiceProvidersPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [serviceFilter, setServiceFilter] = useState("all");
 
-  // Sync dialog state with URL parameter for back-button support
   const selectedProviderId = searchParams.get("view");
   const selectedProvider = useMemo(() => 
     providers.find(p => p.id === selectedProviderId), 
@@ -67,7 +67,10 @@ export default function ServiceProvidersPage() {
       setProviders(data);
       setLoading(false);
     }, (error) => {
-      console.error("Error fetching providers:", error);
+      errorEmitter.emit('permission-error', new FirestorePermissionError({
+        path: 'service_providers',
+        operation: 'list'
+      }));
       setLoading(false);
     });
     return () => unsubscribe();
@@ -98,7 +101,7 @@ export default function ServiceProvidersPage() {
   const handleCloseDetails = () => {
     const params = new URLSearchParams(searchParams.toString());
     params.delete("view");
-    router.back(); // Use back to remove the history entry
+    router.back();
   };
 
   const handleBookSession = async (provider: Provider) => {
@@ -108,33 +111,39 @@ export default function ServiceProvidersPage() {
     }
 
     setIsBooking(provider.id);
-    try {
-      const bookingsColRef = collection(db, "bookings");
-      const bookingDate = new Date();
-      bookingDate.setDate(bookingDate.getDate() + 3);
+    const bookingsColRef = collection(db, "bookings");
+    const bookingDate = new Date();
+    bookingDate.setDate(bookingDate.getDate() + 3);
 
-      await addDoc(bookingsColRef, {
-        ownerId: user.uid,
-        serviceProviderId: provider.id,
-        serviceProviderName: provider.name,
-        serviceType: provider.service,
-        status: "pending",
-        date: bookingDate.toISOString().split('T')[0],
-        time: "10:00 AM",
-        createdAt: serverTimestamp(),
-      });
+    const bookingData = {
+      ownerId: user.uid,
+      serviceProviderId: provider.id,
+      serviceProviderName: provider.name,
+      serviceType: provider.service,
+      status: "pending",
+      date: bookingDate.toISOString().split('T')[0],
+      time: "10:00 AM",
+      createdAt: serverTimestamp(),
+    };
 
-      toast({
-        title: "Booking Requested!",
-        description: `Your session with ${provider.name} has been scheduled for ${bookingDate.toLocaleDateString()}.`,
+    addDoc(bookingsColRef, bookingData)
+      .then(() => {
+        toast({
+          title: "Booking Requested!",
+          description: `Your session with ${provider.name} has been scheduled for ${bookingDate.toLocaleDateString()}.`,
+        });
+        handleCloseDetails();
+      })
+      .catch(async (error) => {
+        errorEmitter.emit('permission-error', new FirestorePermissionError({
+          path: 'bookings',
+          operation: 'create',
+          requestResourceData: bookingData,
+        }));
+      })
+      .finally(() => {
+        setIsBooking(null);
       });
-      handleCloseDetails();
-    } catch (error) {
-      console.error("Booking error:", error);
-      toast({ variant: "destructive", title: "Booking Failed", description: "Could not create the booking. Please try again." });
-    } finally {
-      setIsBooking(null);
-    }
   };
 
   return (

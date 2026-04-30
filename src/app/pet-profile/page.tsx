@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect, useCallback, useRef } from "react";
@@ -22,6 +21,8 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { auth, db, storage } from "@/lib/firebase";
 import { useAuth } from "@/contexts/auth-context";
 import { useToast } from "@/hooks/use-toast";
+import { errorEmitter } from "@/firebase/error-emitter";
+import { FirestorePermissionError } from "@/firebase/errors";
 
 const petSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters.").max(50),
@@ -89,7 +90,7 @@ export default function PetProfilePage() {
     
     try {
       const userDocRef = doc(db, "users", user.uid);
-      const petDocRef = doc(db, "pets", user.uid); // Updated path
+      const petDocRef = doc(db, "pets", user.uid);
 
       const [userDocSnap, petDocSnap] = await Promise.all([
         getDoc(userDocRef),
@@ -111,13 +112,17 @@ export default function PetProfilePage() {
       setPetData(finalPetData);
       resetPetForm(finalPetData);
 
-    } catch (error) {
-      console.error("Error fetching profile data:", error);
-      toast({ variant: "destructive", title: "Error", description: `Could not fetch profile data.` });
+    } catch (error: any) {
+      if (error.code === 'permission-denied') {
+        errorEmitter.emit('permission-error', new FirestorePermissionError({
+          path: `users/${user.uid}`,
+          operation: 'get'
+        }));
+      }
     } finally {
       setIsLoading(false);
     }
-  }, [user, resetOwnerForm, resetPetForm, toast]);
+  }, [user, resetOwnerForm, resetPetForm]);
 
   useEffect(() => {
     fetchProfileData();
@@ -126,27 +131,31 @@ export default function PetProfilePage() {
   const onPetSubmit: SubmitHandler<PetFormData> = async (data) => {
     if (!user) return;
     setIsSubmittingPet(true);
-    try {
-      const petDocRef = doc(db, "pets", user.uid); // Updated path
-      const dataToSave = { 
-        ...petData, 
-        ...data, 
-        userId: user.uid,
-        updatedAt: serverTimestamp(),
-        createdAt: petData.createdAt || serverTimestamp()
-      }; 
-      
-      await setDoc(petDocRef, dataToSave, { merge: true });
-      
-      setPetData(dataToSave);
-      toast({ title: "Success", description: "Pet details updated." });
-      setIsEditingPet(false);
-    } catch (error) {
-      console.error("Failed to update pet details:", error);
-      toast({ variant: "destructive", title: "Error", description: "Failed to update pet details." });
-    } finally {
-      setIsSubmittingPet(false);
-    }
+    const petDocRef = doc(db, "pets", user.uid);
+    const dataToSave = { 
+      ...petData, 
+      ...data, 
+      userId: user.uid,
+      updatedAt: serverTimestamp(),
+      createdAt: petData.createdAt || serverTimestamp()
+    }; 
+    
+    setDoc(petDocRef, dataToSave, { merge: true })
+      .then(() => {
+        setPetData(dataToSave);
+        toast({ title: "Success", description: "Pet details updated." });
+        setIsEditingPet(false);
+      })
+      .catch(async (error) => {
+        errorEmitter.emit('permission-error', new FirestorePermissionError({
+          path: petDocRef.path,
+          operation: 'update',
+          requestResourceData: dataToSave,
+        }));
+      })
+      .finally(() => {
+        setIsSubmittingPet(false);
+      });
   };
 
   const onOwnerSubmit: SubmitHandler<OwnerFormData> = async (data) => {
@@ -160,16 +169,23 @@ export default function PetProfilePage() {
       const userDocRef = doc(db, "users", user.uid);
       const dataToSave = { ...ownerData, ...data, updatedAt: serverTimestamp() };
 
-      await setDoc(userDocRef, dataToSave, { merge: true });
-      
-      setOwnerData(dataToSave);
-      toast({ title: "Success", description: "Your profile has been updated." });
-      setIsEditingOwner(false);
-    } catch (error) {
-      console.error("Failed to update profile:", error);
-      toast({ variant: "destructive", title: "Error", description: "Failed to update profile." });
+      setDoc(userDocRef, dataToSave, { merge: true })
+        .then(() => {
+          setOwnerData(dataToSave);
+          toast({ title: "Success", description: "Your profile has been updated." });
+          setIsEditingOwner(false);
+        })
+        .catch(async (error) => {
+          errorEmitter.emit('permission-error', new FirestorePermissionError({
+            path: userDocRef.path,
+            operation: 'update',
+            requestResourceData: dataToSave,
+          }));
+        });
+    } catch (error: any) {
+        toast({ variant: "destructive", title: "Error", description: "Failed to update profile." });
     } finally {
-      setIsSubmittingOwner(false);
+        setIsSubmittingOwner(false);
     }
   };
   
@@ -183,13 +199,22 @@ export default function PetProfilePage() {
       const snapshot = await uploadBytes(avatarRef, file);
       const downloadURL = await getDownloadURL(snapshot.ref);
 
-      const petDocRef = doc(db, "pets", user.uid); // Updated path
-      await setDoc(petDocRef, { avatar: downloadURL }, { merge: true });
+      const petDocRef = doc(db, "pets", user.uid);
+      const updateData = { avatar: downloadURL };
 
-      setPetData(prev => ({ ...prev, avatar: downloadURL }));
-      toast({ title: 'Avatar Updated!', description: "Your pet's new picture is saved." });
+      setDoc(petDocRef, updateData, { merge: true })
+        .then(() => {
+          setPetData(prev => ({ ...prev, avatar: downloadURL }));
+          toast({ title: 'Avatar Updated!', description: "Your pet's new picture is saved." });
+        })
+        .catch(async (error) => {
+          errorEmitter.emit('permission-error', new FirestorePermissionError({
+            path: petDocRef.path,
+            operation: 'update',
+            requestResourceData: updateData,
+          }));
+        });
     } catch (error) {
-      console.error("Avatar upload failed:", error);
       toast({ variant: 'destructive', title: 'Upload Failed', description: 'There was an error uploading your image.' });
     } finally {
       setIsUploadingPetAvatar(false);
@@ -207,12 +232,21 @@ export default function PetProfilePage() {
       const downloadURL = await getDownloadURL(snapshot.ref);
 
       const userDocRef = doc(db, "users", user.uid);
-      await setDoc(userDocRef, { avatar: downloadURL }, { merge: true });
+      const updateData = { avatar: downloadURL };
 
-      setOwnerData(prev => ({ ...prev, avatar: downloadURL }));
-      toast({ title: 'Profile Picture Updated!', description: 'Your new picture is saved.' });
+      setDoc(userDocRef, updateData, { merge: true })
+        .then(() => {
+          setOwnerData(prev => ({ ...prev, avatar: downloadURL }));
+          toast({ title: 'Profile Picture Updated!', description: 'Your new picture is saved.' });
+        })
+        .catch(async (error) => {
+          errorEmitter.emit('permission-error', new FirestorePermissionError({
+            path: userDocRef.path,
+            operation: 'update',
+            requestResourceData: updateData,
+          }));
+        });
     } catch (error) {
-      console.error("Avatar upload failed:", error);
       toast({ variant: 'destructive', title: 'Upload Failed', description: 'There was an error uploading your image.' });
     } finally {
       setIsUploadingOwnerAvatar(false);

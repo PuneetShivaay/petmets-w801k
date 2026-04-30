@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
@@ -6,6 +5,8 @@ import { collection, getDocs, doc, setDoc, serverTimestamp, query, where, onSnap
 import { db } from "@/lib/firebase";
 import { useAuth } from "@/contexts/auth-context";
 import { useToast } from "@/hooks/use-toast";
+import { errorEmitter } from "@/firebase/error-emitter";
+import { FirestorePermissionError } from "@/firebase/errors";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -30,6 +31,7 @@ interface MatchRequest {
     requesterId: string;
     requesterName: string;
     requesterEmail: string;
+    targetOwnerId: string;
     targetPetName: string;
     status: 'pending' | 'accepted' | 'declined';
 }
@@ -58,19 +60,14 @@ export default function MatchPetPage() {
     }
     setLoading(true);
     try {
-      // Using collectionGroup("pets") to find all pet documents across any path.
-      // This is a robust way to handle both top-level and sub-collection pet data.
       const petsCol = collectionGroup(db, "pets");
       const querySnapshot = await getDocs(petsCol);
 
       const petsList: Pet[] = querySnapshot.docs
         .map((petDoc) => {
             const data = petDoc.data();
-            // ownerId is either doc.id (for top-level) or data.userId (if stored explicitly)
-            // or we extract it from the path (e.g. /users/UID/pets/main-pet)
             let ownerId = data.userId || petDoc.id;
             
-            // If the document path indicates it's a subcollection of 'users', extract the UID
             if (petDoc.ref.path.includes('users/')) {
                 const parts = petDoc.ref.path.split('/');
                 const usersIndex = parts.indexOf('users');
@@ -88,7 +85,6 @@ export default function MatchPetPage() {
               dataAiHint: data.dataAiHint || "pet portrait",
             };
         })
-        // Filter out current user's pet so you don't match with yourself
         .filter(pet => pet.ownerId !== user.uid);
       
       setAllPets(petsList);
@@ -130,13 +126,17 @@ export default function MatchPetPage() {
               });
           });
           setMatchedUserIds(newMatchedIds);
+      }, async (error) => {
+        errorEmitter.emit('permission-error', new FirestorePermissionError({
+          path: 'chats',
+          operation: 'list'
+        }));
       });
 
       return () => unsubscribe();
   }, [user]);
 
   useEffect(() => {
-      // Filtering happens on client side to avoid requiring complex composite indices
       const filteredByMatch = allPets.filter(pet => !matchedUserIds.has(pet.ownerId));
       
       if (searchTerm.trim() === "") {
@@ -175,6 +175,11 @@ export default function MatchPetPage() {
       );
       
       setIncomingRequests(enhancedRequests);
+    }, async (error) => {
+      errorEmitter.emit('permission-error', new FirestorePermissionError({
+        path: 'matchRequests',
+        operation: 'list'
+      }));
     });
 
     return () => unsubscribe();
@@ -196,6 +201,11 @@ export default function MatchPetPage() {
             newPendingIds.add(data.targetOwnerId);
         });
         setPendingRequestPetIds(newPendingIds);
+    }, async (error) => {
+      errorEmitter.emit('permission-error', new FirestorePermissionError({
+        path: 'matchRequests',
+        operation: 'list'
+      }));
     });
 
     return () => unsubscribe();
@@ -208,69 +218,71 @@ export default function MatchPetPage() {
     }
     
     setSubmitting(targetPet.id);
+    const matchRequestRef = doc(collection(db, "matchRequests"));
+    const data = {
+        requesterId: user.uid,
+        requesterEmail: user.email,
+        targetOwnerId: targetPet.ownerId,
+        targetPetId: targetPet.id,
+        targetPetName: targetPet.name,
+        status: "pending",
+        createdAt: serverTimestamp(),
+    };
 
-    try {
-        const matchRequestRef = doc(collection(db, "matchRequests"));
-
-        await setDoc(matchRequestRef, {
-            requesterId: user.uid,
-            requesterEmail: user.email,
-            targetOwnerId: targetPet.ownerId,
-            targetPetId: targetPet.id,
-            targetPetName: targetPet.name,
-            status: "pending",
-            createdAt: serverTimestamp(),
-        });
-        
+    setDoc(matchRequestRef, data)
+      .then(() => {
         toast({ title: "Match Request Sent!", description: `Your request to match with ${targetPet.name} has been sent.` });
-
-    } catch (error) {
-        console.error("Error sending match request:", error);
-        toast({ variant: "destructive", title: "Request Failed", description: "Could not send the match request. Please try again." });
-    } finally {
+      })
+      .catch(async (error) => {
+        errorEmitter.emit('permission-error', new FirestorePermissionError({
+          path: matchRequestRef.path,
+          operation: 'create',
+          requestResourceData: data,
+        }));
+      })
+      .finally(() => {
         setSubmitting(null);
-    }
+      });
   };
 
   const handleRequestResponse = async (request: MatchRequest, status: 'accepted' | 'declined') => {
     if (!user) return;
     setIsUpdatingRequest(request.id);
-    try {
-        const batch = writeBatch(db);
-        const requestRef = doc(db, "matchRequests", request.id);
-        
-        batch.update(requestRef, { status: status });
+    
+    const batch = writeBatch(db);
+    const requestRef = doc(db, "matchRequests", request.id);
+    const updateData = { status: status };
+    batch.update(requestRef, updateData);
 
-        if (status === 'accepted') {
-            const chatId = [user.uid, request.requesterId].sort().join('_');
-            const chatRef = doc(db, 'chats', chatId);
-
-            batch.set(chatRef, {
-                participants: [user.uid, request.requesterId],
-                participantEmails: [user.email, request.requesterEmail],
-                createdAt: serverTimestamp(),
-                lastMessage: 'Chat started!',
-                lastMessageTimestamp: serverTimestamp(),
-            }, { merge: true });
-        }
-        
-        await batch.commit();
-
+    if (status === 'accepted') {
+        const chatId = [user.uid, request.requesterId].sort().join('_');
+        const chatRef = doc(db, 'chats', chatId);
+        batch.set(chatRef, {
+            participants: [user.uid, request.requesterId],
+            participantEmails: [user.email, request.requesterEmail],
+            createdAt: serverTimestamp(),
+            lastMessage: 'Chat started!',
+            lastMessageTimestamp: serverTimestamp(),
+        }, { merge: true });
+    }
+    
+    batch.commit()
+      .then(() => {
         toast({
             title: `Request ${status}`,
             description: `You have ${status} the match request.`
         });
-
-    } catch (error) {
-        console.error(`Error updating request ${request.id}:`, error);
-        toast({
-            variant: "destructive",
-            title: "Update Failed",
-            description: "Could not update the request. Please try again."
-        });
-    } finally {
+      })
+      .catch(async (error) => {
+        errorEmitter.emit('permission-error', new FirestorePermissionError({
+          path: requestRef.path,
+          operation: 'update',
+          requestResourceData: updateData,
+        }));
+      })
+      .finally(() => {
         setIsUpdatingRequest(null);
-    }
+      });
   }
   
   const getButtonState = (pet: Pet) => {

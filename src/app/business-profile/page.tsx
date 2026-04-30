@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect, useCallback, useRef } from "react";
@@ -50,10 +49,6 @@ export default function BusinessProfilePage() {
   const [isUploadingGallery, setIsUploadingGallery] = useState(false);
   const [providerData, setProviderData] = useState<any>(null);
 
-  const { register, handleSubmit, reset, setValue, formState: { errors } } = useForm<ProviderFormData>({
-    resolver: zodResolver(providerSchema),
-  });
-
   const fetchProviderData = useCallback(async () => {
     if (!user) return;
     try {
@@ -72,12 +67,21 @@ export default function BusinessProfilePage() {
       } else {
         setProviderData(null);
       }
-    } catch (error) {
-      console.error("Error fetching provider data:", error);
+    } catch (error: any) {
+      if (error.code === 'permission-denied') {
+        errorEmitter.emit('permission-error', new FirestorePermissionError({
+          path: `service_providers/${user.uid}`,
+          operation: 'get'
+        }));
+      }
     } finally {
       setIsLoading(false);
     }
-  }, [user, reset]);
+  }, [user]);
+
+  const { register, handleSubmit, reset, setValue, formState: { errors } } = useForm<ProviderFormData>({
+    resolver: zodResolver(providerSchema),
+  });
 
   useEffect(() => {
     fetchProviderData();
@@ -106,7 +110,7 @@ export default function BusinessProfilePage() {
         toast({ title: "Success", description: "Business details updated." });
         setIsEditing(false);
       })
-      .catch((err) => {
+      .catch(async (error) => {
         errorEmitter.emit('permission-error', new FirestorePermissionError({
           path: providerDocRef.path,
           operation: 'update',
@@ -131,12 +135,21 @@ export default function BusinessProfilePage() {
       const downloadURL = await getDownloadURL(snapshot.ref);
 
       const providerDocRef = doc(db, "service_providers", user.uid);
-      await setDoc(providerDocRef, { image: downloadURL }, { merge: true });
+      const updateData = { image: downloadURL };
       
-      setProviderData((prev: any) => ({ ...prev, image: downloadURL }));
-      toast({ title: 'Success', description: 'Business photo updated.' });
+      setDoc(providerDocRef, updateData, { merge: true })
+        .then(() => {
+          setProviderData((prev: any) => ({ ...prev, image: downloadURL }));
+          toast({ title: 'Success', description: 'Business photo updated.' });
+        })
+        .catch(async (error) => {
+           errorEmitter.emit('permission-error', new FirestorePermissionError({
+            path: providerDocRef.path,
+            operation: 'update',
+            requestResourceData: updateData,
+          }));
+        });
     } catch (error: any) {
-      console.error("Avatar upload failed:", error);
       toast({ variant: 'destructive', title: 'Upload Failed', description: error.message });
     } finally {
       setIsUploading(false);
@@ -163,12 +176,21 @@ export default function BusinessProfilePage() {
 
       const newGallery = [...currentGallery, downloadURL];
       const providerDocRef = doc(db, "service_providers", user.uid);
+      const updateData = { gallery: newGallery };
       
-      await setDoc(providerDocRef, { gallery: newGallery }, { merge: true });
-      setProviderData((prev: any) => ({ ...prev, gallery: newGallery }));
-      toast({ title: 'Success', description: 'Photo added to gallery.' });
+      setDoc(providerDocRef, updateData, { merge: true })
+        .then(() => {
+          setProviderData((prev: any) => ({ ...prev, gallery: newGallery }));
+          toast({ title: 'Success', description: 'Photo added to gallery.' });
+        })
+        .catch(async (error) => {
+          errorEmitter.emit('permission-error', new FirestorePermissionError({
+            path: providerDocRef.path,
+            operation: 'update',
+            requestResourceData: updateData,
+          }));
+        });
     } catch (error: any) {
-      console.error("Gallery upload failed:", error);
       toast({ variant: 'destructive', title: 'Upload Failed', description: error.message });
     } finally {
       setIsUploadingGallery(false);
@@ -179,17 +201,22 @@ export default function BusinessProfilePage() {
   const handleDeleteGalleryImage = async (imageUrl: string) => {
     if (!user) return;
     
-    try {
-      const newGallery = (providerData?.gallery || []).filter((url: string) => url !== imageUrl);
-      const providerDocRef = doc(db, "service_providers", user.uid);
-      await setDoc(providerDocRef, { gallery: newGallery }, { merge: true });
-      
-      setProviderData((prev: any) => ({ ...prev, gallery: newGallery }));
-      toast({ title: 'Success', description: 'Photo removed from gallery.' });
-    } catch (error: any) {
-      console.error("Delete failed:", error);
-      toast({ variant: 'destructive', title: 'Delete Failed', description: error.message });
-    }
+    const newGallery = (providerData?.gallery || []).filter((url: string) => url !== imageUrl);
+    const providerDocRef = doc(db, "service_providers", user.uid);
+    const updateData = { gallery: newGallery };
+
+    setDoc(providerDocRef, updateData, { merge: true })
+      .then(() => {
+        setProviderData((prev: any) => ({ ...prev, gallery: newGallery }));
+        toast({ title: 'Success', description: 'Photo removed from gallery.' });
+      })
+      .catch(async (error) => {
+        errorEmitter.emit('permission-error', new FirestorePermissionError({
+          path: providerDocRef.path,
+          operation: 'update',
+          requestResourceData: updateData,
+        }));
+      });
   };
 
   if (isLoading) {
