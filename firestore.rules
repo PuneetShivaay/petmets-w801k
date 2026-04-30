@@ -20,18 +20,24 @@ service cloud.firestore {
     }
 
     // --- Pets (Top-level) ---
+    // Documents are keyed by userId
     match /pets/{userId} {
       allow get, list: if true;
-      allow create: if isOwner(userId);
+      allow create: if isOwner(userId) && request.resource.data.userId == userId;
       allow update, delete: if isOwner(userId);
     }
 
     // --- Bookings (Top-level) ---
     match /bookings/{bookingId} {
-      allow get: if isSignedIn() && (request.auth.uid == resource.data.ownerId || request.auth.uid == resource.data.serviceProviderId);
-      allow list: if isSignedIn() && (request.auth.uid == resource.data.ownerId || request.auth.uid == resource.data.serviceProviderId);
-      allow create: if isSignedIn();
-      allow update, delete: if isSignedIn() && (request.auth.uid == resource.data.ownerId || request.auth.uid == resource.data.serviceProviderId);
+      allow get, list: if isSignedIn() && (
+        request.auth.uid == resource.data.ownerId || 
+        request.auth.uid == resource.data.serviceProviderId
+      );
+      allow create: if isSignedIn() && request.resource.data.ownerId == request.auth.uid;
+      allow update, delete: if isSignedIn() && (
+        request.auth.uid == resource.data.ownerId || 
+        request.auth.uid == resource.data.serviceProviderId
+      );
     }
 
     // --- Service Providers ---
@@ -44,21 +50,27 @@ service cloud.firestore {
     // --- Adoption Listings ---
     match /adoptionListings/{listingId} {
       allow get, list: if true;
-      allow create: if isSignedIn();
+      allow create: if isSignedIn() && request.resource.data.ownerId == request.auth.uid;
       allow update, delete: if isSignedIn() && resource.data.ownerId == request.auth.uid;
     }
 
     // --- Match Requests ---
     match /matchRequests/{requestId} {
-      allow get, list: if isSignedIn() && (request.auth.uid == resource.data.requesterId || request.auth.uid == resource.data.targetOwnerId);
-      allow create: if isSignedIn();
-      allow update, delete: if isSignedIn() && (request.auth.uid == resource.data.requesterId || request.auth.uid == resource.data.targetOwnerId);
+      allow get, list: if isSignedIn() && (
+        request.auth.uid == resource.data.requesterId || 
+        request.auth.uid == resource.data.targetOwnerId
+      );
+      allow create: if isSignedIn() && request.resource.data.requesterId == request.auth.uid;
+      allow update, delete: if isSignedIn() && (
+        request.auth.uid == resource.data.requesterId || 
+        request.auth.uid == resource.data.targetOwnerId
+      );
     }
 
     // --- Chats ---
     match /chats/{chatId} {
       allow get, list: if isSignedIn() && request.auth.uid in resource.data.participants;
-      allow create: if isSignedIn();
+      allow create: if isSignedIn() && request.auth.uid in request.resource.data.participants;
       allow update: if isSignedIn() && request.auth.uid in resource.data.participants;
       
       match /messages/{messageId} {

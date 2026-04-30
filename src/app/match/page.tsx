@@ -1,7 +1,8 @@
+
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { collection, getDocs, doc, setDoc, serverTimestamp, query, where, onSnapshot, writeBatch, getDoc, collectionGroup } from "firebase/firestore";
+import { collection, getDocs, doc, setDoc, serverTimestamp, query, where, onSnapshot, writeBatch, getDoc } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { useAuth } from "@/contexts/auth-context";
 import { useToast } from "@/hooks/use-toast";
@@ -60,21 +61,16 @@ export default function MatchPetPage() {
     }
     setLoading(true);
     try {
-      const petsCol = collectionGroup(db, "pets");
+      // Switched from collectionGroup to collection for top-level /pets
+      // This avoids index requirements and matches our new structure
+      const petsCol = collection(db, "pets");
       const querySnapshot = await getDocs(petsCol);
 
       const petsList: Pet[] = querySnapshot.docs
         .map((petDoc) => {
             const data = petDoc.data();
-            let ownerId = data.userId || petDoc.id;
-            
-            if (petDoc.ref.path.includes('users/')) {
-                const parts = petDoc.ref.path.split('/');
-                const usersIndex = parts.indexOf('users');
-                if (usersIndex !== -1 && parts[usersIndex + 1]) {
-                    ownerId = parts[usersIndex + 1];
-                }
-            }
+            // In top-level collection, the doc ID is the owner's UID
+            const ownerId = petDoc.id;
 
             return {
               id: petDoc.id,
@@ -126,7 +122,7 @@ export default function MatchPetPage() {
               });
           });
           setMatchedUserIds(newMatchedIds);
-      }, async (error) => {
+      }, (error) => {
         errorEmitter.emit('permission-error', new FirestorePermissionError({
           path: 'chats',
           operation: 'list'
@@ -175,7 +171,7 @@ export default function MatchPetPage() {
       );
       
       setIncomingRequests(enhancedRequests);
-    }, async (error) => {
+    }, (error) => {
       errorEmitter.emit('permission-error', new FirestorePermissionError({
         path: 'matchRequests',
         operation: 'list'
@@ -201,7 +197,7 @@ export default function MatchPetPage() {
             newPendingIds.add(data.targetOwnerId);
         });
         setPendingRequestPetIds(newPendingIds);
-    }, async (error) => {
+    }, (error) => {
       errorEmitter.emit('permission-error', new FirestorePermissionError({
         path: 'matchRequests',
         operation: 'list'
@@ -391,7 +387,6 @@ export default function MatchPetPage() {
                 <p className="text-muted-foreground">No pets found matching your criteria.</p>
                 <p className="text-sm text-muted-foreground mt-2">
                   Pets you've already matched with or your own pet are not shown here. 
-                  Try clearing your search filter if you have one applied.
                 </p>
             </CardContent>
         </Card>
