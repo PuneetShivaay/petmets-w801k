@@ -2,7 +2,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { collection, collectionGroup, getDocs, doc, setDoc, serverTimestamp, query, where, onSnapshot, writeBatch, getDoc } from "firebase/firestore";
+import { collection, getDocs, doc, setDoc, serverTimestamp, query, where, onSnapshot, writeBatch, getDoc } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { useAuth } from "@/contexts/auth-context";
 import { useToast } from "@/hooks/use-toast";
@@ -16,14 +16,12 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Heart, Search, Loader2, Check, Bell, X, Clock } from "lucide-react";
 
-// Define a type for the pet data we'll fetch
 interface Pet {
-  id: string; // Composite ID: ownerId-petId
-  petId: string; // The pet's document ID
-  ownerId: string; // The owner's UID
+  id: string; // The pet's document ID (which is the owner's UID)
+  ownerId: string;
   name: string;
   breed: string;
-  image: string; // URL for the pet's image
+  image: string;
   dataAiHint: string;
 }
 
@@ -36,14 +34,13 @@ interface MatchRequest {
     status: 'pending' | 'accepted' | 'declined';
 }
 
-
 export default function MatchPetPage() {
   const { user, isLoading: isAuthLoading } = useAuth();
   const { toast } = useToast();
   const [allPets, setAllPets] = useState<Pet[]>([]);
   const [displayPets, setDisplayPets] = useState<Pet[]>([]);
   const [loading, setLoading] = useState(true);
-  const [submitting, setSubmitting] = useState<string | null>(null); // Stores the composite ID of the pet being requested
+  const [submitting, setSubmitting] = useState<string | null>(null);
   
   const [incomingRequests, setIncomingRequests] = useState<MatchRequest[]>([]);
   const [isPopoverOpen, setIsPopoverOpen] = useState(false);
@@ -54,7 +51,6 @@ export default function MatchPetPage() {
   
   const [searchTerm, setSearchTerm] = useState("");
 
-
   const fetchPets = useCallback(async () => {
     if (!user) {
         setLoading(false);
@@ -62,28 +58,23 @@ export default function MatchPetPage() {
     }
     setLoading(true);
     try {
-      // This is a collection group query. It requires a specific index in Firestore.
-      const petsQuery = collectionGroup(db, "pets");
-      const querySnapshot = await getDocs(petsQuery);
+      // Changed to top-level collection query to avoid index requirements
+      const petsCol = collection(db, "pets");
+      const querySnapshot = await getDocs(petsCol);
 
       const petsList: Pet[] = querySnapshot.docs
         .map((petDoc) => {
             const data = petDoc.data();
-            const pathParts = petDoc.ref.path.split('/');
-            const ownerId = pathParts[1];
-            const petId = petDoc.id;
-            
             return {
-            id: `${ownerId}-${petId}`, // Create a unique composite ID
-            petId: petId,
-            ownerId: ownerId,
-            name: data.name || "Unnamed Pet",
-            breed: data.breed || "Unknown Breed",
-            image: data.avatar || "https://placehold.co/300x300.png",
-            dataAiHint: data.dataAiHint || "pet portrait",
+              id: petDoc.id,
+              ownerId: petDoc.id,
+              name: data.name || "Unnamed Pet",
+              breed: data.breed || "Unknown Breed",
+              image: data.avatar || "https://placehold.co/300x300.png",
+              dataAiHint: data.dataAiHint || "pet portrait",
             };
         })
-        .filter(pet => pet.ownerId !== user.uid); // Filter out user's own pet
+        .filter(pet => pet.ownerId !== user.uid);
       
       setAllPets(petsList);
 
@@ -92,7 +83,7 @@ export default function MatchPetPage() {
       toast({
         variant: "destructive",
         title: "Failed to load pets",
-        description: "This may require a Firestore index. Check the browser console for a link to create it.",
+        description: "Could not retrieve pets for matching.",
       });
     } finally {
       setLoading(false);
@@ -105,7 +96,6 @@ export default function MatchPetPage() {
     }
   }, [isAuthLoading, fetchPets]);
   
-  // Listen for existing chats to filter out matched users
   useEffect(() => {
       if (!user) return;
       
@@ -130,7 +120,6 @@ export default function MatchPetPage() {
       return () => unsubscribe();
   }, [user]);
 
-  // Filter the displayed pets whenever the full pet list, matched user list, or search term changes
   useEffect(() => {
       if (allPets.length > 0) {
           const filteredByMatch = allPets.filter(pet => !matchedUserIds.has(pet.ownerId));
@@ -150,8 +139,6 @@ export default function MatchPetPage() {
       }
   }, [allPets, matchedUserIds, searchTerm]);
 
-
-  // Listen for incoming match requests
   useEffect(() => {
     if (!user) return;
 
@@ -181,7 +168,6 @@ export default function MatchPetPage() {
     return () => unsubscribe();
   }, [user]);
 
-  // Listen for outgoing match requests sent by the current user that are pending
   useEffect(() => {
     if (!user) return;
     
@@ -195,8 +181,7 @@ export default function MatchPetPage() {
         const newPendingIds = new Set<string>();
         snapshot.forEach(doc => {
             const data = doc.data();
-            const compositePetId = `${data.targetOwnerId}-${data.targetPetId}`;
-            newPendingIds.add(compositePetId);
+            newPendingIds.add(data.targetOwnerId);
         });
         setPendingRequestPetIds(newPendingIds);
     });
@@ -204,7 +189,6 @@ export default function MatchPetPage() {
     return () => unsubscribe();
   }, [user]);
 
-  
   const handleMatchRequest = async (targetPet: Pet) => {
     if (!user) {
         toast({ variant: "destructive", title: "Please login", description: "You must be logged in to request a match." });
@@ -220,13 +204,12 @@ export default function MatchPetPage() {
             requesterId: user.uid,
             requesterEmail: user.email,
             targetOwnerId: targetPet.ownerId,
-            targetPetId: targetPet.petId,
+            targetPetId: targetPet.id,
             targetPetName: targetPet.name,
             status: "pending",
             createdAt: serverTimestamp(),
         });
         
-        // No need to manually update state here, the onSnapshot listener will do it.
         toast({ title: "Match Request Sent!", description: `Your request to match with ${targetPet.name} has been sent.` });
 
     } catch (error) {

@@ -52,7 +52,6 @@ export default function ChatPage() {
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    // Hide the global page loader that was triggered when navigating here.
     hideLoading();
   }, [hideLoading]);
 
@@ -73,7 +72,7 @@ export default function ChatPage() {
             const otherUserId = chatData.participants.find((p: string) => p !== user.uid);
             if (otherUserId) {
                 const userDoc = await getDoc(doc(db, 'users', otherUserId));
-                const petDoc = await getDoc(doc(db, 'users', otherUserId, 'pets', 'main-pet'));
+                const petDoc = await getDoc(doc(db, 'pets', otherUserId)); // Updated path
                 if (userDoc.exists()) {
                     const data = userDoc.data();
                     const petData = petDoc.exists() ? petDoc.data() : {};

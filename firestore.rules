@@ -17,11 +17,13 @@ service cloud.firestore {
       allow list: if isOwner(userId);
       allow create: if isOwner(userId);
       allow update, delete: if isOwner(userId);
+    }
 
-      match /pets/{petId} {
-        allow get, list: if true;
-        allow create, update, delete: if isOwner(userId);
-      }
+    // --- Pets (Top-level) ---
+    match /pets/{userId} {
+      allow get, list: if true;
+      allow create: if isOwner(userId);
+      allow update, delete: if isOwner(userId);
     }
 
     // --- Bookings (Top-level) ---

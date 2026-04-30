@@ -58,10 +58,6 @@
       "type": "object",
       "description": "Represents a pet owned by a user.",
       "properties": {
-        "id": {
-          "type": "string",
-          "description": "Unique identifier for the Pet entity."
-        },
         "userId": {
           "type": "string",
           "description": "Reference to the User who owns this pet."
@@ -98,7 +94,6 @@
         }
       },
       "required": [
-        "id",
         "userId",
         "name",
         "createdAt"
@@ -189,10 +184,10 @@
         }
       },
       {
-        "path": "/users/{userId}/pets/{petId}",
+        "path": "/pets/{userId}",
         "definition": {
           "entityName": "Pet",
-          "description": "User's pets."
+          "description": "Global pet profiles."
         }
       },
       {
