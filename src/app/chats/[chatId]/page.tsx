@@ -38,7 +38,7 @@ interface OtherUser {
 
 export default function ChatPage() {
   const { user } = useAuth();
-  const { hideLoading, showLoading } = useLoading();
+  const { hideLoading } = useLoading();
   const params = useParams();
   const router = useRouter();
   const chatId = params.chatId as string;
@@ -72,7 +72,7 @@ export default function ChatPage() {
             const otherUserId = chatData.participants.find((p: string) => p !== user.uid);
             if (otherUserId) {
                 const userDoc = await getDoc(doc(db, 'users', otherUserId));
-                const petDoc = await getDoc(doc(db, 'pets', otherUserId)); // Updated path
+                const petDoc = await getDoc(doc(db, 'pets', otherUserId));
                 if (userDoc.exists()) {
                     const data = userDoc.data();
                     const petData = petDoc.exists() ? petDoc.data() : {};
@@ -89,21 +89,16 @@ export default function ChatPage() {
         }
     };
     fetchChatInfo();
-
   }, [chatId, user]);
 
   useEffect(() => {
     if (!chatId) return;
-
-    setIsLoadingMessages(true);
     const messagesQuery = query(collection(db, `chats/${chatId}/messages`), orderBy('timestamp', 'asc'));
-
     const unsubscribe = onSnapshot(messagesQuery, (snapshot) => {
       const messagesData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Message));
       setMessages(messagesData);
       setIsLoadingMessages(false);
     });
-
     return () => unsubscribe();
   }, [chatId]);
 
@@ -129,7 +124,6 @@ export default function ChatPage() {
           lastMessage: messageText,
           lastMessageTimestamp: serverTimestamp(),
       });
-
     } catch (error) {
       console.error("Error sending message:", error);
       setNewMessage(messageText);
@@ -139,8 +133,11 @@ export default function ChatPage() {
   };
 
   const handleGoBack = () => {
-    showLoading();
-    router.push('/chats');
+    if (typeof window !== 'undefined' && window.history.length > 2) {
+      router.back();
+    } else {
+      router.push('/chats');
+    }
   };
 
   return (
@@ -150,7 +147,7 @@ export default function ChatPage() {
             <ArrowLeft className="h-5 w-5" />
          </Button>
          {otherUser ? (
-             <Link href={`/profile/${otherUser.id}`} className="flex items-center gap-3 overflow-hidden" onClick={showLoading}>
+             <Link href={`/profile/${otherUser.id}`} className="flex items-center gap-3 overflow-hidden">
                  <Avatar className="h-9 w-9">
                      <AvatarImage src={otherUser.avatar} data-ai-hint={otherUser.dataAiHint} />
                      <AvatarFallback><User /></AvatarFallback>

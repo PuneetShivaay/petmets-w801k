@@ -1,7 +1,8 @@
 
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { collection, query, onSnapshot, addDoc, serverTimestamp } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { useAuth } from "@/contexts/auth-context";
@@ -12,7 +13,7 @@ import { Button } from "@/components/ui/button";
 import Image from "next/image";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { PawPrint, Star, Search, MapPin, Mail, Loader2, Image as ImageIcon } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
@@ -36,6 +37,8 @@ interface Provider {
 export default function ServiceProvidersPage() {
   const { user } = useAuth();
   const { toast } = useToast();
+  const router = useRouter();
+  const searchParams = useSearchParams();
   
   const [providers, setProviders] = useState<Provider[]>([]);
   const [filteredProviders, setFilteredProviders] = useState<Provider[]>([]);
@@ -45,13 +48,17 @@ export default function ServiceProvidersPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [serviceFilter, setServiceFilter] = useState("all");
 
+  // Sync dialog state with URL parameter for back-button support
+  const selectedProviderId = searchParams.get("view");
+  const selectedProvider = useMemo(() => 
+    providers.find(p => p.id === selectedProviderId), 
+    [providers, selectedProviderId]
+  );
+
   useEffect(() => {
-    // Removed orderBy to ensure data shows even if indices aren't ready
     const q = query(collection(db, "service_providers"));
-    
     const unsubscribe = onSnapshot(q, (snapshot) => {
       const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Provider));
-      // Sort in-memory if needed
       data.sort((a, b) => {
         const dateA = a.createdAt?.toDate?.() || new Date(0);
         const dateB = b.createdAt?.toDate?.() || new Date(0);
@@ -82,6 +89,18 @@ export default function ServiceProvidersPage() {
     setFilteredProviders(result);
   }, [providers, searchTerm, serviceFilter]);
 
+  const handleOpenDetails = (providerId: string) => {
+    const params = new URLSearchParams(searchParams.toString());
+    params.set("view", providerId);
+    router.push(`?${params.toString()}`, { scroll: false });
+  };
+
+  const handleCloseDetails = () => {
+    const params = new URLSearchParams(searchParams.toString());
+    params.delete("view");
+    router.back(); // Use back to remove the history entry
+  };
+
   const handleBookSession = async (provider: Provider) => {
     if (!user) {
       toast({ variant: "destructive", title: "Authentication Required", description: "Please log in to book a session." });
@@ -91,7 +110,6 @@ export default function ServiceProvidersPage() {
     setIsBooking(provider.id);
     try {
       const bookingsColRef = collection(db, "bookings");
-      
       const bookingDate = new Date();
       bookingDate.setDate(bookingDate.getDate() + 3);
 
@@ -110,6 +128,7 @@ export default function ServiceProvidersPage() {
         title: "Booking Requested!",
         description: `Your session with ${provider.name} has been scheduled for ${bookingDate.toLocaleDateString()}.`,
       });
+      handleCloseDetails();
     } catch (error) {
       console.error("Booking error:", error);
       toast({ variant: "destructive", title: "Booking Failed", description: "Could not create the booking. Please try again." });
@@ -192,88 +211,83 @@ export default function ServiceProvidersPage() {
                 <p className="text-sm text-muted-foreground line-clamp-2 italic leading-relaxed">
                   "{provider.bio}"
                 </p>
-                {provider.gallery && provider.gallery.length > 0 && (
-                   <div className="mt-4 flex items-center gap-1 text-xs text-primary font-medium">
-                      <ImageIcon className="h-3 w-3" />
-                      {provider.gallery.length} Service Photos
-                   </div>
-                )}
               </CardContent>
               <CardFooter className="p-4 pt-0">
-                <Dialog>
-                    <DialogTrigger asChild>
-                        <Button className="w-full bg-accent hover:bg-accent/90">
-                            <PawPrint className="mr-2 h-4 w-4" /> View Details & Book
-                        </Button>
-                    </DialogTrigger>
-                    <DialogContent className="max-w-2xl max-h-[90vh] flex flex-col p-0 overflow-hidden">
-                        <ScrollArea className="flex-1">
-                          <div className="p-6">
-                            <DialogHeader>
-                                <div className="flex items-center justify-between mb-4">
-                                  <DialogTitle className="text-2xl font-headline">{provider.name}</DialogTitle>
-                                  <Badge>{provider.service}</Badge>
-                                </div>
-                                <DialogDescription className="text-base text-foreground/80 leading-relaxed italic border-l-4 border-primary pl-4 py-2 bg-muted/30">
-                                    "{provider.bio}"
-                                </DialogDescription>
-                            </DialogHeader>
-
-                            {provider.gallery && provider.gallery.length > 0 && (
-                                <div className="mt-8">
-                                    <h4 className="text-lg font-semibold mb-4 flex items-center gap-2">
-                                        <ImageIcon className="h-5 w-5 text-primary" />
-                                        Service Showcase
-                                    </h4>
-                                    <ScrollArea className="w-full whitespace-nowrap rounded-md">
-                                        <div className="flex w-max space-x-4 p-1">
-                                            {provider.gallery.map((url, idx) => (
-                                                <div key={idx} className="relative w-64 h-48 rounded-lg overflow-hidden border shadow-sm">
-                                                    <Image src={url} alt={`Gallery ${idx}`} fill className="object-cover" />
-                                                </div>
-                                            ))}
-                                        </div>
-                                        <ScrollBar orientation="horizontal" />
-                                    </ScrollArea>
-                                </div>
-                            )}
-
-                            <div className="mt-8 grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                <div className="flex items-center gap-3 p-4 rounded-lg bg-muted/50">
-                                    <Mail className="h-6 w-6 text-primary" />
-                                    <div>
-                                        <p className="text-xs text-muted-foreground uppercase font-bold tracking-wider">Email Address</p>
-                                        <p className="font-medium">{provider.email || "Contact via dashboard"}</p>
-                                    </div>
-                                </div>
-                                <div className="flex items-center gap-3 p-4 rounded-lg bg-muted/50">
-                                    <MapPin className="h-6 w-6 text-primary" />
-                                    <div>
-                                        <p className="text-xs text-muted-foreground uppercase font-bold tracking-wider">Service Location</p>
-                                        <p className="font-medium">{provider.location}</p>
-                                    </div>
-                                </div>
-                            </div>
-                            
-                            <div className="mt-8 flex justify-end">
-                                <Button 
-                                  className="w-full sm:w-auto px-8" 
-                                  onClick={() => handleBookSession(provider)}
-                                  disabled={isBooking === provider.id}
-                                >
-                                  {isBooking === provider.id && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                                  Book a Session
-                                </Button>
-                            </div>
-                          </div>
-                        </ScrollArea>
-                    </DialogContent>
-                </Dialog>
+                <Button className="w-full bg-accent hover:bg-accent/90" onClick={() => handleOpenDetails(provider.id)}>
+                    <PawPrint className="mr-2 h-4 w-4" /> View Details & Book
+                </Button>
               </CardFooter>
             </Card>
           ))
         )}
       </div>
+
+      <Dialog open={!!selectedProvider} onOpenChange={(open) => !open && handleCloseDetails()}>
+        <DialogContent className="max-w-2xl max-h-[90vh] flex flex-col p-0 overflow-hidden">
+            {selectedProvider && (
+              <ScrollArea className="flex-1">
+                <div className="p-6">
+                  <DialogHeader>
+                      <div className="flex items-center justify-between mb-4">
+                        <DialogTitle className="text-2xl font-headline">{selectedProvider.name}</DialogTitle>
+                        <Badge>{selectedProvider.service}</Badge>
+                      </div>
+                      <DialogDescription className="text-base text-foreground/80 leading-relaxed italic border-l-4 border-primary pl-4 py-2 bg-muted/30">
+                          "{selectedProvider.bio}"
+                      </DialogDescription>
+                  </DialogHeader>
+
+                  {selectedProvider.gallery && selectedProvider.gallery.length > 0 && (
+                      <div className="mt-8">
+                          <h4 className="text-lg font-semibold mb-4 flex items-center gap-2">
+                              <ImageIcon className="h-5 w-5 text-primary" />
+                              Service Showcase
+                          </h4>
+                          <ScrollArea className="w-full whitespace-nowrap rounded-md">
+                              <div className="flex w-max space-x-4 p-1">
+                                  {selectedProvider.gallery.map((url, idx) => (
+                                      <div key={idx} className="relative w-64 h-48 rounded-lg overflow-hidden border shadow-sm">
+                                          <Image src={url} alt={`Gallery ${idx}`} fill className="object-cover" />
+                                      </div>
+                                  ))}
+                              </div>
+                              <ScrollBar orientation="horizontal" />
+                          </ScrollArea>
+                      </div>
+                  )}
+
+                  <div className="mt-8 grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div className="flex items-center gap-3 p-4 rounded-lg bg-muted/50">
+                          <Mail className="h-6 w-6 text-primary" />
+                          <div>
+                              <p className="text-xs text-muted-foreground uppercase font-bold tracking-wider">Email Address</p>
+                              <p className="font-medium">{selectedProvider.email || "Contact via dashboard"}</p>
+                          </div>
+                      </div>
+                      <div className="flex items-center gap-3 p-4 rounded-lg bg-muted/50">
+                          <MapPin className="h-6 w-6 text-primary" />
+                          <div>
+                              <p className="text-xs text-muted-foreground uppercase font-bold tracking-wider">Service Location</p>
+                              <p className="font-medium">{selectedProvider.location}</p>
+                          </div>
+                      </div>
+                  </div>
+                  
+                  <div className="mt-8 flex justify-end">
+                      <Button 
+                        className="w-full sm:w-auto px-8" 
+                        onClick={() => handleBookSession(selectedProvider)}
+                        disabled={isBooking === selectedProvider.id}
+                      >
+                        {isBooking === selectedProvider.id && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                        Book a Session
+                      </Button>
+                  </div>
+                </div>
+              </ScrollArea>
+            )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

@@ -3,7 +3,6 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { useParams, useRouter } from 'next/navigation';
-import Link from 'next/link';
 import { doc, getDoc } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 
@@ -39,8 +38,7 @@ export default function UserProfilePage() {
   const params = useParams();
   const router = useRouter();
   const { toast } = useToast();
-  const { user } = useAuth();
-  const { hideLoading, showLoading } = useLoading();
+  const { hideLoading } = useLoading();
   const userId = params.userId as string;
 
   const [isLoading, setIsLoading] = useState(true);
@@ -48,7 +46,6 @@ export default function UserProfilePage() {
   const [ownerData, setOwnerData] = useState<OwnerData | null>(null);
 
   useEffect(() => {
-    // Hide the global page loader that was triggered when navigating here.
     hideLoading();
   }, [hideLoading]);
   
@@ -58,7 +55,6 @@ export default function UserProfilePage() {
     setIsLoading(true);
     try {
       const userDocRef = doc(db, "users", userId);
-      // Updated to top-level pets collection
       const petDocRef = doc(db, "pets", userId);
 
       const [userDocSnap, petDocSnap] = await Promise.all([
@@ -71,21 +67,14 @@ export default function UserProfilePage() {
         setOwnerData(data);
       } else {
         toast({ variant: "destructive", title: "Error", description: "This user profile does not exist." });
-        router.push('/'); // Redirect if user not found
+        router.push('/'); 
         return;
       }
       
       if (petDocSnap.exists()) {
         setPetData(petDocSnap.data() as PetData);
       } else {
-        // Fallback for older profiles
-        const oldPetDocRef = doc(db, "users", userId, "pets", "main-pet");
-        const oldPetDocSnap = await getDoc(oldPetDocRef);
-        if (oldPetDocSnap.exists()) {
-            setPetData(oldPetDocSnap.data() as PetData);
-        } else {
-            setPetData(null); 
-        }
+        setPetData(null); 
       }
 
     } catch (error) {
@@ -101,11 +90,10 @@ export default function UserProfilePage() {
   }, [fetchProfileData]);
   
   const handleGoBack = () => {
-    // Check if there's a page to go back to in the history
-    if (window.history.length > 1) {
+    // If we have history, go back, otherwise safe route to dashboard
+    if (typeof window !== 'undefined' && window.history.length > 2) {
       router.back();
     } else {
-      // Fallback to a default page if no history is available
       router.push('/');
     }
   };

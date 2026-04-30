@@ -1,6 +1,8 @@
+
 "use client";
 
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback, useRef, useMemo } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useForm, type SubmitHandler } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -14,13 +16,12 @@ import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/componen
 import { Button } from "@/components/ui/button";
 import Image from "next/image";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Heart, PlusCircle, Loader2, MapPin } from "lucide-react";
 
-// Schema for the adoption listing form
 const adoptionListingSchema = z.object({
   name: z.string().min(2, "Pet name must be at least 2 characters."),
   breed: z.string().min(2, "Breed is required."),
@@ -30,7 +31,6 @@ const adoptionListingSchema = z.object({
 });
 type AdoptionListingFormData = z.infer<typeof adoptionListingSchema>;
 
-// Type for the fetched adoption listings
 interface AdoptionListing {
   id: string;
   ownerId: string;
@@ -48,11 +48,13 @@ interface AdoptionListing {
 export default function AdoptionPage() {
   const { user, isLoading: isAuthLoading } = useAuth();
   const { toast } = useToast();
+  const router = useRouter();
+  const searchParams = useSearchParams();
 
   const [listings, setListings] = useState<AdoptionListing[]>([]);
   const [isLoadingListings, setIsLoadingListings] = useState(true);
   
-  const [isFormOpen, setIsFormOpen] = useState(false);
+  const isFormOpen = searchParams.get("add") === "true";
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [imageFile, setImageFile] = useState<File | null>(null);
   const imageInputRef = useRef<HTMLInputElement>(null);
@@ -61,7 +63,6 @@ export default function AdoptionPage() {
     resolver: zodResolver(adoptionListingSchema),
   });
 
-  // Fetch adoption listings
   useEffect(() => {
     setIsLoadingListings(true);
     const listingsQuery = query(collection(db, "adoptionListings"), orderBy("createdAt", "desc"));
@@ -78,6 +79,18 @@ export default function AdoptionPage() {
 
     return () => unsubscribe();
   }, [toast]);
+
+  const handleOpenForm = () => {
+    const params = new URLSearchParams(searchParams.toString());
+    params.set("add", "true");
+    router.push(`?${params.toString()}`, { scroll: false });
+  };
+
+  const handleCloseForm = () => {
+    const params = new URLSearchParams(searchParams.toString());
+    params.delete("add");
+    router.back();
+  };
 
   const handleImageSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     if (event.target.files && event.target.files[0]) {
@@ -106,13 +119,11 @@ export default function AdoptionPage() {
 
     setIsSubmitting(true);
     try {
-      // 1. Upload image to Firebase Storage
       const fileName = `${user.uid}_${Date.now()}_${imageFile.name}`;
       const imageRef = storageRef(storage, `adoption-listings/${fileName}`);
       const snapshot = await uploadBytes(imageRef, imageFile);
       const downloadURL = await getDownloadURL(snapshot.ref);
 
-      // 2. Create document in Firestore
       await addDoc(collection(db, "adoptionListings"), {
         ...data,
         ownerId: user.uid,
@@ -124,11 +135,9 @@ export default function AdoptionPage() {
       
       toast({ title: "Listing Created!", description: `${data.name} is now listed for adoption.` });
       
-      // Reset form and close dialog
       reset();
       setImageFile(null);
-      if(imageInputRef.current) imageInputRef.current.value = "";
-      setIsFormOpen(false);
+      handleCloseForm();
 
     } catch (error) {
       console.error("Error creating adoption listing:", error);
@@ -142,63 +151,62 @@ export default function AdoptionPage() {
     <div className="space-y-6">
       <div className="flex flex-col items-center justify-between gap-4 md:flex-row">
         <p className="text-muted-foreground md:max-w-2xl">Help a pet find its forever home. Browse available pets or list one for adoption.</p>
-        <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
-          <DialogTrigger asChild>
-            <Button disabled={isAuthLoading} className="bg-accent text-accent-foreground hover:bg-accent/90">
-              <PlusCircle className="mr-2 h-4 w-4" /> List a Pet for Adoption
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="sm:max-w-lg">
-            <DialogHeader>
-              <DialogTitle>List Your Pet for Adoption</DialogTitle>
-              <DialogDescription>Fill out the details below to help your pet find a new home. All fields are required.</DialogDescription>
-            </DialogHeader>
-            <form onSubmit={handleSubmit(onSubmit)}>
-              <div className="grid gap-4 py-4 max-h-[70vh] overflow-y-auto px-1">
+        <Button onClick={handleOpenForm} disabled={isAuthLoading} className="bg-accent text-accent-foreground hover:bg-accent/90">
+            <PlusCircle className="mr-2 h-4 w-4" /> List a Pet for Adoption
+        </Button>
+      </div>
+
+      <Dialog open={isFormOpen} onOpenChange={(open) => !open && handleCloseForm()}>
+        <DialogContent className="sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle>List Your Pet for Adoption</DialogTitle>
+            <DialogDescription>Fill out the details below to help your pet find a new home. All fields are required.</DialogDescription>
+          </DialogHeader>
+          <form onSubmit={handleSubmit(onSubmit)}>
+            <div className="grid gap-4 py-4 max-h-[70vh] overflow-y-auto px-1">
+              <div className="space-y-1">
+                <Label htmlFor="photo">Pet's Photo</Label>
+                <Input id="photo" type="file" accept="image/*" required ref={imageInputRef} onChange={handleImageSelect} />
+                {imageFile && <p className="text-xs text-muted-foreground">Selected: {imageFile.name}</p>}
+              </div>
+              <div className="space-y-1">
+                <Label htmlFor="name">Pet's Name</Label>
+                <Input id="name" {...register("name")} />
+                {errors.name && <p className="text-sm text-destructive">{errors.name.message}</p>}
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-1">
-                  <Label htmlFor="photo">Pet's Photo</Label>
-                  <Input id="photo" type="file" accept="image/*" required ref={imageInputRef} onChange={handleImageSelect} />
-                  {imageFile && <p className="text-xs text-muted-foreground">Selected: {imageFile.name}</p>}
+                  <Label htmlFor="breed">Breed</Label>
+                  <Input id="breed" {...register("breed")} />
+                  {errors.breed && <p className="text-sm text-destructive">{errors.breed.message}</p>}
                 </div>
                 <div className="space-y-1">
-                  <Label htmlFor="name">Pet's Name</Label>
-                  <Input id="name" {...register("name")} />
-                  {errors.name && <p className="text-sm text-destructive">{errors.name.message}</p>}
-                </div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div className="space-y-1">
-                    <Label htmlFor="breed">Breed</Label>
-                    <Input id="breed" {...register("breed")} />
-                    {errors.breed && <p className="text-sm text-destructive">{errors.breed.message}</p>}
-                  </div>
-                  <div className="space-y-1">
-                    <Label htmlFor="age">Age</Label>
-                    <Input id="age" {...register("age")} placeholder="e.g., 2 years" />
-                    {errors.age && <p className="text-sm text-destructive">{errors.age.message}</p>}
-                  </div>
-                </div>
-                 <div className="space-y-1">
-                    <Label htmlFor="city">City</Label>
-                    <Input id="city" {...register("city")} placeholder="e.g., San Francisco, CA" />
-                    {errors.city && <p className="text-sm text-destructive">{errors.city.message}</p>}
-                  </div>
-                <div className="space-y-1">
-                  <Label htmlFor="bio">Bio</Label>
-                  <Textarea id="bio" {...register("bio")} rows={4} placeholder="Describe the pet's personality, needs, and history."/>
-                  {errors.bio && <p className="text-sm text-destructive">{errors.bio.message}</p>}
+                  <Label htmlFor="age">Age</Label>
+                  <Input id="age" {...register("age")} placeholder="e.g., 2 years" />
+                  {errors.age && <p className="text-sm text-destructive">{errors.age.message}</p>}
                 </div>
               </div>
-              <DialogFooter>
-                <Button type="button" variant="outline" onClick={() => setIsFormOpen(false)}>Cancel</Button>
-                <Button type="submit" disabled={isSubmitting}>
-                  {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                  Submit Listing
-                </Button>
-              </DialogFooter>
-            </form>
-          </DialogContent>
-        </Dialog>
-      </div>
+               <div className="space-y-1">
+                  <Label htmlFor="city">City</Label>
+                  <Input id="city" {...register("city")} placeholder="e.g., San Francisco, CA" />
+                  {errors.city && <p className="text-sm text-destructive">{errors.city.message}</p>}
+                </div>
+              <div className="space-y-1">
+                <Label htmlFor="bio">Bio</Label>
+                <Textarea id="bio" {...register("bio")} rows={4} placeholder="Describe the pet's personality, needs, and history."/>
+                {errors.bio && <p className="text-sm text-destructive">{errors.bio.message}</p>}
+              </div>
+            </div>
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={handleCloseForm}>Cancel</Button>
+              <Button type="submit" disabled={isSubmitting}>
+                {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                Submit Listing
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
 
       {isLoadingListings ? (
         <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
