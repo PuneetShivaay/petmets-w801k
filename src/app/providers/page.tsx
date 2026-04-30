@@ -2,7 +2,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { collection, query, onSnapshot, orderBy, addDoc, serverTimestamp } from "firebase/firestore";
+import { collection, query, onSnapshot, addDoc, serverTimestamp } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { useAuth } from "@/contexts/auth-context";
 import { useToast } from "@/hooks/use-toast";
@@ -46,9 +46,17 @@ export default function ServiceProvidersPage() {
   const [serviceFilter, setServiceFilter] = useState("all");
 
   useEffect(() => {
-    const q = query(collection(db, "service_providers"), orderBy("createdAt", "desc"));
+    // Removed orderBy to ensure data shows even if indices aren't ready
+    const q = query(collection(db, "service_providers"));
+    
     const unsubscribe = onSnapshot(q, (snapshot) => {
       const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Provider));
+      // Sort in-memory if needed
+      data.sort((a, b) => {
+        const dateA = a.createdAt?.toDate?.() || new Date(0);
+        const dateB = b.createdAt?.toDate?.() || new Date(0);
+        return dateB - dateA;
+      });
       setProviders(data);
       setLoading(false);
     }, (error) => {
@@ -82,7 +90,6 @@ export default function ServiceProvidersPage() {
 
     setIsBooking(provider.id);
     try {
-      // Save to top-level bookings collection
       const bookingsColRef = collection(db, "bookings");
       
       const bookingDate = new Date();
