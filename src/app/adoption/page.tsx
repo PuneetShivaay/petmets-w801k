@@ -10,6 +10,7 @@ import { ref as storageRef, uploadBytes, getDownloadURL } from "firebase/storage
 import { db, storage } from "@/lib/firebase";
 import { useAuth } from "@/contexts/auth-context";
 import { useToast } from "@/hooks/use-toast";
+import { useLoading } from "@/contexts/loading-context";
 
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -48,6 +49,7 @@ interface AdoptionListing {
 export default function AdoptionPage() {
   const { user, isLoading: isAuthLoading } = useAuth();
   const { toast } = useToast();
+  const { showLoading } = useLoading();
   const router = useRouter();
   const searchParams = useSearchParams();
 
@@ -90,6 +92,11 @@ export default function AdoptionPage() {
     const params = new URLSearchParams(searchParams.toString());
     params.delete("add");
     router.back();
+  };
+
+  const handleLearnMore = (ownerId: string) => {
+    showLoading();
+    router.push(`/profile/${ownerId}`);
   };
 
   const handleImageSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -240,7 +247,7 @@ export default function AdoptionPage() {
                 <p className="mt-2 text-sm text-muted-foreground line-clamp-3">{pet.bio}</p>
               </CardContent>
               <CardFooter>
-                 <Button variant="outline" className="w-full">
+                 <Button variant="outline" className="w-full" onClick={() => handleLearnMore(pet.ownerId)}>
                   <Heart className="mr-2 h-4 w-4" /> Learn More & Contact
                 </Button>
               </CardFooter>
