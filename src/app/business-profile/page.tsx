@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect, useCallback, useRef } from "react";
@@ -30,7 +31,7 @@ const MAX_GALLERY_IMAGES = 5;
 
 const providerSchema = z.object({
   name: z.string().min(2, "Business name is required.").max(50),
-  service: z.enum(["Walking", "Grooming", "Training", "Boarding", "Photography"]),
+  service: z.enum(["Walking", "Grooming", "Training", "Boarding", "Photography", "Playzone"]),
   bio: z.string().min(10, "Please provide a short description of your services.").max(500),
   location: z.string().min(2, "Location is required."),
 });
@@ -322,6 +323,7 @@ export default function BusinessProfilePage() {
                               <SelectItem value="Training">Training</SelectItem>
                               <SelectItem value="Boarding">Boarding</SelectItem>
                               <SelectItem value="Photography">Photography</SelectItem>
+                              <SelectItem value="Playzone">Playzone</SelectItem>
                             </SelectContent>
                           </Select>
                         </div>

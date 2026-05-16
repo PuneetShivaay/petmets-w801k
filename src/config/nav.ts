@@ -79,12 +79,6 @@ export const navItems: NavItem[] = [
     roles: ['owner', 'provider'],
   },
   {
-    title: 'Pet Playzone',
-    href: '/playzone',
-    icon: Trees,
-    roles: ['owner'],
-  },
-  {
     title: 'My Business Listing',
     href: '/business-profile',
     icon: Briefcase,

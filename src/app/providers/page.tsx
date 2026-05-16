@@ -2,7 +2,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { collection, query, onSnapshot } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { useAuth } from "@/contexts/auth-context";
@@ -35,13 +35,15 @@ export default function ServiceProvidersPage() {
   const { user } = useAuth();
   const { showLoading } = useLoading();
   const router = useRouter();
+  const searchParams = useSearchParams();
   
   const [providers, setProviders] = useState<Provider[]>([]);
   const [filteredProviders, setFilteredProviders] = useState<Provider[]>([]);
   const [loading, setLoading] = useState(true);
   
   const [searchTerm, setSearchTerm] = useState("");
-  const [serviceFilter, setServiceFilter] = useState("all");
+  const initialFilter = searchParams.get("service") || "all";
+  const [serviceFilter, setServiceFilter] = useState(initialFilter);
 
   useEffect(() => {
     const q = query(collection(db, "service_providers"));
@@ -114,6 +116,7 @@ export default function ServiceProvidersPage() {
                 <SelectItem value="Training">Pet Trainers</SelectItem>
                 <SelectItem value="Boarding">Pet Boarding</SelectItem>
                 <SelectItem value="Photography">Pet Photography</SelectItem>
+                <SelectItem value="Playzone">Pet Playzone</SelectItem>
               </SelectContent>
             </Select>
           </div>
