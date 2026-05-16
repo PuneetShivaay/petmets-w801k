@@ -17,6 +17,7 @@ import {
   Camera,
   Heart,
   Briefcase,
+  Search,
 } from 'lucide-react';
 
 export interface NavItem {
@@ -39,25 +40,19 @@ export const navItems: NavItem[] = [
   {
     title: 'Match Your Pet',
     href: '/match',
-    icon: Bell,
-    roles: ['owner'],
-  },
-  {
-    title: 'Adoption',
-    href: '/adoption',
     icon: Heart,
-    roles: ['owner', 'provider'],
-  },
-  {
-    title: 'Pet Profile',
-    href: '/pet-profile',
-    icon: User,
     roles: ['owner'],
   },
   {
     title: 'Service Providers',
     href: '/providers',
-    icon: Users,
+    icon: Search,
+    roles: ['owner', 'provider'],
+  },
+  {
+    title: 'Bookings',
+    href: '/bookings',
+    icon: CalendarDays,
     roles: ['owner', 'provider'],
   },
   {
@@ -67,22 +62,28 @@ export const navItems: NavItem[] = [
     roles: ['owner', 'provider'],
   },
   {
-    title: 'Digital Records',
-    href: '/records',
-    icon: FileText,
+    title: 'Pet Profile',
+    href: '/pet-profile',
+    icon: User,
     roles: ['owner'],
-  },
-  {
-    title: 'Bookings',
-    href: '/bookings',
-    icon: CalendarDays,
-    roles: ['owner', 'provider'],
   },
   {
     title: 'My Business Listing',
     href: '/business-profile',
     icon: Briefcase,
     roles: ['provider'],
+  },
+  {
+    title: 'Digital Records',
+    href: '/records',
+    icon: FileText,
+    roles: ['owner'],
+  },
+  {
+    title: 'Adoption',
+    href: '/adoption',
+    icon: Dog,
+    roles: ['owner', 'provider'],
   },
   {
     title: 'Login / Sign Up',
