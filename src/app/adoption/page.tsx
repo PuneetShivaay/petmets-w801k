@@ -21,6 +21,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Heart, PlusCircle, Loader2, MapPin } from "lucide-react";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 const adoptionListingSchema = z.object({
   name: z.string().min(2, "Pet name must be at least 2 characters."),
@@ -157,47 +158,49 @@ export default function AdoptionPage() {
       </div>
 
       <Dialog open={isFormOpen} onOpenChange={(open) => !open && handleCloseForm()}>
-        <DialogContent className="sm:max-w-lg">
-          <DialogHeader>
+        <DialogContent className="sm:max-w-lg max-h-[90vh] flex flex-col p-0 overflow-hidden">
+          <DialogHeader className="p-6 pb-0">
             <DialogTitle>List Your Pet for Adoption</DialogTitle>
-            <DialogDescription>Fill out the details below to help your pet find a new home. All fields are required.</DialogDescription>
+            <DialogDescription>Fill out the details below to help your pet find a new home.</DialogDescription>
           </DialogHeader>
-          <form onSubmit={handleSubmit(onSubmit)}>
-            <div className="grid gap-4 py-4 max-h-[70vh] overflow-y-auto px-1">
-              <div className="space-y-1">
-                <Label htmlFor="photo">Pet's Photo</Label>
-                <Input id="photo" type="file" accept="image/*" required ref={imageInputRef} onChange={handleImageSelect} />
-                {imageFile && <p className="text-xs text-muted-foreground">Selected: {imageFile.name}</p>}
-              </div>
-              <div className="space-y-1">
-                <Label htmlFor="name">Pet's Name</Label>
-                <Input id="name" {...register("name")} />
-                {errors.name && <p className="text-sm text-destructive">{errors.name.message}</p>}
-              </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <form onSubmit={handleSubmit(onSubmit)} className="flex-1 flex flex-col overflow-hidden">
+            <ScrollArea className="flex-1 px-6">
+              <div className="grid gap-4 py-4">
                 <div className="space-y-1">
-                  <Label htmlFor="breed">Breed</Label>
-                  <Input id="breed" {...register("breed")} />
-                  {errors.breed && <p className="text-sm text-destructive">{errors.breed.message}</p>}
+                  <Label htmlFor="photo">Pet's Photo</Label>
+                  <Input id="photo" type="file" accept="image/*" required ref={imageInputRef} onChange={handleImageSelect} />
+                  {imageFile && <p className="text-xs text-muted-foreground">Selected: {imageFile.name}</p>}
                 </div>
                 <div className="space-y-1">
-                  <Label htmlFor="age">Age</Label>
-                  <Input id="age" {...register("age")} placeholder="e.g., 2 years" />
-                  {errors.age && <p className="text-sm text-destructive">{errors.age.message}</p>}
+                  <Label htmlFor="name">Pet's Name</Label>
+                  <Input id="name" {...register("name")} />
+                  {errors.name && <p className="text-sm text-destructive">{errors.name.message}</p>}
                 </div>
-              </div>
-               <div className="space-y-1">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="space-y-1">
+                    <Label htmlFor="breed">Breed</Label>
+                    <Input id="breed" {...register("breed")} />
+                    {errors.breed && <p className="text-sm text-destructive">{errors.breed.message}</p>}
+                  </div>
+                  <div className="space-y-1">
+                    <Label htmlFor="age">Age</Label>
+                    <Input id="age" {...register("age")} placeholder="e.g., 2 years" />
+                    {errors.age && <p className="text-sm text-destructive">{errors.age.message}</p>}
+                  </div>
+                </div>
+                <div className="space-y-1">
                   <Label htmlFor="city">City</Label>
                   <Input id="city" {...register("city")} placeholder="e.g., San Francisco, CA" />
                   {errors.city && <p className="text-sm text-destructive">{errors.city.message}</p>}
                 </div>
-              <div className="space-y-1">
-                <Label htmlFor="bio">Bio</Label>
-                <Textarea id="bio" {...register("bio")} rows={4} placeholder="Describe the pet's personality, needs, and history."/>
-                {errors.bio && <p className="text-sm text-destructive">{errors.bio.message}</p>}
+                <div className="space-y-1 pb-4">
+                  <Label htmlFor="bio">Bio</Label>
+                  <Textarea id="bio" {...register("bio")} rows={4} placeholder="Describe the pet's personality, needs, and history."/>
+                  {errors.bio && <p className="text-sm text-destructive">{errors.bio.message}</p>}
+                </div>
               </div>
-            </div>
-            <DialogFooter>
+            </ScrollArea>
+            <DialogFooter className="p-6 border-t">
               <Button type="button" variant="outline" onClick={handleCloseForm}>Cancel</Button>
               <Button type="submit" disabled={isSubmitting}>
                 {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}

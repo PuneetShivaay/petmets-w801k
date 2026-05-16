@@ -235,66 +235,67 @@ export default function ServiceProvidersPage() {
       <Dialog open={!!selectedProvider} onOpenChange={(open) => !open && handleCloseDetails()}>
         <DialogContent className="max-w-2xl w-[95vw] sm:w-full max-h-[90vh] flex flex-col p-0 overflow-hidden">
             {selectedProvider && (
-              <ScrollArea className="flex-1">
-                <div className="p-4 sm:p-6">
-                  <DialogHeader className="space-y-4">
-                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                        <DialogTitle className="text-2xl font-headline">{selectedProvider.name}</DialogTitle>
-                        <Badge className="w-fit">{selectedProvider.service}</Badge>
-                      </div>
-                      <DialogDescription className="text-base text-foreground/80 leading-relaxed italic border-l-4 border-primary pl-4 py-2 bg-muted/30">
-                          "{selectedProvider.bio}"
-                      </DialogDescription>
-                  </DialogHeader>
+              <>
+                <ScrollArea className="flex-1 min-h-0">
+                  <div className="p-4 sm:p-6 pb-20 sm:pb-24">
+                    <DialogHeader className="space-y-4">
+                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                          <DialogTitle className="text-2xl font-headline">{selectedProvider.name}</DialogTitle>
+                          <Badge className="w-fit">{selectedProvider.service}</Badge>
+                        </div>
+                        <DialogDescription className="text-base text-foreground/80 leading-relaxed italic border-l-4 border-primary pl-4 py-2 bg-muted/30">
+                            "{selectedProvider.bio}"
+                        </DialogDescription>
+                    </DialogHeader>
 
-                  {selectedProvider.gallery && selectedProvider.gallery.length > 0 && (
-                      <div className="mt-8">
-                          <h4 className="text-lg font-semibold mb-4 flex items-center gap-2">
-                              <ImageIcon className="h-5 w-5 text-primary" />
-                              Service Showcase
-                          </h4>
-                          <ScrollArea className="w-full whitespace-nowrap rounded-md">
-                              <div className="flex w-max space-x-4 p-1">
-                                  {selectedProvider.gallery.map((url, idx) => (
-                                      <div key={idx} className="relative w-48 h-36 sm:w-64 sm:h-48 rounded-lg overflow-hidden border shadow-sm">
-                                          <Image src={url} alt={`Gallery ${idx}`} fill className="object-cover" />
-                                      </div>
-                                  ))}
-                              </div>
-                              <ScrollBar orientation="horizontal" />
-                          </ScrollArea>
-                      </div>
-                  )}
+                    {selectedProvider.gallery && selectedProvider.gallery.length > 0 && (
+                        <div className="mt-8">
+                            <h4 className="text-lg font-semibold mb-4 flex items-center gap-2">
+                                <ImageIcon className="h-5 w-5 text-primary" />
+                                Service Showcase
+                            </h4>
+                            <ScrollArea className="w-full whitespace-nowrap rounded-md pb-4">
+                                <div className="flex w-max space-x-4 p-1">
+                                    {selectedProvider.gallery.map((url, idx) => (
+                                        <div key={idx} className="relative w-48 h-36 sm:w-64 sm:h-48 rounded-lg overflow-hidden border shadow-sm">
+                                            <Image src={url} alt={`Gallery ${idx}`} fill className="object-cover" />
+                                        </div>
+                                    ))}
+                                </div>
+                                <ScrollBar orientation="horizontal" />
+                            </ScrollArea>
+                        </div>
+                    )}
 
-                  <div className="mt-8 grid grid-cols-1 sm:grid-cols-2 gap-4">
-                      <div className="flex items-center gap-3 p-4 rounded-lg bg-muted/50">
-                          <Mail className="h-6 w-6 text-primary" />
-                          <div className="min-w-0">
-                              <p className="text-xs text-muted-foreground uppercase font-bold tracking-wider">Email Address</p>
-                              <p className="font-medium truncate">{selectedProvider.email || "Contact via dashboard"}</p>
-                          </div>
-                      </div>
-                      <div className="flex items-center gap-3 p-4 rounded-lg bg-muted/50">
-                          <MapPin className="h-6 w-6 text-primary" />
-                          <div>
-                              <p className="text-xs text-muted-foreground uppercase font-bold tracking-wider">Service Location</p>
-                              <p className="font-medium">{selectedProvider.location}</p>
-                          </div>
-                      </div>
+                    <div className="mt-8 grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div className="flex items-center gap-3 p-4 rounded-lg bg-muted/50">
+                            <Mail className="h-6 w-6 text-primary" />
+                            <div className="min-w-0">
+                                <p className="text-xs text-muted-foreground uppercase font-bold tracking-wider">Email Address</p>
+                                <p className="font-medium truncate">{selectedProvider.email || "Contact via dashboard"}</p>
+                            </div>
+                        </div>
+                        <div className="flex items-center gap-3 p-4 rounded-lg bg-muted/50">
+                            <MapPin className="h-6 w-6 text-primary" />
+                            <div>
+                                <p className="text-xs text-muted-foreground uppercase font-bold tracking-wider">Service Location</p>
+                                <p className="font-medium">{selectedProvider.location}</p>
+                            </div>
+                        </div>
+                    </div>
                   </div>
-                  
-                  <div className="mt-8 flex justify-end">
-                      <Button 
-                        className="w-full sm:w-auto px-8" 
-                        onClick={() => handleBookSession(selectedProvider)}
-                        disabled={isBooking === selectedProvider.id}
-                      >
-                        {isBooking === selectedProvider.id && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                        Book a Session
-                      </Button>
-                  </div>
+                </ScrollArea>
+                <div className="absolute bottom-0 left-0 right-0 p-4 bg-background border-t">
+                    <Button 
+                      className="w-full sm:w-auto sm:float-right px-8" 
+                      onClick={() => handleBookSession(selectedProvider)}
+                      disabled={isBooking === selectedProvider.id}
+                    >
+                      {isBooking === selectedProvider.id && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                      Book a Session
+                    </Button>
                 </div>
-              </ScrollArea>
+              </>
             )}
         </DialogContent>
       </Dialog>
