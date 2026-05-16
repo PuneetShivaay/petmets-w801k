@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect, useMemo } from "react";
@@ -232,14 +233,14 @@ export default function ServiceProvidersPage() {
       </div>
 
       <Dialog open={!!selectedProvider} onOpenChange={(open) => !open && handleCloseDetails()}>
-        <DialogContent className="max-w-2xl max-h-[90vh] flex flex-col p-0 overflow-hidden">
+        <DialogContent className="max-w-2xl w-[95vw] sm:w-full max-h-[90vh] flex flex-col p-0 overflow-hidden">
             {selectedProvider && (
               <ScrollArea className="flex-1">
-                <div className="p-6">
-                  <DialogHeader>
-                      <div className="flex items-center justify-between mb-4">
+                <div className="p-4 sm:p-6">
+                  <DialogHeader className="space-y-4">
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                         <DialogTitle className="text-2xl font-headline">{selectedProvider.name}</DialogTitle>
-                        <Badge>{selectedProvider.service}</Badge>
+                        <Badge className="w-fit">{selectedProvider.service}</Badge>
                       </div>
                       <DialogDescription className="text-base text-foreground/80 leading-relaxed italic border-l-4 border-primary pl-4 py-2 bg-muted/30">
                           "{selectedProvider.bio}"
@@ -255,7 +256,7 @@ export default function ServiceProvidersPage() {
                           <ScrollArea className="w-full whitespace-nowrap rounded-md">
                               <div className="flex w-max space-x-4 p-1">
                                   {selectedProvider.gallery.map((url, idx) => (
-                                      <div key={idx} className="relative w-64 h-48 rounded-lg overflow-hidden border shadow-sm">
+                                      <div key={idx} className="relative w-48 h-36 sm:w-64 sm:h-48 rounded-lg overflow-hidden border shadow-sm">
                                           <Image src={url} alt={`Gallery ${idx}`} fill className="object-cover" />
                                       </div>
                                   ))}
@@ -268,9 +269,9 @@ export default function ServiceProvidersPage() {
                   <div className="mt-8 grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <div className="flex items-center gap-3 p-4 rounded-lg bg-muted/50">
                           <Mail className="h-6 w-6 text-primary" />
-                          <div>
+                          <div className="min-w-0">
                               <p className="text-xs text-muted-foreground uppercase font-bold tracking-wider">Email Address</p>
-                              <p className="font-medium">{selectedProvider.email || "Contact via dashboard"}</p>
+                              <p className="font-medium truncate">{selectedProvider.email || "Contact via dashboard"}</p>
                           </div>
                       </div>
                       <div className="flex items-center gap-3 p-4 rounded-lg bg-muted/50">
