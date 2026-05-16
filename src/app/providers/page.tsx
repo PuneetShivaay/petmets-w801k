@@ -3,7 +3,7 @@
 
 import { useState, useEffect, useMemo } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { collection, query, onSnapshot, addDoc, serverTimestamp, doc } from "firebase/firestore";
+import { collection, query, onSnapshot, addDoc, serverTimestamp } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { useAuth } from "@/contexts/auth-context";
 import { useToast } from "@/hooks/use-toast";
@@ -16,10 +16,12 @@ import Image from "next/image";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { PawPrint, Star, Search, MapPin, Mail, Loader2, Image as ImageIcon } from "lucide-react";
+import { PawPrint, Star, Search, MapPin, Mail, Loader2, Image as ImageIcon, Calendar as CalendarIcon, Clock } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
+import { Calendar } from "@/components/ui/calendar";
+import { format } from "date-fns";
 
 interface Provider {
   id: string;
@@ -36,6 +38,11 @@ interface Provider {
   createdAt: any;
 }
 
+const TIME_SLOTS = [
+  "09:00 AM", "10:00 AM", "11:00 AM", "12:00 PM",
+  "01:00 PM", "02:00 PM", "03:00 PM", "04:00 PM", "05:00 PM", "06:00 PM"
+];
+
 export default function ServiceProvidersPage() {
   const { user } = useAuth();
   const { toast } = useToast();
@@ -49,6 +56,10 @@ export default function ServiceProvidersPage() {
   
   const [searchTerm, setSearchTerm] = useState("");
   const [serviceFilter, setServiceFilter] = useState("all");
+
+  // Booking states
+  const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
+  const [selectedTime, setSelectedTime] = useState<string>("10:00 AM");
 
   const selectedProviderId = searchParams.get("view");
   const selectedProvider = useMemo(() => 
@@ -103,6 +114,9 @@ export default function ServiceProvidersPage() {
     const params = new URLSearchParams(searchParams.toString());
     params.delete("view");
     router.back();
+    // Reset booking selection on close
+    setSelectedDate(new Date());
+    setSelectedTime("10:00 AM");
   };
 
   const handleBookSession = async (provider: Provider) => {
@@ -111,10 +125,13 @@ export default function ServiceProvidersPage() {
       return;
     }
 
+    if (!selectedDate) {
+      toast({ variant: "destructive", title: "Date Required", description: "Please select a date for your booking." });
+      return;
+    }
+
     setIsBooking(provider.id);
     const bookingsColRef = collection(db, "bookings");
-    const bookingDate = new Date();
-    bookingDate.setDate(bookingDate.getDate() + 3);
 
     const bookingData = {
       ownerId: user.uid,
@@ -122,8 +139,8 @@ export default function ServiceProvidersPage() {
       serviceProviderName: provider.name,
       serviceType: provider.service,
       status: "pending",
-      date: bookingDate.toISOString().split('T')[0],
-      time: "10:00 AM",
+      date: format(selectedDate, 'yyyy-MM-dd'),
+      time: selectedTime,
       createdAt: serverTimestamp(),
     };
 
@@ -131,7 +148,7 @@ export default function ServiceProvidersPage() {
       .then(() => {
         toast({
           title: "Booking Requested!",
-          description: `Your session with ${provider.name} has been scheduled for ${bookingDate.toLocaleDateString()}.`,
+          description: `Your session with ${provider.name} has been scheduled for ${format(selectedDate, 'PPP')} at ${selectedTime}.`,
         });
         handleCloseDetails();
       })
@@ -233,11 +250,11 @@ export default function ServiceProvidersPage() {
       </div>
 
       <Dialog open={!!selectedProvider} onOpenChange={(open) => !open && handleCloseDetails()}>
-        <DialogContent className="max-w-2xl w-[95vw] sm:w-full max-h-[90vh] flex flex-col p-0 overflow-hidden">
+        <DialogContent className="max-w-3xl w-[95vw] sm:w-full max-h-[90vh] flex flex-col p-0 overflow-hidden">
             {selectedProvider && (
               <>
                 <ScrollArea className="flex-1 min-h-0">
-                  <div className="p-4 sm:p-6 pb-20 sm:pb-24">
+                  <div className="p-4 sm:p-6 pb-24 sm:pb-28">
                     <DialogHeader className="space-y-4">
                         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                           <DialogTitle className="text-2xl font-headline">{selectedProvider.name}</DialogTitle>
@@ -267,19 +284,66 @@ export default function ServiceProvidersPage() {
                         </div>
                     )}
 
-                    <div className="mt-8 grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        <div className="flex items-center gap-3 p-4 rounded-lg bg-muted/50">
-                            <Mail className="h-6 w-6 text-primary" />
-                            <div className="min-w-0">
-                                <p className="text-xs text-muted-foreground uppercase font-bold tracking-wider">Email Address</p>
-                                <p className="font-medium truncate">{selectedProvider.email || "Contact via dashboard"}</p>
+                    <div className="mt-8 space-y-6">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <div className="flex items-center gap-3 p-4 rounded-lg bg-muted/50">
+                                <Mail className="h-6 w-6 text-primary" />
+                                <div className="min-w-0">
+                                    <p className="text-xs text-muted-foreground uppercase font-bold tracking-wider">Email Address</p>
+                                    <p className="font-medium truncate">{selectedProvider.email || "Contact via dashboard"}</p>
+                                </div>
+                            </div>
+                            <div className="flex items-center gap-3 p-4 rounded-lg bg-muted/50">
+                                <MapPin className="h-6 w-6 text-primary" />
+                                <div>
+                                    <p className="text-xs text-muted-foreground uppercase font-bold tracking-wider">Service Location</p>
+                                    <p className="font-medium">{selectedProvider.location}</p>
+                                </div>
                             </div>
                         </div>
-                        <div className="flex items-center gap-3 p-4 rounded-lg bg-muted/50">
-                            <MapPin className="h-6 w-6 text-primary" />
-                            <div>
-                                <p className="text-xs text-muted-foreground uppercase font-bold tracking-wider">Service Location</p>
-                                <p className="font-medium">{selectedProvider.location}</p>
+
+                        <div className="border-t pt-8">
+                            <h4 className="text-lg font-semibold mb-6 flex items-center gap-2">
+                                <CalendarIcon className="h-5 w-5 text-primary" />
+                                Schedule Your Session
+                            </h4>
+                            
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-start">
+                                <div className="flex justify-center border rounded-lg p-2 bg-background shadow-sm">
+                                    <Calendar
+                                        mode="single"
+                                        selected={selectedDate}
+                                        onSelect={setSelectedDate}
+                                        disabled={(date) => date < new Date() || date < new Date("1900-01-01")}
+                                        initialFocus
+                                    />
+                                </div>
+                                
+                                <div className="space-y-4">
+                                    <div className="space-y-2">
+                                        <label className="text-sm font-medium flex items-center gap-2">
+                                            <Clock className="h-4 w-4 text-primary" />
+                                            Preferred Time
+                                        </label>
+                                        <Select value={selectedTime} onValueChange={setSelectedTime}>
+                                            <SelectTrigger className="w-full">
+                                                <SelectValue placeholder="Choose a time" />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                {TIME_SLOTS.map(slot => (
+                                                    <SelectItem key={slot} value={slot}>{slot}</SelectItem>
+                                                ))}
+                                            </SelectContent>
+                                        </Select>
+                                    </div>
+                                    
+                                    <div className="p-4 bg-primary/5 rounded-lg border border-primary/10">
+                                        <p className="text-xs text-muted-foreground uppercase font-bold tracking-wider mb-1">Appointment Summary</p>
+                                        <p className="text-sm">
+                                            Booking for <span className="font-bold">{selectedDate ? format(selectedDate, 'PPPP') : '...'}</span> at <span className="font-bold">{selectedTime}</span>
+                                        </p>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -287,12 +351,12 @@ export default function ServiceProvidersPage() {
                 </ScrollArea>
                 <div className="absolute bottom-0 left-0 right-0 p-4 bg-background border-t">
                     <Button 
-                      className="w-full sm:w-auto sm:float-right px-8" 
+                      className="w-full sm:w-auto sm:float-right px-8 py-6 text-lg" 
                       onClick={() => handleBookSession(selectedProvider)}
-                      disabled={isBooking === selectedProvider.id}
+                      disabled={isBooking === selectedProvider.id || !selectedDate}
                     >
                       {isBooking === selectedProvider.id && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                      Book a Session
+                      Confirm Booking
                     </Button>
                 </div>
               </>
