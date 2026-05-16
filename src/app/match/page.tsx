@@ -8,6 +8,7 @@ import { useAuth } from "@/contexts/auth-context";
 import { useToast } from "@/hooks/use-toast";
 import { errorEmitter } from "@/firebase/error-emitter";
 import { FirestorePermissionError } from "@/firebase/errors";
+import { useRouter } from "next/navigation";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -16,7 +17,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { Heart, Search, Loader2, Check, Bell, X, Clock, Info } from "lucide-react";
+import { Heart, Search, Loader2, Check, Bell, X, Clock, Info, User } from "lucide-react";
 
 interface Pet {
   id: string; 
@@ -40,6 +41,7 @@ interface MatchRequest {
 export default function MatchPetPage() {
   const { user, isLoading: isAuthLoading } = useAuth();
   const { toast } = useToast();
+  const router = useRouter();
   const [allPets, setAllPets] = useState<Pet[]>([]);
   const [displayPets, setDisplayPets] = useState<Pet[]>([]);
   const [loading, setLoading] = useState(true);
@@ -61,15 +63,12 @@ export default function MatchPetPage() {
     }
     setLoading(true);
     try {
-      // Switched from collectionGroup to collection for top-level /pets
-      // This avoids index requirements and matches our new structure
       const petsCol = collection(db, "pets");
       const querySnapshot = await getDocs(petsCol);
 
       const petsList: Pet[] = querySnapshot.docs
         .map((petDoc) => {
             const data = petDoc.data();
-            // In top-level collection, the doc ID is the owner's UID
             const ownerId = petDoc.id;
 
             return {
@@ -163,7 +162,7 @@ export default function MatchPetPage() {
       }));
 
       const enhancedRequests = await Promise.all(
-        requestsData.map(async (req) => {
+        requestsData.map(async (req: any) => {
           const userDoc = await getDoc(doc(db, "users", req.requesterId));
           const requesterName = userDoc.exists() ? userDoc.data().name : req.requesterEmail;
           return { ...req, requesterName } as MatchRequest;
@@ -318,37 +317,51 @@ export default function MatchPetPage() {
               )}
             </Button>
           </PopoverTrigger>
-          <PopoverContent className="w-[calc(100vw-2rem)] sm:w-80">
+          <PopoverContent className="w-[calc(100vw-2rem)] sm:w-96">
             <div className="grid gap-4">
               <div className="space-y-2">
                 <h4 className="font-medium leading-none">Incoming Requests</h4>
                 <p className="text-sm text-muted-foreground">
-                  Accept or decline requests from other pet owners.
+                  View profiles and decide who to connect with.
                 </p>
               </div>
-              <div className="grid gap-2">
+              <div className="grid gap-3">
                 {incomingRequests.length > 0 ? (
                   incomingRequests.map(req => (
-                    <div key={req.id} className="rounded-md border p-3 flex flex-col gap-2">
+                    <div key={req.id} className="rounded-lg border bg-card p-4 flex flex-col gap-3 shadow-sm">
                       <div>
-                        <p className="text-sm font-medium truncate">From: {req.requesterName}</p>
-                        <p className="text-sm text-muted-foreground">For: {req.targetPetName}</p>
+                        <p className="text-sm font-bold truncate">From: {req.requesterName}</p>
+                        <p className="text-xs text-muted-foreground mt-0.5">Wants to match with: <span className="text-primary font-medium">{req.targetPetName}</span></p>
                       </div>
-                      <div className="flex gap-2 justify-end">
+                      
+                      <Button 
+                        size="sm" 
+                        variant="secondary" 
+                        className="w-full h-9 flex items-center justify-center gap-2"
+                        onClick={() => {
+                          setIsPopoverOpen(false);
+                          router.push(`/profile/${req.requesterId}`);
+                        }}
+                      >
+                        <User className="h-4 w-4" />
+                        View Profile
+                      </Button>
+
+                      <div className="flex gap-2">
                           <Button 
                             size="sm" 
-                            variant="outline" 
-                            className="h-8 px-2 flex-1"
+                            variant="default" 
+                            className="h-9 px-2 flex-1 bg-green-600 hover:bg-green-700 text-white border-none"
                             onClick={() => handleRequestResponse(req, 'accepted')}
                             disabled={isUpdatingRequest === req.id}
                           >
-                             {isUpdatingRequest === req.id ? <Loader2 className="h-4 w-4 animate-spin"/> : <Check className="h-4 w-4 text-green-500" />}
+                             {isUpdatingRequest === req.id ? <Loader2 className="h-4 w-4 animate-spin"/> : <Check className="h-4 w-4" />}
                              <span className="ml-1">Accept</span>
                           </Button>
                           <Button 
                             size="sm" 
                             variant="destructive"
-                            className="h-8 px-2 flex-1"
+                            className="h-9 px-2 flex-1"
                             onClick={() => handleRequestResponse(req, 'declined')}
                              disabled={isUpdatingRequest === req.id}
                            >
@@ -359,7 +372,7 @@ export default function MatchPetPage() {
                     </div>
                   ))
                 ) : (
-                  <p className="text-sm text-muted-foreground text-center py-4">No new requests.</p>
+                  <p className="text-sm text-muted-foreground text-center py-6 border-2 border-dashed rounded-lg">No new requests.</p>
                 )}
               </div>
             </div>
