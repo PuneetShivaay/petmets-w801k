@@ -4,13 +4,30 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useAuth } from "@/contexts/auth-context";
-import { collection, query, where, onSnapshot, doc, getDoc } from "firebase/firestore";
+import { collection, query, where, onSnapshot, doc, getDoc, orderBy, limit } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ArrowRight, Bell, Calendar, FileText, User, HeartHandshake, AlertTriangle, MessageSquare, Briefcase, Star, CheckCircle, Heart, ExternalLink } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { 
+  ArrowRight, 
+  Bell, 
+  Calendar, 
+  FileText, 
+  User, 
+  HeartHandshake, 
+  AlertTriangle, 
+  MessageSquare, 
+  Briefcase, 
+  Star, 
+  CheckCircle, 
+  Heart, 
+  ExternalLink,
+  Clock,
+  ChevronRight
+} from "lucide-react";
 
 interface StatCardProps {
   title: string;
@@ -71,6 +88,7 @@ export default function DashboardPage() {
   const [completedServices, setCompletedServices] = useState(0);
   const [averageRating, setAverageRating] = useState(5.0);
   const [isBusinessListed, setIsBusinessListed] = useState(false);
+  const [recentPendingBookings, setRecentPendingBookings] = useState<any[]>([]);
 
   const [loadingStats, setLoadingStats] = useState(true);
 
@@ -99,7 +117,6 @@ export default function DashboardPage() {
       const chatsQuery = query(collection(db, "chats"), where("participants", "array-contains", user.uid));
       const unsubscribeChats = onSnapshot(chatsQuery, (snapshot) => setMatchedProfilesCount(snapshot.size));
       
-      // Fetch from top-level bookings
       const bookingsQuery = query(
         collection(db, "bookings"), 
         where("ownerId", "==", user.uid),
@@ -134,14 +151,19 @@ export default function DashboardPage() {
           }
       };
 
-      // Fetch from top-level bookings for provider
-      const providerBookingsQuery = query(collection(db, "bookings"), where("serviceProviderId", "==", user.uid));
+      const providerBookingsQuery = query(
+        collection(db, "bookings"), 
+        where("serviceProviderId", "==", user.uid)
+      );
       
       const unsubscribeProviderBookings = onSnapshot(providerBookingsQuery, (snapshot) => {
-          const pending = snapshot.docs.filter(d => d.data().status === 'pending').length;
-          const completed = snapshot.docs.filter(d => d.data().status === 'completed' || d.data().status === 'accepted').length;
-          setPendingAppointments(pending);
+          const bookings = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+          const pending = bookings.filter((d: any) => d.status === 'pending');
+          const completed = bookings.filter((d: any) => d.status === 'completed' || d.status === 'accepted').length;
+          
+          setPendingAppointments(pending.length);
           setCompletedServices(completed);
+          setRecentPendingBookings(pending.slice(0, 3));
       });
 
       checkBusinessListing();
@@ -218,6 +240,35 @@ export default function DashboardPage() {
               </CardContent>
           </Card>
         </div>
+
+        {recentPendingBookings.length > 0 && (
+          <Card className="shadow-lg border-primary/10">
+            <CardHeader>
+              <CardTitle className="text-lg flex items-center gap-2">
+                <Clock className="h-5 w-5 text-primary" />
+                New Booking Requests
+              </CardTitle>
+              <CardDescription>Action these quickly to confirm sessions with pet owners.</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                {recentPendingBookings.map((booking) => (
+                  <div key={booking.id} className="flex items-center justify-between p-4 rounded-xl border bg-muted/20">
+                    <div>
+                      <p className="font-bold">{booking.serviceType}</p>
+                      <p className="text-sm text-muted-foreground">{booking.date} at {booking.time}</p>
+                    </div>
+                    <Link href="/bookings">
+                      <Button size="sm" variant="ghost">
+                        Manage <ChevronRight className="ml-1 h-4 w-4" />
+                      </Button>
+                    </Link>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        )}
       </div>
     );
   }
