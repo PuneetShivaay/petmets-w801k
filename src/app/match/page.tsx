@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
@@ -76,7 +75,7 @@ export default function MatchPetPage() {
               ownerId: ownerId,
               name: data.name || "Unnamed Pet",
               breed: data.breed || "Unknown Breed",
-              image: data.avatar || "https://placehold.co/300x300.png",
+              image: data.avatar || "/images/logo.png",
               dataAiHint: data.dataAiHint || "pet portrait",
             };
         })

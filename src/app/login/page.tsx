@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect } from "react";
@@ -125,7 +124,7 @@ export default function LoginPage() {
         role: data.role,
         phone: "",
         address: "",
-        avatar: data.role === 'owner' ? "https://i.imgur.com/83AAQ1X.png" : "https://placehold.co/128x128.png",
+        avatar: "/images/logo.png",
         dataAiHint: data.role === 'owner' ? "paw print logo" : "business logo",
         createdAt: serverTimestamp(),
       };
@@ -133,14 +132,13 @@ export default function LoginPage() {
       await setDoc(userDocRef, defaultUserData);
 
       if (data.role === 'owner') {
-        // Updated to top-level pets collection
         const petDocRef = doc(db, "pets", newUser.uid);
         const defaultPetData = {
           name: "Buddy",
           breed: "Golden Retriever",
           age: "3 years",
           gender: "Male",
-          avatar: "https://placehold.co/128x128.png",
+          avatar: "/images/logo.png",
           dataAiHint: "golden retriever",
           bio: "Loves long walks in the park and playing fetch. A very good boy indeed!",
           createdAt: serverTimestamp(),

@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect, useCallback, useRef } from "react";
@@ -99,7 +98,7 @@ export default function BusinessProfilePage() {
       userId: user.uid,
       email: user.email,
       updatedAt: serverTimestamp(),
-      image: providerData?.image || "https://placehold.co/600x400.png",
+      image: providerData?.image || "/images/logo.png",
       gallery: providerData?.gallery || [],
       rating: providerData?.rating || 5.0,
       createdAt: providerData?.createdAt || serverTimestamp(),
@@ -261,7 +260,7 @@ export default function BusinessProfilePage() {
             <CardHeader className="text-center">
               <div className="relative mx-auto w-32 h-32 mb-4 group">
                 <Avatar className="w-full h-full border-4 border-primary shadow-xl">
-                  <AvatarImage src={providerData?.image} className="object-cover" />
+                  <AvatarImage src={providerData?.image || "/images/logo.png"} className="object-cover" />
                   <AvatarFallback><Briefcase className="h-12 w-12" /></AvatarFallback>
                 </Avatar>
                 <input type="file" ref={avatarInputRef} onChange={handleAvatarUpload} className="hidden" accept="image/*" />

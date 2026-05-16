@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect, useRef } from 'react';
@@ -79,7 +78,7 @@ export default function ChatPage() {
                     setOtherUser({
                         id: otherUserId,
                         name: data.name || 'Pet Owner',
-                        avatar: data.avatar || 'https://i.imgur.com/83AAQ1X.png',
+                        avatar: data.avatar || '/images/logo.png',
                         dataAiHint: data.dataAiHint || 'paw print logo',
                         petName: petData.name,
                         petBreed: petData.breed,
@@ -149,7 +148,7 @@ export default function ChatPage() {
          {otherUser ? (
              <Link href={`/profile/${otherUser.id}`} className="flex items-center gap-3 overflow-hidden">
                  <Avatar className="h-9 w-9">
-                     <AvatarImage src={otherUser.avatar} data-ai-hint={otherUser.dataAiHint} />
+                     <AvatarImage src={otherUser.avatar || "/images/logo.png"} data-ai-hint={otherUser.dataAiHint} />
                      <AvatarFallback><User /></AvatarFallback>
                  </Avatar>
                  <div className="overflow-hidden">

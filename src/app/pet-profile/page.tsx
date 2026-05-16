@@ -45,7 +45,7 @@ const defaultPetData = {
     breed: "Golden Retriever",
     age: "3 years",
     gender: "Male" as "Male" | "Female",
-    avatar: "https://placehold.co/128x128.png",
+    avatar: "/images/logo.png",
     dataAiHint: "golden retriever",
     bio: "Loves long walks in the park and playing fetch. A very good boy indeed!",
 };
@@ -55,7 +55,7 @@ const defaultOwnerData = {
     email: "loading...",
     phone: "",
     address: "",
-    avatar: "https://i.imgur.com/83AAQ1X.png",
+    avatar: "/images/logo.png",
     dataAiHint: "paw print logo",
 };
 

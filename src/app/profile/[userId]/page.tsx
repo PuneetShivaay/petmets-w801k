@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
@@ -268,7 +267,7 @@ export default function UserProfilePage() {
                     <CardHeader>
                     <div className="flex items-center gap-4">
                         <Avatar className="h-20 w-20 border-2 border-primary">
-                        <AvatarImage src={petData.avatar} alt={petData.name} data-ai-hint={petData.dataAiHint} />
+                        <AvatarImage src={petData.avatar || "/images/logo.png"} alt={petData.name} data-ai-hint={petData.dataAiHint} />
                         <AvatarFallback><PawPrint className="h-10 w-10" /></AvatarFallback>
                         </Avatar>
                         <div>
@@ -306,7 +305,7 @@ export default function UserProfilePage() {
                 <CardHeader>
                     <div className="flex items-center gap-4">
                         <Avatar className="h-20 w-20 border-2 border-accent">
-                        <AvatarImage src={ownerData.avatar} alt={ownerData.name} data-ai-hint={ownerData.dataAiHint} />
+                        <AvatarImage src={ownerData.avatar || "/images/logo.png"} alt={ownerData.name} data-ai-hint={ownerData.dataAiHint} />
                         <AvatarFallback><User className="h-10 w-10" /></AvatarFallback>
                         </Avatar>
                         <div>

@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect, useCallback, useRef, useMemo } from "react";
@@ -230,7 +229,7 @@ export default function AdoptionPage() {
           {listings.map((pet) => (
             <Card key={pet.id} className="flex flex-col overflow-hidden rounded-lg shadow-lg">
               <div className="relative h-52 w-full">
-                <Image src={pet.image} alt={pet.name} fill sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw" style={{objectFit: 'cover'}} data-ai-hint={pet.dataAiHint} />
+                <Image src={pet.image || "/images/logo.png"} alt={pet.name} fill sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw" style={{objectFit: 'cover'}} data-ai-hint={pet.dataAiHint} />
               </div>
               <CardHeader>
                 <CardTitle className="font-headline text-lg sm:text-xl">{pet.name}</CardTitle>

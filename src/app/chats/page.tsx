@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect, useCallback } from 'react';
@@ -45,24 +44,15 @@ export default function ChatsListPage() {
 
       const profilePromises = idsToFetch.map(async (id) => {
           const userDoc = await getDoc(doc(db, 'users', id));
-          // Updated to new top-level pets collection
           const petDoc = await getDoc(doc(db, 'pets', id));
           
           if (userDoc.exists()) {
               const data = userDoc.data();
               let petData = petDoc.exists() ? petDoc.data() : null;
 
-              // Fallback check for older path
-              if (!petData) {
-                  const oldPetDoc = await getDoc(doc(db, 'users', id, 'pets', 'main-pet'));
-                  if (oldPetDoc.exists()) {
-                      petData = oldPetDoc.data();
-                  }
-              }
-
               newProfiles[id] = {
                   name: data.name || 'Pet Owner',
-                  avatar: data.avatar || 'https://i.imgur.com/83AAQ1X.png',
+                  avatar: data.avatar || '/images/logo.png',
                   dataAiHint: data.dataAiHint || 'paw print logo',
                   petName: petData?.name,
                   petBreed: petData?.breed,
@@ -80,7 +70,6 @@ export default function ChatsListPage() {
     if (authIsLoading || !user) return;
 
     setIsLoadingChats(true);
-    // Query to find all chats where the current user is a participant
     const q = query(
         collection(db, 'chats'), 
         where('participants', 'array-contains', user.uid)
@@ -97,7 +86,6 @@ export default function ChatsListPage() {
         data.participants.forEach((p: string) => allParticipantIds.add(p));
       });
       
-      // Sort on the client-side to ensure most recent messages are at the top
       chatsData.sort((a, b) => {
         const timeA = a.lastMessageTimestamp?.toDate() || new Date(0);
         const timeB = b.lastMessageTimestamp?.toDate() || new Date(0);
@@ -144,7 +132,7 @@ export default function ChatsListPage() {
                           className="w-full text-left p-3 flex items-center gap-4 transition-colors hover:bg-muted"
                       >
                       <Avatar className="h-12 w-12">
-                          <AvatarImage src={profile?.avatar} data-ai-hint={profile?.dataAiHint} />
+                          <AvatarImage src={profile?.avatar || "/images/logo.png"} data-ai-hint={profile?.dataAiHint} />
                           <AvatarFallback><User /></AvatarFallback>
                       </Avatar>
                       <div className="flex-grow overflow-hidden">
