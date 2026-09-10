@@ -88,14 +88,14 @@ function MainLayoutChild({ children }: { children: React.ReactNode }) {
                       asChild={item.href.startsWith("/")}
                       isActive={pathname === item.href}
                       className={cn(
-                        "w-full justify-start rounded-xl px-4 py-6 transition-all",
+                        "w-full justify-start rounded-xl px-4 py-3.5 transition-all",
                         pathname === item.href ? "bg-primary text-white hover:bg-primary/90" : "text-slate-600 hover:bg-slate-50"
                       )}
                       onClick={item.href.startsWith("/") ? handleLinkClick : undefined}
                     >
                       <div className="flex items-center w-full">
                         <item.icon className={cn("mr-3 h-5 w-5", pathname === item.href ? "text-white" : "text-slate-400")} />
-                        <span className="font-semibold">{item.title}</span>
+                        <span className="font-semibold text-sm">{item.title}</span>
                         {item.badge && (
                           <Badge className="ml-auto bg-primary text-white border-none h-5 w-5 flex items-center justify-center p-0 text-[10px]">
                             {item.badge}
@@ -107,7 +107,7 @@ function MainLayoutChild({ children }: { children: React.ReactNode }) {
                 </SidebarMenuItem>
               ))}
 
-              <div className="mt-8 px-4 mb-2">
+              <div className="mt-4 px-4 mb-2">
                 <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Quick Links</span>
               </div>
 
