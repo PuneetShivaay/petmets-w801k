@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect } from "react";
@@ -6,6 +5,7 @@ import Link from "next/link";
 import { useAuth } from "@/contexts/auth-context";
 import { collection, query, where, onSnapshot, doc, getDocs, limit } from "firebase/firestore";
 import { db } from "@/lib/firebase";
+import { cn } from "@/lib/utils";
 
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -35,7 +35,8 @@ import {
   Navigation,
   Droplets,
   Heart,
-  ChevronDown
+  ChevronDown,
+  FileText as FileTextIcon
 } from "lucide-react";
 
 export default function DashboardPage() {
@@ -163,7 +164,7 @@ export default function DashboardPage() {
              </div>
              <Avatar className="h-8 w-8 border border-muted shadow-sm">
                 <AvatarImage src={user?.photoURL || "/images/logo.png"} />
-                <AvatarFallback><User /></AvatarFallback>
+                <AvatarFallback><User className="h-5 w-5" /></AvatarFallback>
              </Avatar>
           </div>
         </div>
@@ -357,7 +358,7 @@ export default function DashboardPage() {
                 {localProviders.map((provider) => (
                    <Card key={provider.id} className="w-72 sm:w-80 border-none shadow-md bg-white rounded-[2rem] overflow-hidden flex-shrink-0">
                       <div className="relative h-48 w-full">
-                         <AvatarImage src={provider.image} className="w-full h-full object-cover" />
+                         <AvatarImage src={provider.image || "/images/logo.png"} className="w-full h-full object-cover" />
                          <div className="absolute top-3 left-3 flex items-center gap-1 bg-white/90 backdrop-blur-md px-2 py-1 rounded-full shadow-sm">
                             <Star className="h-3 w-3 fill-yellow-400 text-yellow-400" />
                             <span className="text-[10px] font-bold">{provider.rating} (128)</span>
@@ -369,7 +370,9 @@ export default function DashboardPage() {
                       <CardContent className="p-5">
                          <div className="flex items-center justify-between mb-2">
                             <h4 className="font-bold text-base truncate">{provider.name}</h4>
-                            <Badge className="bg-primary/10 text-primary border-none text-[8px] font-bold uppercase tracking-wider">Book</Badge>
+                            <Link href={`/providers/${provider.id}`}>
+                              <Badge className="bg-primary/10 text-primary border-none text-[8px] font-bold uppercase tracking-wider cursor-pointer">Book</Badge>
+                            </Link>
                          </div>
                          <p className="text-xs text-muted-foreground">Organic Treats • Agility Training</p>
                          <div className="flex items-center justify-between mt-4 pt-4 border-t border-dashed">
@@ -580,29 +583,6 @@ function PawPrintIcon(props: any) {
       <circle cx="14" cy="5" r="2" />
       <path d="M12 13c-2 0-4 1-4 3 0 2 2 4 4 4s4-2 4-4c0-2-2-3-4-3Z" />
       <path d="M12 21c-3.1 0-6-2.3-6-5.5s2.9-5.5 6-5.5 6 2.3 6 5.5-2.9 5.5-6 5.5Z" />
-    </svg>
-  )
-}
-
-function FileTextIcon(props: any) {
-  return (
-    <svg
-      {...props}
-      xmlns="http://www.w3.org/2000/svg"
-      width="24"
-      height="24"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z" />
-      <polyline points="14 2 14 8 20 8" />
-      <line x1="16" y1="13" x2="8" y2="13" />
-      <line x1="16" y1="17" x2="8" y2="17" />
-      <line x1="10" y1="9" x2="8" y2="9" />
     </svg>
   )
 }
