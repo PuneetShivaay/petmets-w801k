@@ -2,7 +2,7 @@
 {
   "hero": {
     "dashboard": {
-      "url": "https://picsum.photos/seed/dashboard-hero/1200/500",
+      "url": "/images/banner.jpeg",
       "hint": "happy dog cat",
       "width": 1200,
       "height": 500

@@ -5,7 +5,7 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/auth-context";
-import { collection, query, onSnapshot, doc, getDocs, limit } from "firebase/firestore";
+import { collection, query, onSnapshot, doc, getDocs, limit, where, orderBy } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { cn } from "@/lib/utils";
 import Image from "next/image";
@@ -33,8 +33,9 @@ import {
   Headphones,
   Users as UsersIcon,
   Settings,
-  Waves,
-  Calendar
+  Calendar,
+  Clock,
+  Ticket
 } from "lucide-react";
 
 const SERVICE_GRID = [
@@ -55,6 +56,7 @@ export default function DashboardPage() {
   const [userData, setUserData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [localProviders, setLocalProviders] = useState<any[]>([]);
+  const [upcomingBookings, setUpcomingBookings] = useState<any[]>([]);
   const [heroSearch, setHeroSearch] = useState("");
 
   useEffect(() => {
@@ -73,6 +75,22 @@ export default function DashboardPage() {
         if (docSnap.exists()) {
           setPetData({ id: docSnap.id, ...docSnap.data() });
         }
+      });
+
+      // Fetch upcoming bookings
+      const today = new Date().toISOString().split('T')[0];
+      const bookingsQuery = query(
+        collection(db, "bookings"),
+        where("ownerId", "==", user.uid),
+        where("status", "in", ["pending", "accepted"]),
+        limit(2)
+      );
+
+      const unsubscribeBookings = onSnapshot(bookingsQuery, (snapshot) => {
+        const data = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+        // Client-side sort to avoid needing a complex index during prototype
+        data.sort((a: any, b: any) => a.date.localeCompare(b.date));
+        setUpcomingBookings(data);
         setLoading(false);
       });
 
@@ -86,6 +104,7 @@ export default function DashboardPage() {
       return () => {
         unsubscribePet();
         unsubscribeUser();
+        unsubscribeBookings();
       };
     } else {
       setLoading(false);
@@ -266,7 +285,7 @@ export default function DashboardPage() {
                 </Avatar>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center justify-between gap-2">
-                    <p className="text-sm font-black text-slate-800 truncate">{petData?.name || 'Buddy2'}</p>
+                    <p className="text-sm font-black text-slate-800 truncate">{petData?.name || 'Buddy'}</p>
                     <Badge variant="outline" className="text-[9px] bg-orange-50 border-orange-100 text-orange-600 font-bold px-2 py-0.5 rounded-full shrink-0">Active</Badge>
                   </div>
                   <p className="text-[10px] text-slate-400 font-medium mt-0.5">{petData?.breed || 'Golden Retriever'} • {petData?.age || '3 years'}</p>
@@ -275,6 +294,34 @@ export default function DashboardPage() {
               <Settings className="absolute top-4 right-4 h-4 w-4 text-slate-200 cursor-pointer hover:text-primary transition-colors" />
             </Card>
           </div>
+
+          {/* Upcoming Sessions Ticket */}
+          {upcomingBookings.length > 0 && (
+            <div className="space-y-4 px-2">
+               <h3 className="font-bold text-[10px] uppercase tracking-[0.2em] text-slate-400">Upcoming Sessions</h3>
+               {upcomingBookings.map((booking) => (
+                 <Link key={booking.id} href="/bookings">
+                   <Card className="relative overflow-hidden rounded-[1.5rem] border-none shadow-md bg-white p-5 group hover:shadow-lg transition-all cursor-pointer">
+                      <div className="absolute top-0 right-0 p-4 opacity-[0.03]">
+                        <Ticket className="h-20 w-20 -rotate-12" />
+                      </div>
+                      <div className="flex items-center gap-4 relative z-10">
+                        <div className="h-10 w-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary shrink-0">
+                          <Calendar className="h-5 w-5" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-[11px] font-bold text-slate-800 leading-none truncate">{booking.serviceType}</p>
+                          <p className="text-[10px] text-slate-400 font-medium mt-1.5 flex items-center gap-1.5">
+                            <Clock className="h-3 w-3" /> {booking.date} • {booking.time}
+                          </p>
+                        </div>
+                        <ArrowRight className="h-4 w-4 text-slate-200 group-hover:text-primary transition-colors" />
+                      </div>
+                   </Card>
+                 </Link>
+               ))}
+            </div>
+          )}
 
           {/* Recently Viewed */}
           <div className="space-y-5 px-2">
@@ -332,4 +379,3 @@ export default function DashboardPage() {
     </div>
   );
 }
-
