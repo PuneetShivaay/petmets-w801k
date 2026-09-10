@@ -1,4 +1,3 @@
-
 import type { LucideIcon } from 'lucide-react';
 import {
   Dog,
@@ -29,13 +28,13 @@ export interface NavItem {
 
 export const navItems: NavItem[] = [
   {
-    title: 'Dashboard',
+    title: 'Home',
     href: '/',
     icon: LayoutDashboard,
     roles: ['owner', 'provider'],
   },
   {
-    title: 'Pet Profile',
+    title: 'Profile',
     href: '/pet-profile',
     icon: Dog,
     roles: ['owner', 'provider'],
@@ -71,7 +70,7 @@ export const navItems: NavItem[] = [
     roles: ['owner'],
   },
   {
-    title: 'Pet Chats',
+    title: 'Messages',
     href: '/chats',
     icon: MessageSquare,
     roles: ['owner', 'provider'],

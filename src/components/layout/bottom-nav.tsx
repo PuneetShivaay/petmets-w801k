@@ -1,4 +1,3 @@
-
 'use client';
 
 import Link from 'next/link';
@@ -15,15 +14,15 @@ export function BottomNav() {
 
   if (!userRole) return null;
 
-  // Filter items for the bottom bar (Home, Match, Services, Chats, Profile)
+  // Filter items for the bottom bar
   const bottomNavItems = navItems.filter((item) => {
     if (item.href === '/login') return false;
     if (item.roles && !item.roles.includes(userRole)) return false;
     
     // Select specific items for the 5-slot bottom bar
-    const allowed = ['Dashboard', 'Match Your Pet', 'Service Providers', 'Pet Chats', 'Pet Profile', 'My Business Listing'];
+    const allowed = ['Home', 'Match Your Pet', 'Service Providers', 'Messages', 'Profile', 'My Business Listing'];
     return allowed.includes(item.title);
-  }).slice(0, 5); // Ensure exactly 5 for best layout
+  }).slice(0, 5); 
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-50 flex h-16 items-center justify-around border-t bg-background/95 pb-safe backdrop-blur-md md:hidden">
@@ -37,20 +36,20 @@ export function BottomNav() {
             href={item.href}
             onClick={() => !isActive && showLoading()}
             className={cn(
-              "flex flex-col items-center justify-center gap-1 px-2 transition-colors",
+              "flex flex-col items-center justify-center gap-1 px-2 transition-colors relative",
               isActive ? "text-primary" : "text-muted-foreground"
             )}
           >
             <Icon className={cn("h-6 w-6", isActive && "fill-primary/10")} />
             <span className="text-[10px] font-bold uppercase tracking-wider">
-              {item.title === 'Dashboard' ? 'Home' : 
+              {item.title === 'Home' ? 'Home' : 
                item.title === 'Match Your Pet' ? 'Match' : 
                item.title === 'Service Providers' ? 'Services' : 
-               item.title === 'Pet Chats' ? 'Chats' : 
-               item.title === 'Pet Profile' || item.title === 'My Business Listing' ? 'Profile' : item.title}
+               item.title === 'Messages' ? 'Messages' : 
+               item.title === 'Profile' || item.title === 'My Business Listing' ? 'Profile' : item.title}
             </span>
-            {isActive && item.title === 'Pet Chats' && (
-               <div className="absolute top-2 right-1/2 translate-x-4 h-2 w-2 rounded-full bg-primary border border-white" />
+            {item.title === 'Messages' && item.badge && (
+               <div className="absolute top-2 right-4 h-2 w-2 rounded-full bg-primary border border-white" />
             )}
           </Link>
         );
