@@ -4,7 +4,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useAuth } from "@/contexts/auth-context";
-import { collection, query, where, onSnapshot, doc, limit } from "firebase/firestore";
+import { collection, query, where, onSnapshot, doc } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -27,7 +27,14 @@ import {
   MessageSquare,
   Briefcase,
   TrendingUp,
-  User
+  User,
+  Dog,
+  Scissors,
+  GraduationCap,
+  Trees,
+  MapPin,
+  Star,
+  Navigation
 } from "lucide-react";
 
 export default function DashboardPage() {
@@ -62,7 +69,6 @@ export default function DashboardPage() {
       );
       const unsubscribeRequests = onSnapshot(requestsQuery, (snapshot) => setPendingRequests(snapshot.size));
 
-      // Removed orderBy to avoid composite index error
       const bookingsQuery = query(
         collection(db, "bookings"), 
         where("ownerId", "==", user.uid),
@@ -71,7 +77,6 @@ export default function DashboardPage() {
       const unsubscribeBookings = onSnapshot(bookingsQuery, (snapshot) => {
         if (!snapshot.empty) {
           const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-          // Sort client-side by date
           data.sort((a: any, b: any) => a.date.localeCompare(b.date));
           setUpcomingBooking(data[0]);
         } else {
@@ -85,7 +90,6 @@ export default function DashboardPage() {
         unsubscribeBookings();
       };
     } else if (userRole === 'provider') {
-      // Removed orderBy to avoid composite index error
       const providerBookingsQuery = query(
         collection(db, "bookings"),
         where("serviceProviderId", "==", user.uid),
@@ -93,7 +97,6 @@ export default function DashboardPage() {
       );
       const unsubscribeProviderBookings = onSnapshot(providerBookingsQuery, (snapshot) => {
         const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-        // Sort client-side by creation date
         data.sort((a: any, b: any) => {
           const timeA = a.createdAt?.toDate?.() || new Date(0);
           const timeB = b.createdAt?.toDate?.() || new Date(0);
@@ -149,6 +152,29 @@ export default function DashboardPage() {
               <RefreshCw className="h-4 w-4" />
             </Button>
           </div>
+        </div>
+
+        {/* Quick Essentials Row */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-6 gap-4">
+          {[
+            { label: 'Walkers', icon: Trees, color: 'bg-green-100 text-green-600', href: '/providers?service=Walking' },
+            { label: 'Grooming', icon: Scissors, color: 'bg-blue-100 text-blue-600', href: '/providers?service=Grooming' },
+            { label: 'Training', icon: GraduationCap, color: 'bg-orange-100 text-orange-600', href: '/providers?service=Training' },
+            { label: 'Playzone', icon: Activity, color: 'bg-purple-100 text-purple-600', href: '/providers?service=Playzone' },
+            { label: 'Boarding', icon: Briefcase, color: 'bg-pink-100 text-pink-600', href: '/providers?service=Boarding' },
+            { label: 'Photography', icon: Navigation, color: 'bg-yellow-100 text-yellow-600', href: '/providers?service=Photography' },
+          ].map((item, i) => (
+            <Link key={i} href={item.href}>
+              <Card className="hover:shadow-md transition-all cursor-pointer border-none bg-white">
+                <CardContent className="p-4 flex flex-col items-center gap-2">
+                  <div className={`h-12 w-12 rounded-2xl flex items-center justify-center ${item.color}`}>
+                    <item.icon className="h-6 w-6" />
+                  </div>
+                  <span className="text-xs font-bold text-center">{item.label}</span>
+                </CardContent>
+              </Card>
+            </Link>
+          ))}
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
@@ -240,32 +266,49 @@ export default function DashboardPage() {
             </Card>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <Card className="border-none shadow-sm bg-white rounded-2xl">
+              <Card className="border-none shadow-sm bg-white rounded-2xl overflow-hidden">
                 <CardHeader>
                   <CardTitle className="text-lg flex items-center gap-2">
-                    <Calendar className="h-5 w-5 text-primary" /> Upcoming Booking
+                    <Calendar className="h-5 w-5 text-primary" /> Featured Appointment
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
                   {upcomingBooking ? (
                     <div className="space-y-4">
-                      <div className="p-4 bg-muted/20 rounded-xl border border-muted">
-                        <p className="font-bold text-lg">{upcomingBooking.serviceType}</p>
-                        <p className="text-sm text-muted-foreground">with {upcomingBooking.serviceProviderName}</p>
-                        <div className="flex items-center gap-2 mt-2">
-                          <Badge variant="secondary" className="bg-primary/10 text-primary border-none">{upcomingBooking.date}</Badge>
-                          <Badge variant="outline">{upcomingBooking.time}</Badge>
+                      <div className="p-5 bg-primary/5 rounded-2xl border border-primary/10 relative overflow-hidden group">
+                        <div className="absolute top-0 right-0 p-3">
+                           <div className="h-10 w-10 rounded-full bg-white shadow-sm flex items-center justify-center">
+                              <Calendar className="h-5 w-5 text-primary" />
+                           </div>
+                        </div>
+                        <div className="space-y-1">
+                          <p className="font-bold text-xl text-primary">{upcomingBooking.serviceType}</p>
+                          <p className="text-sm text-muted-foreground flex items-center gap-1">
+                            <Briefcase className="h-3 w-3" /> {upcomingBooking.serviceProviderName}
+                          </p>
+                        </div>
+                        <div className="flex items-center gap-3 mt-4">
+                          <div className="bg-white px-3 py-1.5 rounded-xl shadow-sm">
+                            <p className="text-[10px] font-bold text-muted-foreground uppercase">Date</p>
+                            <p className="text-sm font-bold">{upcomingBooking.date}</p>
+                          </div>
+                          <div className="bg-white px-3 py-1.5 rounded-xl shadow-sm">
+                            <p className="text-[10px] font-bold text-muted-foreground uppercase">Time</p>
+                            <p className="text-sm font-bold">{upcomingBooking.time}</p>
+                          </div>
+                        </div>
+                        <div className="mt-4 flex gap-2">
+                           <Button size="sm" className="flex-1 rounded-xl">View Details</Button>
+                           <Button size="sm" variant="outline" className="flex-1 rounded-xl">Get Directions</Button>
                         </div>
                       </div>
-                      <Link href="/bookings">
-                        <Button variant="outline" className="w-full">Manage Bookings</Button>
-                      </Link>
                     </div>
                   ) : (
-                    <div className="text-center py-6 text-muted-foreground border-2 border-dashed rounded-xl">
-                      <p className="text-sm">No confirmed sessions.</p>
+                    <div className="text-center py-10 text-muted-foreground border-2 border-dashed rounded-2xl flex flex-col items-center">
+                      <Calendar className="h-10 w-10 opacity-10 mb-2" />
+                      <p className="text-sm font-medium">No sessions scheduled.</p>
                       <Link href="/providers">
-                        <Button variant="link" className="text-xs text-primary mt-2">Find a service provider</Button>
+                        <Button variant="link" className="text-xs text-primary mt-1 font-bold">Book a service now</Button>
                       </Link>
                     </div>
                   )}
@@ -279,16 +322,28 @@ export default function DashboardPage() {
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                   <div className="flex items-center justify-between">
-                     <p className="text-sm text-muted-foreground">Nearby Playmates</p>
-                     <span className="font-bold text-sm">12 Active</span>
+                   <div className="flex items-center justify-between p-3 rounded-xl bg-muted/20">
+                     <div className="flex items-center gap-3">
+                        <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center text-primary">
+                           <Dog className="h-4 w-4" />
+                        </div>
+                        <p className="text-sm font-bold">Nearby Playmates</p>
+                     </div>
+                     <span className="font-bold text-sm bg-white px-2 py-0.5 rounded-md shadow-sm">12 Active</span>
                    </div>
-                   <div className="flex items-center justify-between">
-                     <p className="text-sm text-muted-foreground">Grooming Deals</p>
+                   <div className="flex items-center justify-between p-3 rounded-xl bg-muted/20">
+                     <div className="flex items-center gap-3">
+                        <div className="h-8 w-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-600">
+                           <Scissors className="h-4 w-4" />
+                        </div>
+                        <p className="text-sm font-bold">Grooming Deals</p>
+                     </div>
                      <span className="font-bold text-sm text-primary">2 Local</span>
                    </div>
-                   <Link href="/match">
-                    <Button variant="secondary" className="w-full text-xs font-bold mt-2">Find Playmates</Button>
+                   <Link href="/match" className="block mt-2">
+                    <Button variant="secondary" className="w-full text-xs font-bold rounded-xl py-5">
+                       Find Local Playmates <ChevronRight className="h-4 w-4 ml-1" />
+                    </Button>
                    </Link>
                 </CardContent>
               </Card>
@@ -310,11 +365,15 @@ export default function DashboardPage() {
               <CardContent>
                 {pendingRequests > 0 ? (
                   <div className="space-y-3">
-                    <p className="text-xs text-muted-foreground leading-relaxed">
-                      You have new match requests from pet owners nearby.
-                    </p>
+                    <div className="p-4 bg-muted/30 rounded-2xl">
+                        <p className="text-xs font-bold text-muted-foreground leading-relaxed">
+                          You have {pendingRequests} new match requests from pet owners nearby.
+                        </p>
+                    </div>
                     <Link href="/match">
-                      <Button className="w-full bg-accent text-accent-foreground hover:bg-accent/90 text-xs">View All Requests</Button>
+                      <Button className="w-full bg-accent text-accent-foreground hover:bg-accent/90 text-xs rounded-xl py-5">
+                         Review All Requests
+                      </Button>
                     </Link>
                   </div>
                 ) : (
@@ -334,17 +393,19 @@ export default function DashboardPage() {
               </CardHeader>
               <CardContent>
                  <div className="space-y-3">
-                    <div className="p-3 bg-muted/30 rounded-xl flex items-center gap-3">
-                       <div className="h-8 w-8 rounded-full bg-primary/20 flex items-center justify-center text-primary font-bold text-xs">
+                    <div className="p-4 bg-muted/30 rounded-2xl flex items-center gap-3">
+                       <div className="h-10 w-10 rounded-full bg-primary/20 flex items-center justify-center text-primary font-bold text-lg">
                           {matchedProfilesCount}
                        </div>
                        <div>
-                          <p className="text-xs font-bold">Active Conversations</p>
-                          <p className="text-[10px] text-muted-foreground">Keep in touch with your matches.</p>
+                          <p className="text-sm font-bold">Active Chats</p>
+                          <p className="text-xs text-muted-foreground">Stay connected with matches.</p>
                        </div>
                     </div>
                     <Link href="/chats">
-                      <Button variant="outline" className="w-full text-xs">Open Messages</Button>
+                      <Button variant="outline" className="w-full text-xs rounded-xl py-5">
+                        Open All Messages
+                      </Button>
                     </Link>
                  </div>
               </CardContent>
