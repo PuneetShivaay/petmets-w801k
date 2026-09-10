@@ -34,10 +34,10 @@ export const navItems: NavItem[] = [
     roles: ['owner', 'provider'],
   },
   {
-    title: 'Profile',
-    href: '/pet-profile',
-    icon: Dog,
-    roles: ['owner', 'provider'],
+    title: 'Match Your Pet',
+    href: '/match',
+    icon: Users,
+    roles: ['owner'],
   },
   {
     title: 'Service Providers',
@@ -46,15 +46,15 @@ export const navItems: NavItem[] = [
     roles: ['owner', 'provider'],
   },
   {
+    title: 'Profile',
+    href: '/pet-profile',
+    icon: Dog,
+    roles: ['owner', 'provider'],
+  },
+  {
     title: 'Adoption',
     href: '/adoption',
     icon: Heart,
-    roles: ['owner'],
-  },
-  {
-    title: 'Match Your Pet',
-    href: '/match',
-    icon: Users,
     roles: ['owner'],
   },
   {
