@@ -147,18 +147,18 @@ export default function DashboardPage() {
               priority
             />
             <div className="absolute inset-0 bg-gradient-to-r from-black/10 to-transparent flex flex-col justify-center px-12">
-              <form onSubmit={handleHeroSearch} className="flex items-center bg-white rounded-full p-1 shadow-lg w-full max-w-lg">
-                <div className="flex flex-1 items-center px-4">
-                  <Search className="h-4 w-4 text-slate-400 mr-2" />
+              <form onSubmit={handleHeroSearch} className="mt-4 md:mt-8 flex items-center bg-white rounded-full p-0.5 md:p-1 shadow-lg w-[90%] md:w-full max-w-lg mx-auto md:mx-0">
+                <div className="flex flex-1 items-center px-2 md:px-4">
+                  <Search className="h-3 w-3 md:h-4 md:w-4 text-slate-400 mr-1 md:mr-2" />
                   <input 
                     type="text" 
                     value={heroSearch}
                     onChange={(e) => setHeroSearch(e.target.value)}
-                    placeholder="Search for services, products or vendors..."
-                    className="w-full text-slate-800 text-xs py-2.5 bg-transparent border-none focus:ring-0 placeholder:text-slate-400"
+                    placeholder="Search for services..."
+                    className="w-full text-[10px] md:text-xs py-1.5 md:py-2.5 bg-transparent border-none focus:ring-0 placeholder:text-slate-400"
                   />
                 </div>
-                <Button type="submit" className="bg-[#FF642F] hover:bg-[#FF642F]/90 text-white rounded-full px-8 font-bold h-10 text-[10px] uppercase tracking-wider">
+                <Button type="submit" className="bg-[#FF642F] hover:bg-[#FF642F]/90 text-white rounded-full px-4 md:px-8 font-bold h-7 md:h-10 text-[8px] md:text-[10px] uppercase tracking-wider">
                   Search
                 </Button>
               </form>
