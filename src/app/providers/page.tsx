@@ -120,20 +120,25 @@ export default function ServiceProvidersPage() {
             />
           </div>
           
-          <div className="flex items-center gap-2 overflow-x-auto no-scrollbar pb-2 md:pb-0 md:col-span-2">
-            {SERVICE_CATEGORIES.map((cat) => (
-              <Button
-                key={cat.value}
-                variant={serviceFilter === cat.value ? "default" : "outline"}
-                className={cn(
-                  "rounded-full h-11 px-6 font-bold text-xs shrink-0 transition-all border-none shadow-sm",
-                  serviceFilter === cat.value ? "bg-primary text-white" : "bg-white text-slate-600 hover:bg-slate-50"
-                )}
-                onClick={() => setServiceFilter(cat.value)}
-              >
-                {cat.label}
-              </Button>
-            ))}
+          <div className="md:col-span-2">
+            <Select value={serviceFilter} onValueChange={setServiceFilter}>
+              <SelectTrigger className="w-full h-14 rounded-2xl bg-white border-none shadow-sm font-bold text-slate-700">
+                <div className="flex items-center gap-2">
+                  <Filter className="h-4 w-4 text-primary" />
+                  <SelectValue placeholder="Select Category" />
+                </div>
+              </SelectTrigger>
+              <SelectContent className="rounded-2xl border-none shadow-xl">
+                {SERVICE_CATEGORIES.map((cat) => (
+                  <SelectItem key={cat.value} value={cat.value} className="font-bold py-3">
+                    <div className="flex items-center gap-2">
+                      <cat.icon className={cn("h-4 w-4", serviceFilter === cat.value ? "text-primary" : "text-slate-400")} />
+                      {cat.label}
+                    </div>
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
         </div>
       </section>
