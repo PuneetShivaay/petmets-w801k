@@ -5,7 +5,7 @@ import * as React from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { AppLogo } from "@/components/icons";
-import { navItems } from "@/config/nav";
+import { navItems, quickLinks } from "@/config/nav";
 import { cn } from "@/lib/utils";
 import {
   SidebarProvider, 
@@ -20,11 +20,14 @@ import {
   useSidebar,        
 } from "@/components/ui/sidebar";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { LogOut } from "lucide-react";
+import { LogOut, Bell, Search, MapPin, User, ChevronDown } from "lucide-react";
 import { useLoading } from "@/contexts/loading-context";
 import { useAuth } from "@/contexts/auth-context";
 import { useToast } from "@/hooks/use-toast";
 import { BottomNav } from "./bottom-nav";
+import { Badge } from "@/components/ui/badge";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Input } from "@/components/ui/input";
 
 function MainLayoutChild({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -56,82 +59,131 @@ function MainLayoutChild({ children }: { children: React.ReactNode }) {
   const filteredNavItems = navItems.filter(item => {
     if (!user) return item.href === '/login';
     if (item.href === '/login') return false;
-    
-    // Filter based on roles
     if (item.roles && userRole) {
       return item.roles.includes(userRole);
     }
-    
     return true; 
   });
   
-  const defaultTitle = navItems.find(item => item.href === pathname)?.title;
   const isDynamicPage = pathname.startsWith('/chats/') || pathname.startsWith('/profile/');
-  
-  // Header is hidden on mobile if it's the dashboard (custom mobile header there)
-  // or dynamic pages.
   const isDashboard = pathname === '/';
   const headerIsVisible = !isDynamicPage && (!isMobile || !isDashboard);
 
   return (
     <>
-      <Sidebar className="border-r border-sidebar-border hidden md:flex">
-        <SidebarHeader className="p-4">
+      <Sidebar className="border-r border-sidebar-border hidden md:flex bg-white">
+        <SidebarHeader className="p-6">
           <Link href="/" onClick={handleLinkClick} className="block">
             <AppLogo />
           </Link>
         </SidebarHeader>
         <SidebarContent>
           <ScrollArea className="flex-grow">
-            <SidebarMenu className="p-2 pt-0 sm:p-4 sm:pt-0">
+            <SidebarMenu className="px-3 gap-1">
               {filteredNavItems.map((item) => (
                 <SidebarMenuItem key={item.href}>
                   <Link href={item.href} passHref legacyBehavior>
                     <SidebarMenuButton
                       asChild={item.href.startsWith("/")}
                       className={cn(
-                        "w-full justify-start",
-                        pathname === item.href && "bg-sidebar-primary text-sidebar-primary-foreground",
-                        pathname !== item.href && "hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
-                        item.disabled && "cursor-not-allowed opacity-80"
+                        "w-full justify-start rounded-xl px-4 py-6",
+                        pathname === item.href ? "bg-primary text-white" : "text-slate-600 hover:bg-slate-50"
                       )}
-                      disabled={item.disabled}
-                      target={item.external ? "_blank" : undefined}
-                      rel={item.external ? "noopener noreferrer" : undefined}
-                      tooltip={item.title}
                       onClick={item.href.startsWith("/") ? handleLinkClick : undefined}
                     >
-                      <a>
-                        <item.icon className="mr-2 h-5 w-5" />
-                        <span className="text-sidebar-foreground">{item.title}</span>
-                      </a>
+                      <div className="flex items-center w-full">
+                        <item.icon className={cn("mr-3 h-5 w-5", pathname === item.href ? "text-white" : "text-slate-400")} />
+                        <span className="font-medium">{item.title}</span>
+                        {item.badge && (
+                          <Badge className="ml-auto bg-primary text-white border-none h-5 w-5 flex items-center justify-center p-0 text-[10px]">
+                            {item.badge}
+                          </Badge>
+                        )}
+                      </div>
                     </SidebarMenuButton>
                   </Link>
+                </SidebarMenuItem>
+              ))}
+
+              <div className="mt-8 px-4 mb-2">
+                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Quick Links</span>
+              </div>
+
+              {quickLinks.map((item) => (
+                <SidebarMenuItem key={item.title}>
+                  <SidebarMenuButton
+                    className="w-full justify-start rounded-xl px-4 py-2 text-slate-500 hover:bg-slate-50"
+                  >
+                    <div className="flex items-center">
+                      <item.icon className="mr-3 h-4 w-4 text-slate-400" />
+                      <span className="text-sm">{item.title}</span>
+                    </div>
+                  </SidebarMenuButton>
                 </SidebarMenuItem>
               ))}
             </SidebarMenu>
           </ScrollArea>
         </SidebarContent>
-        {user && (
-          <SidebarFooter className="p-4 border-t border-sidebar-border">
-             <SidebarMenuButton
-                className="w-full justify-start"
-                onClick={handleLogoutClick}
-                tooltip="Logout"
-            >
-                <LogOut className="mr-2 h-5 w-5" />
-                <span className="text-sidebar-foreground">Logout</span>
-            </SidebarMenuButton>
-          </SidebarFooter>
-        )}
+        <SidebarFooter className="p-6 mt-auto">
+            <div className="space-y-4">
+              <div className="text-[10px] font-bold text-slate-600 italic">
+                Happy Pets<br/>Happy People<br/>Better World 🧡
+              </div>
+              {user && (
+                <SidebarMenuButton
+                  className="w-full justify-start text-slate-400 hover:text-destructive"
+                  onClick={handleLogoutClick}
+                >
+                  <LogOut className="mr-2 h-4 w-4" />
+                  <span className="text-xs">Logout</span>
+                </SidebarMenuButton>
+              )}
+            </div>
+        </SidebarFooter>
       </Sidebar>
-      <div className="flex-1 flex flex-col">
-        {headerIsVisible && (
+
+      <div className="flex-1 flex flex-col bg-[#F8FAFC]">
+        {/* New Global Desktop Header */}
+        {!isMobile && (
+          <header className="sticky top-0 z-40 flex h-20 items-center justify-between gap-6 border-b bg-white px-8">
+            <div className="flex flex-1 items-center max-w-2xl relative">
+              <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400" />
+              <Input 
+                className="w-full pl-12 bg-slate-50 border-none rounded-xl h-11 focus-visible:ring-1 focus-visible:ring-primary/20" 
+                placeholder="Search for services, products, vets, trainers, or anything..."
+              />
+            </div>
+            
+            <div className="flex items-center gap-6">
+              <div className="flex items-center gap-2 px-3 py-2 rounded-xl hover:bg-slate-50 cursor-pointer text-slate-600">
+                <MapPin className="h-5 w-5 text-primary" />
+                <span className="text-sm font-semibold">Bengaluru</span>
+                <ChevronDown className="h-4 w-4 text-slate-400" />
+              </div>
+
+              <div className="relative cursor-pointer hover:bg-slate-50 p-2 rounded-xl transition-colors">
+                <Bell className="h-6 w-6 text-slate-600" />
+                <Badge className="absolute top-1 right-1 h-4 w-4 bg-primary text-white border-none flex items-center justify-center p-0 text-[8px]">
+                  3
+                </Badge>
+              </div>
+
+              <div className="flex items-center gap-3 pl-4 border-l">
+                <Avatar className="h-10 w-10 border-2 border-slate-50 shadow-sm">
+                  <AvatarImage src={user?.photoURL || "/images/logo.png"} />
+                  <AvatarFallback><User /></AvatarFallback>
+                </Avatar>
+              </div>
+            </div>
+          </header>
+        )}
+
+        {headerIsVisible && isMobile && (
             <header className="sticky top-0 z-10 flex h-16 items-center justify-between gap-4 border-b bg-background px-4">
                 <div className="flex w-full items-center gap-2">
                     <SidebarTrigger />
                     <h1 className="font-headline text-lg sm:text-xl font-semibold truncate">
-                        {defaultTitle}
+                        {navItems.find(item => item.href === pathname)?.title}
                     </h1>
                 </div>
             </header>

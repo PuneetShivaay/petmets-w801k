@@ -18,6 +18,9 @@ import {
   Heart,
   Briefcase,
   Search,
+  Wallet,
+  HelpCircle,
+  Settings,
 } from 'lucide-react';
 
 export interface NavItem {
@@ -28,26 +31,21 @@ export interface NavItem {
   disabled?: boolean;
   external?: boolean;
   roles?: ('owner' | 'provider')[];
+  badge?: number;
 }
 
 export const navItems: NavItem[] = [
   {
-    title: 'Dashboard',
+    title: 'Home',
     href: '/',
     icon: LayoutDashboard,
     roles: ['owner', 'provider'],
   },
   {
-    title: 'Match Your Pet',
-    href: '/match',
-    icon: Heart,
+    title: 'My Pets',
+    href: '/pet-profile',
+    icon: Dog,
     roles: ['owner'],
-  },
-  {
-    title: 'Service Providers',
-    href: '/providers',
-    icon: Search,
-    roles: ['owner', 'provider'],
   },
   {
     title: 'Bookings',
@@ -56,38 +54,52 @@ export const navItems: NavItem[] = [
     roles: ['owner', 'provider'],
   },
   {
-    title: 'Pet Chats',
-    href: '/chats',
-    icon: MessageSquare,
-    roles: ['owner', 'provider'],
-  },
-  {
-    title: 'Pet Profile',
-    href: '/pet-profile',
-    icon: User,
-    roles: ['owner'],
-  },
-  {
-    title: 'My Business Listing',
-    href: '/business-profile',
-    icon: Briefcase,
-    roles: ['provider'],
-  },
-  {
-    title: 'Digital Records',
+    title: 'Pet Reports',
     href: '/records',
     icon: FileText,
     roles: ['owner'],
   },
   {
-    title: 'Adoption',
-    href: '/adoption',
-    icon: Dog,
-    roles: ['owner', 'provider'],
+    title: 'Community',
+    href: '/match',
+    icon: Users,
+    roles: ['owner'],
   },
   {
-    title: 'Login / Sign Up',
-    href: '/login',
-    icon: LogIn,
+    title: 'Messages',
+    href: '/chats',
+    icon: MessageSquare,
+    roles: ['owner', 'provider'],
+    badge: 3,
+  },
+  {
+    title: 'Wallet & Offers',
+    href: '#',
+    icon: Wallet,
+    roles: ['owner'],
+  },
+  {
+    title: 'Profile',
+    href: '/pet-profile',
+    icon: User,
+    roles: ['owner', 'provider'],
+  },
+];
+
+export const quickLinks: NavItem[] = [
+  {
+    title: 'Support',
+    href: '#',
+    icon: HelpCircle,
+  },
+  {
+    title: 'Help Center',
+    href: '#',
+    icon: HelpCircle,
+  },
+  {
+    title: 'Settings',
+    href: '#',
+    icon: Settings,
   },
 ];
