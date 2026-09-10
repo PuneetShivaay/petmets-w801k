@@ -1,26 +1,19 @@
 
 import type { LucideIcon } from 'lucide-react';
 import {
-  Trees,
-  Users,
   Dog,
-  GraduationCap,
-  Scissors,
-  Hotel,
   FileText,
   CalendarDays,
   LayoutDashboard,
-  LogIn,
   User,
   MessageSquare,
-  Bell,
-  Camera,
+  Search,
   Heart,
   Briefcase,
-  Search,
-  Wallet,
   HelpCircle,
   Settings,
+  Users,
+  Wallet,
 } from 'lucide-react';
 
 export interface NavItem {
@@ -36,15 +29,33 @@ export interface NavItem {
 
 export const navItems: NavItem[] = [
   {
-    title: 'Home',
+    title: 'Dashboard',
     href: '/',
     icon: LayoutDashboard,
     roles: ['owner', 'provider'],
   },
   {
-    title: 'My Pets',
+    title: 'Pet Profile',
     href: '/pet-profile',
     icon: Dog,
+    roles: ['owner'],
+  },
+  {
+    title: 'Service Providers',
+    href: '/providers',
+    icon: Search,
+    roles: ['owner', 'provider'],
+  },
+  {
+    title: 'Adoption',
+    href: '/adoption',
+    icon: Heart,
+    roles: ['owner'],
+  },
+  {
+    title: 'Match Your Pet',
+    href: '/match',
+    icon: Users,
     roles: ['owner'],
   },
   {
@@ -60,17 +71,17 @@ export const navItems: NavItem[] = [
     roles: ['owner'],
   },
   {
-    title: 'Community',
-    href: '/match',
-    icon: Users,
-    roles: ['owner'],
-  },
-  {
-    title: 'Messages',
+    title: 'Pet Chats',
     href: '/chats',
     icon: MessageSquare,
     roles: ['owner', 'provider'],
     badge: 3,
+  },
+  {
+    title: 'My Business Listing',
+    href: '/business-profile',
+    icon: Briefcase,
+    roles: ['provider'],
   },
   {
     title: 'Wallet & Offers',
