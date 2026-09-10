@@ -2,7 +2,7 @@
 {
   "hero": {
     "dashboard": {
-      "url": "https://picsum.photos/seed/hero-pet/1200/500",
+      "url": "https://picsum.photos/seed/dashboard-hero/1200/500",
       "hint": "happy dog cat",
       "width": 1200,
       "height": 500
@@ -10,22 +10,22 @@
   },
   "promos": {
     "promo1": {
-      "url": "https://picsum.photos/seed/promo1/200/200",
+      "url": "https://picsum.photos/seed/promo-healthy/400/400",
       "hint": "healthy dog",
-      "width": 200,
-      "height": 200
+      "width": 400,
+      "height": 400
     },
     "promo2": {
-      "url": "https://picsum.photos/seed/promo2/200/200",
-      "hint": "cute pets",
-      "width": 200,
-      "height": 200
+      "url": "https://picsum.photos/seed/promo-love/400/400",
+      "hint": "cute puppy",
+      "width": 400,
+      "height": 400
     },
     "promo3": {
-      "url": "https://picsum.photos/seed/promo3/200/200",
-      "hint": "pet reports",
-      "width": 200,
-      "height": 200
+      "url": "https://picsum.photos/seed/promo-reports/400/400",
+      "hint": "pet health chart",
+      "width": 400,
+      "height": 400
     }
   },
   "sidebar": {
@@ -36,10 +36,10 @@
       "height": 100
     },
     "community": {
-      "url": "https://picsum.photos/seed/comm/200/200",
-      "hint": "pet owners",
-      "width": 200,
-      "height": 200
+      "url": "https://picsum.photos/seed/comm/300/300",
+      "hint": "pet community",
+      "width": 300,
+      "height": 300
     }
   },
   "playzone": {
