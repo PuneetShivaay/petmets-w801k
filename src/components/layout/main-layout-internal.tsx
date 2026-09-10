@@ -1,8 +1,7 @@
-
 "use client"; 
 
 import * as React from "react";
-import Link from "next/link";
+import Link from "next/navigation";
 import { usePathname, useRouter } from "next/navigation";
 import { AppLogo } from "@/components/icons";
 import { navItems, quickLinks } from "@/config/nav";
@@ -102,31 +101,31 @@ function MainLayoutChild({ children }: { children: React.ReactNode }) {
   return (
     <>
       <Sidebar className="border-r border-sidebar-border hidden md:flex bg-white" collapsible="icon">
-        <SidebarHeader className="p-6 md:p-8 flex flex-row items-center justify-between">
+        <SidebarHeader className={cn("p-4 flex flex-row items-center justify-between", state === 'collapsed' && "justify-center p-2")}>
           <Link href="/" onClick={handleLinkClick} className="block group-data-[state=collapsed]:hidden">
             <AppLogo />
           </Link>
           <SidebarTrigger className={cn(state === 'collapsed' ? 'mx-auto' : 'ml-auto')} />
         </SidebarHeader>
-        <SidebarContent className="px-4">
-          <ScrollArea className="flex-grow">
-            <SidebarMenu className="gap-2">
+        <SidebarContent className={cn("transition-all duration-300", state === 'collapsed' ? "px-1" : "px-4")}>
+          <ScrollArea className="flex-grow w-full">
+            <SidebarMenu className={cn("gap-2", state === 'collapsed' && "items-center")}>
               {filteredNavItems.map((item) => (
-                <SidebarMenuItem key={item.href}>
+                <SidebarMenuItem key={item.href} className={cn(state === 'collapsed' && "flex justify-center w-full")}>
                   <Link href={item.href} passHref legacyBehavior>
                     <SidebarMenuButton
                       asChild={item.href.startsWith("/")}
                       isActive={pathname === item.href}
                       tooltip={item.title}
                       className={cn(
-                        "w-full justify-start rounded-xl transition-all",
+                        "w-full transition-all duration-300 rounded-xl",
                         pathname === item.href ? "bg-primary text-white hover:bg-primary/90 shadow-md" : "text-slate-600 hover:bg-slate-50",
-                        state === 'collapsed' ? 'px-0 justify-center' : 'px-4 py-6'
+                        state === 'collapsed' ? 'h-11 w-11 p-0 justify-center mx-auto' : 'px-4 py-6 justify-start'
                       )}
                       onClick={item.href.startsWith("/") ? handleLinkClick : undefined}
                     >
-                      <div className={cn("flex items-center w-full", state === 'collapsed' && 'justify-center')}>
-                        <item.icon className={cn("h-5 w-5", pathname === item.href ? "text-white" : "text-slate-400", state === 'expanded' && 'mr-4')} />
+                      <div className={cn("flex items-center w-full", state === 'collapsed' ? 'justify-center' : 'justify-start')}>
+                        <item.icon className={cn("h-5 w-5 shrink-0", pathname === item.href ? "text-white" : "text-slate-400", state === 'expanded' && 'mr-4')} />
                         <span className="font-bold text-sm tracking-tight group-data-[state=collapsed]:hidden">{item.title}</span>
                         {item.badge && state === 'expanded' && (
                           <Badge className="ml-auto bg-primary text-white border-none h-5 w-5 flex items-center justify-center p-0 text-[10px] rounded-full">
@@ -144,12 +143,15 @@ function MainLayoutChild({ children }: { children: React.ReactNode }) {
               </div>
 
               {quickLinks.map((item) => (
-                <SidebarMenuItem key={item.title}>
+                <SidebarMenuItem key={item.title} className={cn(state === 'collapsed' && "flex justify-center w-full")}>
                   <SidebarMenuButton
                     tooltip={item.title}
-                    className="w-full justify-start rounded-xl text-slate-500 hover:bg-slate-50"
+                    className={cn(
+                      "w-full transition-all duration-300 rounded-xl text-slate-500 hover:bg-slate-50",
+                      state === 'collapsed' ? 'h-11 w-11 p-0 justify-center mx-auto' : 'px-4'
+                    )}
                   >
-                    <div className={cn("flex items-center", state === 'collapsed' && 'justify-center w-full')}>
+                    <div className={cn("flex items-center", state === 'collapsed' ? 'justify-center' : 'justify-start')}>
                       <item.icon className={cn("h-4 w-4 text-slate-400", state === 'expanded' && 'mr-4')} />
                       <span className="text-sm font-medium group-data-[state=collapsed]:hidden">{item.title}</span>
                     </div>
@@ -159,9 +161,9 @@ function MainLayoutChild({ children }: { children: React.ReactNode }) {
             </SidebarMenu>
           </ScrollArea>
         </SidebarContent>
-        <SidebarFooter className="p-8 mt-auto">
-            <div className="space-y-8">
-              <div className="relative p-6 rounded-[2rem] bg-slate-50/80 overflow-hidden border border-slate-100 group-data-[state=collapsed]:hidden">
+        <SidebarFooter className={cn("mt-auto", state === 'collapsed' ? "p-2 items-center" : "p-8")}>
+            <div className="space-y-6 w-full flex flex-col items-center">
+              <div className="relative p-6 rounded-[2rem] bg-slate-50/80 overflow-hidden border border-slate-100 group-data-[state=collapsed]:hidden w-full">
                 <div className="relative z-10 text-[11px] font-bold text-slate-600 italic leading-snug">
                   Happy Pets<br/>Happy People<br/>Better World 🧡
                 </div>
@@ -177,11 +179,16 @@ function MainLayoutChild({ children }: { children: React.ReactNode }) {
               {user && (
                 <SidebarMenuButton
                   tooltip="Logout"
-                  className="w-full justify-start text-slate-400 hover:text-destructive px-4"
+                  className={cn(
+                    "justify-start text-slate-400 hover:text-destructive transition-all duration-300",
+                    state === 'collapsed' ? 'h-10 w-10 p-0 justify-center rounded-xl' : 'w-full px-4'
+                  )}
                   onClick={handleLogoutClick}
                 >
-                  <LogOut className={cn("h-4 w-4", state === 'expanded' && 'mr-3')} />
-                  <span className="text-xs font-bold group-data-[state=collapsed]:hidden">Logout</span>
+                  <div className="flex items-center justify-center">
+                    <LogOut className={cn("h-4 w-4", state === 'expanded' && 'mr-3')} />
+                    <span className="text-xs font-bold group-data-[state=collapsed]:hidden">Logout</span>
+                  </div>
                 </SidebarMenuButton>
               )}
             </div>
