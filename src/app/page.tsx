@@ -3,6 +3,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/auth-context";
 import { collection, query, where, onSnapshot, doc, getDocs, limit, getDoc } from "firebase/firestore";
 import { db } from "@/lib/firebase";
@@ -72,12 +73,14 @@ const SERVICE_GRID = [
 
 export default function DashboardPage() {
   const { user, userRole } = useAuth();
+  const router = useRouter();
   
   // Data State
   const [petData, setPetData] = useState<any>(null);
   const [userData, setUserData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [localProviders, setLocalProviders] = useState<any[]>([]);
+  const [heroSearch, setHeroSearch] = useState("");
 
   useEffect(() => {
     if (!user) return;
@@ -116,6 +119,13 @@ export default function DashboardPage() {
     }
   }, [user, userRole]);
 
+  const handleHeroSearch = (e?: React.FormEvent) => {
+    e?.preventDefault();
+    if (heroSearch.trim()) {
+      router.push(`/providers?search=${encodeURIComponent(heroSearch.trim())}`);
+    }
+  };
+
   if (loading) {
     return (
       <div className="space-y-6 p-6">
@@ -136,8 +146,8 @@ export default function DashboardPage() {
           {/* Main Dashboard Feed */}
           <div className="lg:col-span-8 space-y-8 md:space-y-10">
             
-            {/* Hero Section - Improved Mobile Responsiveness */}
-            <section className="relative rounded-[2rem] md:rounded-[2.5rem] overflow-hidden aspect-[1.5/1] sm:aspect-[2.4/1] shadow-lg group">
+            {/* Hero Section */}
+            <section className="relative rounded-[2rem] md:rounded-[2.5rem] overflow-hidden aspect-[1.3/1] sm:aspect-[2.4/1] shadow-lg group">
               <Image 
                 src={HERO_SLIDES[0].image} 
                 alt="Pet Happiness" 
@@ -146,26 +156,28 @@ export default function DashboardPage() {
                 data-ai-hint="happy dog and cat"
               />
               <div className="absolute inset-0 bg-gradient-to-r from-black/60 via-black/30 to-transparent flex flex-col justify-center px-6 sm:px-12 text-white">
-                <h1 className="text-xl sm:text-3xl md:text-4xl font-bold font-headline max-w-xs sm:max-w-md leading-tight">
+                <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold font-headline max-w-xs sm:max-w-md leading-tight">
                   {HERO_SLIDES[0].title}
                 </h1>
-                <p className="mt-2 sm:mt-4 text-[9px] sm:text-xs opacity-90 max-w-[200px] sm:max-w-sm">
+                <p className="mt-2 sm:mt-4 text-xs sm:text-sm opacity-90 max-w-[200px] sm:max-w-sm">
                   {HERO_SLIDES[0].description}
                 </p>
                 
-                <div className="mt-4 sm:mt-8 flex items-center bg-white rounded-full p-1 sm:p-1.5 shadow-xl w-full max-w-sm sm:max-w-xl">
+                <form onSubmit={handleHeroSearch} className="mt-6 sm:mt-8 flex items-center bg-white rounded-full p-1.5 shadow-xl w-full max-w-sm sm:max-w-xl">
                   <div className="flex flex-1 items-center px-2 sm:px-4">
-                    <Search className="h-4 w-4 sm:h-5 sm:w-5 text-slate-400 mr-1 sm:mr-2" />
+                    <Search className="h-4 w-4 sm:h-5 sm:w-5 text-slate-400 mr-2" />
                     <input 
                       type="text" 
+                      value={heroSearch}
+                      onChange={(e) => setHeroSearch(e.target.value)}
                       placeholder="Search for services..."
-                      className="w-full text-slate-800 text-[9px] sm:text-[10px] py-1 sm:py-2 bg-transparent border-none focus:ring-0"
+                      className="w-full text-slate-800 text-[10px] sm:text-sm py-2 bg-transparent border-none focus:ring-0"
                     />
                   </div>
-                  <Button className="bg-primary hover:bg-primary/90 rounded-full px-4 sm:px-8 font-bold h-7 sm:h-9 text-[9px] sm:text-[10px] text-white">
+                  <Button type="submit" className="bg-primary hover:bg-primary/90 rounded-full px-6 sm:px-8 font-bold h-8 sm:h-10 text-[10px] sm:text-sm text-white">
                     Search
                   </Button>
-                </div>
+                </form>
               </div>
             </section>
 
@@ -173,11 +185,11 @@ export default function DashboardPage() {
             <section className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-4">
               {SERVICE_GRID.map((item, i) => (
                 <Link key={i} href={item.href} className="group flex flex-col items-center">
-                  <div className={cn("h-12 w-12 sm:h-16 sm:w-16 rounded-2xl sm:rounded-3xl flex items-center justify-center transition-all duration-300 group-hover:scale-105 group-hover:shadow-md mb-2 sm:mb-3", item.bg, item.color)}>
-                    <item.icon className="h-6 w-6 sm:h-8 sm:w-8" />
+                  <div className={cn("h-14 w-14 sm:h-16 sm:w-16 rounded-2xl sm:rounded-3xl flex items-center justify-center transition-all duration-300 group-hover:scale-105 group-hover:shadow-md mb-2 sm:mb-3", item.bg, item.color)}>
+                    <item.icon className="h-7 w-7 sm:h-8 sm:w-8" />
                   </div>
-                  <h4 className="text-[9px] sm:text-[10px] font-bold text-slate-800 text-center uppercase tracking-wider">{item.title}</h4>
-                  <p className="text-[8px] sm:text-[9px] text-slate-400 text-center mt-1 leading-tight hidden sm:block">{item.desc}</p>
+                  <h4 className="text-[10px] font-bold text-slate-800 text-center uppercase tracking-wider">{item.title}</h4>
+                  <p className="text-[9px] text-slate-400 text-center mt-1 leading-tight hidden sm:block">{item.desc}</p>
                 </Link>
               ))}
             </section>
@@ -186,19 +198,23 @@ export default function DashboardPage() {
             <section className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <Card className="bg-[#466935] text-white border-none rounded-[2rem] overflow-hidden p-6 relative group cursor-pointer shadow-md">
                 <div className="relative z-10 space-y-4">
-                  <h3 className="text-base font-bold font-headline leading-tight">Healthy Pets<br/>Happier Lives</h3>
-                  <p className="text-[9px] opacity-80 max-w-[150px]">Book grooming, training, boarding and more — all in one place.</p>
-                  <Button variant="secondary" size="sm" className="rounded-full font-bold h-8 text-[9px] bg-white text-[#466935]">Explore Services <ArrowRight className="ml-2 h-3 w-3" /></Button>
+                  <h3 className="text-base font-bold font-headline leading-tight text-white">Healthy Pets<br/>Happier Lives</h3>
+                  <p className="text-[10px] opacity-80 max-w-[150px]">Book grooming, training, boarding and more — all in one place.</p>
+                  <Button variant="secondary" size="sm" className="rounded-full font-bold h-8 text-[10px] bg-white text-[#466935]">Explore Services <ArrowRight className="ml-2 h-3 w-3" /></Button>
                 </div>
-                <Image src="https://picsum.photos/seed/promo1/200/200" alt="Dog" width={100} height={100} className="absolute bottom-0 right-0 object-cover opacity-60 group-hover:scale-110 transition-transform" />
+                <div className="absolute bottom-0 right-0 w-32 h-32 opacity-60 group-hover:scale-110 transition-transform">
+                  <Image src="https://picsum.photos/seed/promo1/200/200" alt="Dog" fill className="object-contain object-right-bottom" />
+                </div>
               </Card>
 
               <Card className="bg-[#F8D2E2] text-[#802D52] border-none rounded-[2rem] overflow-hidden p-6 relative group cursor-pointer shadow-md">
                 <div className="relative z-10 space-y-4">
                    <h3 className="text-base font-bold font-headline leading-tight">Because<br/>Every Pet Deserves Love</h3>
-                  <Button size="sm" className="bg-[#802D52] text-white rounded-full font-bold h-8 text-[9px]">Explore Pet Store <ArrowRight className="ml-2 h-3 w-3" /></Button>
+                  <Button size="sm" className="bg-[#802D52] text-white rounded-full font-bold h-8 text-[10px]">Explore Pet Store <ArrowRight className="ml-2 h-3 w-3" /></Button>
                 </div>
-                <Image src="https://picsum.photos/seed/promo2/200/200" alt="Pets" width={100} height={100} className="absolute bottom-0 right-0 object-cover opacity-60 group-hover:scale-110 transition-transform" />
+                <div className="absolute bottom-0 right-0 w-32 h-32 opacity-60 group-hover:scale-110 transition-transform">
+                  <Image src="https://picsum.photos/seed/promo2/200/200" alt="Pets" fill className="object-contain object-right-bottom" />
+                </div>
               </Card>
 
               <Card className="bg-[#0D2B2B] text-white border-none rounded-[2rem] overflow-hidden p-6 relative group cursor-pointer shadow-md">
@@ -207,17 +223,19 @@ export default function DashboardPage() {
                     <PawPrintIcon className="h-4 w-4 text-primary" />
                     <h3 className="text-base font-bold font-headline text-white">Pet Reports</h3>
                   </div>
-                  <p className="text-[9px] opacity-80">Track health, activity, habits & more.</p>
-                  <Button variant="secondary" size="sm" className="rounded-full font-bold h-8 text-[9px] bg-white text-[#0D2B2B]">View Reports <ArrowRight className="ml-2 h-3 w-3" /></Button>
+                  <p className="text-[10px] opacity-80">Track health, activity, habits & more.</p>
+                  <Button variant="secondary" size="sm" className="rounded-full font-bold h-8 text-[10px] bg-white text-[#0D2B2B]">View Reports <ArrowRight className="ml-2 h-3 w-3" /></Button>
                 </div>
-                <Image src="https://picsum.photos/seed/promo3/200/200" alt="Reports" width={100} height={100} className="absolute bottom-0 right-0 object-cover opacity-60 group-hover:scale-110 transition-transform" />
+                <div className="absolute bottom-0 right-0 w-32 h-32 opacity-60 group-hover:scale-110 transition-transform">
+                  <Image src="https://picsum.photos/seed/promo3/200/200" alt="Reports" fill className="object-contain object-right-bottom" />
+                </div>
               </Card>
             </section>
 
             {/* Featured Services */}
             <section className="space-y-4">
               <div className="flex items-center justify-between">
-                <h2 className="text-lg font-bold font-headline flex items-center gap-2">
+                <h2 className="text-lg font-bold font-headline flex items-center gap-2 text-slate-900">
                    Featured Services
                 </h2>
                 <Link href="/providers" className="text-[10px] font-bold text-primary flex items-center gap-1 uppercase tracking-widest">
@@ -240,7 +258,7 @@ export default function DashboardPage() {
                           </div>
                           <ChevronRight className="h-3 w-3 text-slate-300" />
                         </div>
-                        <p className="text-[9px] font-bold text-primary mt-1">From ₹{provider.price || '499'}</p>
+                        <p className="text-[10px] font-bold text-primary mt-1">From ₹{provider.price || '499'}</p>
                       </CardContent>
                     </Card>
                   </Link>
@@ -251,18 +269,18 @@ export default function DashboardPage() {
             {/* Trust Footer */}
             <section className="grid grid-cols-2 md:grid-cols-4 gap-4 pt-4 border-t border-slate-100">
                {[
-                 { label: 'Trusted Vendors', sub: 'Verified & background checked', icon: ShieldCheck },
-                 { label: 'Secure Payments', sub: 'Multiple payment options', icon: CreditCard },
-                 { label: '24/7 Support', sub: "We're here for you", icon: Headphones },
-                 { label: 'Happy Pets', sub: 'Thousands of pets served', icon: UsersIcon },
+                 { label: 'Trusted Vendors', sub: 'Verified & checked', icon: ShieldCheck },
+                 { label: 'Secure Payments', sub: 'Multiple options', icon: CreditCard },
+                 { label: '24/7 Support', sub: "We're here", icon: Headphones },
+                 { label: 'Happy Pets', sub: 'Thousands served', icon: UsersIcon },
                ].map((item, i) => (
                  <div key={i} className="flex items-center gap-3">
                     <div className="h-8 w-8 rounded-lg bg-slate-50 flex items-center justify-center text-slate-400">
                        <item.icon className="h-4 w-4" />
                     </div>
                     <div>
-                       <p className="text-[9px] font-bold text-slate-800">{item.label}</p>
-                       <p className="text-[7px] text-slate-400">{item.sub}</p>
+                       <p className="text-[10px] font-bold text-slate-800">{item.label}</p>
+                       <p className="text-[8px] text-slate-400">{item.sub}</p>
                     </div>
                  </div>
                ))}
@@ -277,7 +295,7 @@ export default function DashboardPage() {
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-4">
                   <Avatar className="h-12 w-12 shadow-md">
-                    <AvatarImage src={userAvatar} />
+                    <AvatarImage src={userAvatar} className="object-cover" />
                     <AvatarFallback><UserIcon /></AvatarFallback>
                   </Avatar>
                   <div>
@@ -292,7 +310,7 @@ export default function DashboardPage() {
               <div className="p-4 rounded-[1.5rem] border border-orange-100 bg-orange-50/30">
                  <div className="flex items-center gap-4">
                     <Avatar className="h-12 w-12 ring-4 ring-white shadow-sm">
-                      <AvatarImage src={petData?.avatar || "https://picsum.photos/seed/buddy/100/100"} />
+                      <AvatarImage src={petData?.avatar || "https://picsum.photos/seed/buddy/100/100"} className="object-cover" />
                       <AvatarFallback>B</AvatarFallback>
                     </Avatar>
                     <div className="flex-1 min-w-0">
@@ -342,7 +360,7 @@ export default function DashboardPage() {
                  ].map((item, i) => (
                    <div key={i} className="flex items-center gap-3 group cursor-pointer">
                       <Avatar className="h-10 w-10 rounded-xl">
-                        <AvatarImage src={item.img} />
+                        <AvatarImage src={item.img} className="object-cover" />
                         <AvatarFallback>P</AvatarFallback>
                       </Avatar>
                       <div className="flex-1 min-w-0">
@@ -361,13 +379,15 @@ export default function DashboardPage() {
             {/* Community & Promotion */}
             <Card className="bg-[#0D2B2B] text-white border-none rounded-[2rem] overflow-hidden p-6 relative group shadow-lg">
                <div className="relative z-10 space-y-4">
-                  <h3 className="text-base font-bold leading-tight font-headline">Join Our PetMets Community</h3>
+                  <h3 className="text-base font-bold leading-tight font-headline text-white">Join Our PetMets Community</h3>
                   <p className="text-[9px] opacity-70 leading-relaxed max-w-[180px]">Share stories, get expert tips, and find pet parents near you!</p>
                   <Button variant="outline" size="sm" className="rounded-full font-bold flex items-center gap-2 h-9 text-[10px] px-6 bg-white text-[#0D2B2B] hover:bg-white/90 border-none">
                      <UsersIcon className="h-3 w-3" /> Join Now <ArrowRight className="h-3 w-3" />
                   </Button>
                </div>
-               <Image src="https://picsum.photos/seed/comm/200/200" alt="Pets" width={100} height={100} className="absolute bottom-0 right-0 opacity-30 group-hover:scale-105 transition-transform" />
+               <div className="absolute bottom-0 right-0 w-32 h-32 opacity-30 group-hover:scale-105 transition-transform">
+                 <Image src="https://picsum.photos/seed/comm/200/200" alt="Pets" fill className="object-contain object-right-bottom" />
+               </div>
             </Card>
 
           </div>

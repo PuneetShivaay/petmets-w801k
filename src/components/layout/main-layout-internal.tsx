@@ -38,8 +38,10 @@ function MainLayoutChild({ children }: { children: React.ReactNode }) {
   const { showLoading } = useLoading();
   const { user, userRole, userSignOut } = useAuth();
   const { toast } = useToast();
+  const router = useRouter();
 
   const [userData, setUserData] = React.useState<any>(null);
+  const [headerSearch, setHeaderSearch] = React.useState("");
 
   React.useEffect(() => {
     if (!user) {
@@ -72,6 +74,13 @@ function MainLayoutChild({ children }: { children: React.ReactNode }) {
     } catch (error) {
         console.error("Logout failed", error);
         toast({ title: "Logout Failed", description: (error as Error).message, variant: "destructive" });
+    }
+  };
+
+  const handleHeaderSearch = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' && headerSearch.trim()) {
+      router.push(`/providers?search=${encodeURIComponent(headerSearch.trim())}`);
+      setHeaderSearch("");
     }
   };
 
@@ -152,13 +161,14 @@ function MainLayoutChild({ children }: { children: React.ReactNode }) {
                 <div className="relative z-10 text-[11px] font-bold text-slate-600 italic leading-snug">
                   Happy Pets<br/>Happy People<br/>Better World 🧡
                 </div>
-                <Image 
-                  src="https://picsum.photos/seed/footer-dog/100/100" 
-                  alt="Pet" 
-                  width={80} 
-                  height={80} 
-                  className="absolute -bottom-2 -left-4 opacity-40 rotate-12"
-                />
+                <div className="absolute -bottom-2 -left-4 w-20 h-20 opacity-40 rotate-12">
+                  <Image 
+                    src="https://picsum.photos/seed/footer-dog/100/100" 
+                    alt="Pet" 
+                    fill
+                    className="object-contain"
+                  />
+                </div>
               </div>
               {user && (
                 <SidebarMenuButton
@@ -182,6 +192,9 @@ function MainLayoutChild({ children }: { children: React.ReactNode }) {
               <Input 
                 className="w-full pl-12 bg-slate-50 border-none rounded-xl h-11 text-xs focus-visible:ring-1 focus-visible:ring-primary/20" 
                 placeholder="Search for services, products, vets, trainers, or anything..."
+                value={headerSearch}
+                onChange={(e) => setHeaderSearch(e.target.value)}
+                onKeyDown={handleHeaderSearch}
               />
             </div>
             
@@ -201,7 +214,7 @@ function MainLayoutChild({ children }: { children: React.ReactNode }) {
 
               <div className="flex items-center gap-3 pl-6 border-l border-slate-100">
                 <Avatar className="h-10 w-10 border-2 border-white shadow-md ring-1 ring-slate-100">
-                  <AvatarImage src={headerAvatar} />
+                  <AvatarImage src={headerAvatar} className="object-cover" />
                   <AvatarFallback><User /></AvatarFallback>
                 </Avatar>
               </div>

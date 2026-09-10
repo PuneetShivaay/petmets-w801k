@@ -52,7 +52,8 @@ export default function ServiceProvidersPage() {
   const [filteredProviders, setFilteredProviders] = useState<Provider[]>([]);
   const [loading, setLoading] = useState(true);
   
-  const [searchTerm, setSearchTerm] = useState("");
+  const initialSearch = searchParams.get("search") || "";
+  const [searchTerm, setSearchTerm] = useState(initialSearch);
   const initialFilter = searchParams.get("service") || "all";
   const [serviceFilter, setServiceFilter] = useState(initialFilter);
 
@@ -87,7 +88,8 @@ export default function ServiceProvidersPage() {
       result = result.filter(p => 
         p.name.toLowerCase().includes(lower) || 
         p.bio.toLowerCase().includes(lower) || 
-        p.location.toLowerCase().includes(lower)
+        p.location.toLowerCase().includes(lower) ||
+        p.service.toLowerCase().includes(lower)
       );
     }
     setFilteredProviders(result);
