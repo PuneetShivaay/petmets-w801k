@@ -15,6 +15,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Progress } from "@/components/ui/progress";
+import { SidebarTrigger } from "@/components/ui/sidebar";
 import { 
   Bell, 
   Calendar, 
@@ -146,9 +147,7 @@ export default function DashboardPage() {
         {/* Mobile Header */}
         <div className="sticky top-0 z-30 bg-[#FDFBF9]/80 backdrop-blur-md px-4 py-4 flex items-center justify-between md:hidden border-b border-orange-100">
           <div className="flex items-center gap-2">
-            <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center">
-               <PawPrintIcon className="h-4 w-4 text-primary" />
-            </div>
+            <SidebarTrigger className="-ml-2" />
             <div className="flex flex-col">
               <div className="flex items-center gap-1">
                  <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Active Pet</span>
@@ -281,7 +280,7 @@ export default function DashboardPage() {
                     { label: 'Grooming', icon: Scissors, color: 'text-orange-500', href: '/providers?service=Grooming' },
                     { label: 'Playdate', icon: Dog, color: 'text-amber-600', href: '/match' },
                     { label: 'Records', icon: FileTextIcon, color: 'text-green-600', href: '/records' },
-                    { label: 'Adopt', icon: Heart, color: 'text-blue-500', href: '/adoption' },
+                    { label: 'Adoption', icon: Heart, color: 'text-blue-500', href: '/adoption' },
                   ].map((item, i) => (
                     <Link key={i} href={item.href} className="flex-shrink-0">
                       <Card className="w-20 sm:w-24 border-none shadow-sm bg-white hover:shadow-md transition-all rounded-3xl">
