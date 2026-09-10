@@ -18,7 +18,6 @@ import {
   SidebarMenuButton,
   useSidebar,        
 } from "@/components/ui/sidebar";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { LogOut, Bell, Search, MapPin, User, ChevronDown } from "lucide-react";
 import { useLoading } from "@/contexts/loading-context";
 import { useAuth } from "@/contexts/auth-context";
@@ -76,7 +75,7 @@ function MainLayoutChild({ children }: { children: React.ReactNode }) {
     }
   };
 
-  const handleHeaderSearch = (e: React.KeyboardEvent) => {
+  const handleSidebarSearch = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && headerSearch.trim()) {
       router.push(`/providers?search=${encodeURIComponent(headerSearch.trim())}`);
       setHeaderSearch("");
@@ -100,98 +99,100 @@ function MainLayoutChild({ children }: { children: React.ReactNode }) {
 
   return (
     <>
-      <Sidebar className="border-r border-sidebar-border hidden md:flex bg-white" collapsible="icon">
-        <SidebarHeader className={cn("p-4 flex flex-row items-center justify-between", state === 'collapsed' && "justify-center p-2")}>
-          <Link href="/" onClick={handleLinkClick} className="block group-data-[state=collapsed]:hidden">
+      <Sidebar className="border-r border-sidebar-border hidden md:flex bg-white transition-all duration-300" collapsible="icon">
+        <SidebarHeader className={cn("p-4 flex flex-row items-center justify-between gap-2", state === 'collapsed' && "justify-center p-2")}>
+          <Link href="/" onClick={handleLinkClick} className="block group-data-[state=collapsed]:hidden overflow-hidden whitespace-nowrap">
             <AppLogo />
           </Link>
           <SidebarTrigger className={cn(state === 'collapsed' ? 'mx-auto' : 'ml-auto')} />
         </SidebarHeader>
-        <SidebarContent className={cn("transition-all duration-300", state === 'collapsed' ? "px-1" : "px-4")}>
-          <ScrollArea className="flex-grow w-full">
-            <SidebarMenu className={cn("gap-2", state === 'collapsed' && "items-center")}>
-              {filteredNavItems.map((item) => (
-                <SidebarMenuItem key={item.href} className={cn(state === 'collapsed' && "flex justify-center w-full")}>
-                  <Link href={item.href} passHref legacyBehavior>
-                    <SidebarMenuButton
-                      asChild={item.href.startsWith("/")}
-                      isActive={pathname === item.href}
-                      tooltip={item.title}
-                      className={cn(
-                        "w-full transition-all duration-300 rounded-xl",
-                        pathname === item.href ? "bg-primary text-white hover:bg-primary/90 shadow-md" : "text-slate-600 hover:bg-slate-50",
-                        state === 'collapsed' ? 'h-11 w-11 p-0 justify-center mx-auto' : 'px-4 py-6 justify-start'
-                      )}
-                      onClick={item.href.startsWith("/") ? handleLinkClick : undefined}
-                    >
-                      <div className={cn("flex items-center w-full", state === 'collapsed' ? 'justify-center' : 'justify-start')}>
-                        <item.icon className={cn("h-5 w-5 shrink-0", pathname === item.href ? "text-white" : "text-slate-400", state === 'expanded' && 'mr-4')} />
-                        <span className="font-bold text-sm tracking-tight group-data-[state=collapsed]:hidden">{item.title}</span>
-                        {item.badge && state === 'expanded' && (
-                          <Badge className="ml-auto bg-primary text-white border-none h-5 w-5 flex items-center justify-center p-0 text-[10px] rounded-full">
-                            {item.badge}
-                          </Badge>
-                        )}
-                      </div>
-                    </SidebarMenuButton>
-                  </Link>
-                </SidebarMenuItem>
-              ))}
-
-              <div className="mt-8 px-4 mb-2 group-data-[state=collapsed]:hidden">
-                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Quick Links</span>
-              </div>
-
-              {quickLinks.map((item) => (
-                <SidebarMenuItem key={item.title} className={cn(state === 'collapsed' && "flex justify-center w-full")}>
+        
+        <SidebarContent className="overflow-y-auto overflow-x-hidden px-3 py-2 flex flex-col justify-between">
+          <SidebarMenu className={cn("gap-1.5 w-full", state === 'collapsed' && "items-center")}>
+            {filteredNavItems.map((item) => (
+              <SidebarMenuItem key={item.href} className="w-full">
+                <Link href={item.href} passHref legacyBehavior>
                   <SidebarMenuButton
+                    asChild={item.href.startsWith("/")}
+                    isActive={pathname === item.href}
                     tooltip={item.title}
                     className={cn(
-                      "w-full transition-all duration-300 rounded-xl text-slate-500 hover:bg-slate-50",
-                      state === 'collapsed' ? 'h-11 w-11 p-0 justify-center mx-auto' : 'px-4'
+                      "w-full transition-all duration-200 rounded-xl",
+                      pathname === item.href 
+                        ? "bg-primary text-white hover:bg-primary/95 shadow-sm font-bold" 
+                        : "text-slate-600 hover:bg-slate-50 font-medium",
+                      state === 'collapsed' ? 'h-11 w-11 p-0 justify-center mx-auto' : 'px-4 py-5 justify-start'
                     )}
+                    onClick={item.href.startsWith("/") ? handleLinkClick : undefined}
                   >
-                    <div className={cn("flex items-center", state === 'collapsed' ? 'justify-center' : 'justify-start')}>
-                      <item.icon className={cn("h-4 w-4 text-slate-400", state === 'expanded' && 'mr-4')} />
-                      <span className="text-sm font-medium group-data-[state=collapsed]:hidden">{item.title}</span>
+                    <div className={cn("flex items-center w-full gap-3", state === 'collapsed' && 'justify-center gap-0')}>
+                      <item.icon className={cn("h-5 w-5 shrink-0 transition-colors", pathname === item.href ? "text-white" : "text-slate-400")} />
+                      <span className="text-sm tracking-tight group-data-[state=collapsed]:hidden truncate">{item.title}</span>
+                      {item.badge && state === 'expanded' && (
+                        <Badge className="ml-auto bg-primary text-white border-none h-5 w-5 flex items-center justify-center p-0 text-[10px] rounded-full shrink-0">
+                          {item.badge}
+                        </Badge>
+                      )}
                     </div>
                   </SidebarMenuButton>
-                </SidebarMenuItem>
-              ))}
-            </SidebarMenu>
-          </ScrollArea>
-        </SidebarContent>
-        <SidebarFooter className={cn("mt-auto", state === 'collapsed' ? "p-2 items-center" : "p-8")}>
-            <div className="space-y-6 w-full flex flex-col items-center">
-              <div className="relative p-6 rounded-[2rem] bg-slate-50/80 overflow-hidden border border-slate-100 group-data-[state=collapsed]:hidden w-full">
-                <div className="relative z-10 text-[11px] font-bold text-slate-600 italic leading-snug">
-                  Happy Pets<br/>Happy People<br/>Better World 🧡
-                </div>
-                <div className="absolute -bottom-2 -left-4 w-20 h-20 opacity-40 rotate-12">
-                  <Image 
-                    src="https://picsum.photos/seed/footer-dog/100/100" 
-                    alt="Pet" 
-                    fill
-                    className="object-contain"
-                  />
-                </div>
-              </div>
-              {user && (
+                </Link>
+              </SidebarMenuItem>
+            ))}
+
+            <div className="mt-6 px-4 mb-1 group-data-[state=collapsed]:hidden">
+              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block">Quick Links</span>
+            </div>
+
+            {quickLinks.map((item) => (
+              <SidebarMenuItem key={item.title} className="w-full">
                 <SidebarMenuButton
-                  tooltip="Logout"
+                  tooltip={item.title}
                   className={cn(
-                    "justify-start text-slate-400 hover:text-destructive transition-all duration-300",
-                    state === 'collapsed' ? 'h-10 w-10 p-0 justify-center rounded-xl' : 'w-full px-4'
+                    "w-full transition-all duration-200 rounded-xl text-slate-500 hover:bg-slate-50 font-medium",
+                    state === 'collapsed' ? 'h-11 w-11 p-0 justify-center mx-auto' : 'px-4 py-4'
                   )}
-                  onClick={handleLogoutClick}
                 >
-                  <div className="flex items-center justify-center">
-                    <LogOut className={cn("h-4 w-4", state === 'expanded' && 'mr-3')} />
-                    <span className="text-xs font-bold group-data-[state=collapsed]:hidden">Logout</span>
+                  <div className={cn("flex items-center gap-3", state === 'collapsed' && 'justify-center gap-0')}>
+                    <item.icon className="h-4 w-4 text-slate-400 shrink-0" />
+                    <span className="text-sm group-data-[state=collapsed]:hidden truncate">{item.title}</span>
                   </div>
                 </SidebarMenuButton>
-              )}
+              </SidebarMenuItem>
+            ))}
+          </SidebarMenu>
+        </SidebarContent>
+        
+        <SidebarFooter className={cn("mt-auto", state === 'collapsed' ? "p-2 items-center" : "p-4")}>
+          <div className="space-y-4 w-full flex flex-col items-center">
+            <div className="relative p-5 rounded-[1.5rem] bg-slate-50 border border-slate-100 group-data-[state=collapsed]:hidden w-full overflow-hidden">
+              <div className="relative z-10 text-[11px] font-bold text-slate-600 italic leading-snug">
+                Happy Pets<br/>Happy People<br/>Better World 🧡
+              </div>
+              <div className="absolute -bottom-2 -right-2 w-16 h-16 opacity-30 rotate-12">
+                <Image 
+                  src="https://picsum.photos/seed/footer-dog/100/100" 
+                  alt="Pet" 
+                  fill
+                  className="object-contain"
+                />
+              </div>
             </div>
+            {user && (
+              <SidebarMenuButton
+                tooltip="Logout"
+                className={cn(
+                  "justify-start text-slate-400 hover:text-destructive transition-all duration-200",
+                  state === 'collapsed' ? 'h-10 w-10 p-0 justify-center rounded-xl' : 'w-full px-4'
+                )}
+                onClick={handleLogoutClick}
+              >
+                <div className="flex items-center w-full gap-3 justify-start group-data-[state=collapsed]:justify-center">
+                  <LogOut className="h-4 w-4 shrink-0" />
+                  <span className="text-xs font-bold group-data-[state=collapsed]:hidden">Logout</span>
+                </div>
+              </SidebarMenuButton>
+            )}
+          </div>
         </SidebarFooter>
       </Sidebar>
 
@@ -205,7 +206,7 @@ function MainLayoutChild({ children }: { children: React.ReactNode }) {
                 placeholder="Search for services, products, vets, trainers, or anything..."
                 value={headerSearch}
                 onChange={(e) => setHeaderSearch(e.target.value)}
-                onKeyDown={handleHeaderSearch}
+                onKeyDown={handleSidebarSearch}
               />
             </div>
             
