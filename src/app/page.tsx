@@ -9,6 +9,7 @@ import { collection, query, where, onSnapshot, doc, getDocs, limit, getDoc } fro
 import { db } from "@/lib/firebase";
 import { cn } from "@/lib/utils";
 import Image from "next/image";
+import placeholderImages from "@/app/lib/placeholder-images.json";
 
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -54,10 +55,10 @@ import {
 
 const HERO_SLIDES = [
   {
-    image: "https://picsum.photos/seed/hero-pet/1200/500",
+    image: placeholderImages.hero.dashboard.url,
     title: "Your Pet's Happiness Our Priority",
     description: "All pet care services, products and community - in one place.",
-    hint: "happy dog cat"
+    hint: placeholderImages.hero.dashboard.hint
   }
 ];
 
@@ -153,7 +154,7 @@ export default function DashboardPage() {
                 alt="Pet Happiness" 
                 fill 
                 className="object-cover"
-                data-ai-hint="happy dog and cat"
+                data-ai-hint={HERO_SLIDES[0].hint}
               />
               <div className="absolute inset-0 bg-gradient-to-r from-black/60 via-black/30 to-transparent flex flex-col justify-center px-6 sm:px-12 text-white">
                 <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold font-headline max-w-xs sm:max-w-md leading-tight">
@@ -203,7 +204,7 @@ export default function DashboardPage() {
                   <Button variant="secondary" size="sm" className="rounded-full font-bold h-8 text-[10px] bg-white text-[#466935]">Explore Services <ArrowRight className="ml-2 h-3 w-3" /></Button>
                 </div>
                 <div className="absolute bottom-0 right-0 w-32 h-32 opacity-60 group-hover:scale-110 transition-transform">
-                  <Image src="https://picsum.photos/seed/promo1/200/200" alt="Dog" fill className="object-contain object-right-bottom" />
+                  <Image src={placeholderImages.promos.promo1.url} alt="Dog" fill className="object-contain object-right-bottom" data-ai-hint={placeholderImages.promos.promo1.hint} />
                 </div>
               </Card>
 
@@ -213,7 +214,7 @@ export default function DashboardPage() {
                   <Button size="sm" className="bg-[#802D52] text-white rounded-full font-bold h-8 text-[10px]">Explore Pet Store <ArrowRight className="ml-2 h-3 w-3" /></Button>
                 </div>
                 <div className="absolute bottom-0 right-0 w-32 h-32 opacity-60 group-hover:scale-110 transition-transform">
-                  <Image src="https://picsum.photos/seed/promo2/200/200" alt="Pets" fill className="object-contain object-right-bottom" />
+                  <Image src={placeholderImages.promos.promo2.url} alt="Pets" fill className="object-contain object-right-bottom" data-ai-hint={placeholderImages.promos.promo2.hint} />
                 </div>
               </Card>
 
@@ -227,7 +228,7 @@ export default function DashboardPage() {
                   <Button variant="secondary" size="sm" className="rounded-full font-bold h-8 text-[10px] bg-white text-[#0D2B2B]">View Reports <ArrowRight className="ml-2 h-3 w-3" /></Button>
                 </div>
                 <div className="absolute bottom-0 right-0 w-32 h-32 opacity-60 group-hover:scale-110 transition-transform">
-                  <Image src="https://picsum.photos/seed/promo3/200/200" alt="Reports" fill className="object-contain object-right-bottom" />
+                  <Image src={placeholderImages.promos.promo3.url} alt="Reports" fill className="object-contain object-right-bottom" data-ai-hint={placeholderImages.promos.promo3.hint} />
                 </div>
               </Card>
             </section>
@@ -310,7 +311,7 @@ export default function DashboardPage() {
               <div className="p-4 rounded-[1.5rem] border border-orange-100 bg-orange-50/30">
                  <div className="flex items-center gap-4">
                     <Avatar className="h-12 w-12 ring-4 ring-white shadow-sm">
-                      <AvatarImage src={petData?.avatar || "https://picsum.photos/seed/buddy/100/100"} className="object-cover" />
+                      <AvatarImage src={petData?.avatar || "/images/logo.png"} className="object-cover" />
                       <AvatarFallback>B</AvatarFallback>
                     </Avatar>
                     <div className="flex-1 min-w-0">
@@ -354,13 +355,10 @@ export default function DashboardPage() {
                 <h3 className="font-bold text-[11px] uppercase tracking-widest text-slate-400">Recently Viewed</h3>
               </div>
               <div className="space-y-3 px-1">
-                 {[
-                   { title: 'Dog Grooming', price: '₹1,499', rating: '4.8', img: 'https://picsum.photos/seed/groom/100/100' },
-                   { title: 'Pet Boarding', price: '₹699/day', rating: '4.9', img: 'https://picsum.photos/seed/board/100/100' },
-                 ].map((item, i) => (
+                 {placeholderImages.recentlyViewed.map((item, i) => (
                    <div key={i} className="flex items-center gap-3 group cursor-pointer">
                       <Avatar className="h-10 w-10 rounded-xl">
-                        <AvatarImage src={item.img} className="object-cover" />
+                        <AvatarImage src={item.url} className="object-cover" data-ai-hint={item.hint} />
                         <AvatarFallback>P</AvatarFallback>
                       </Avatar>
                       <div className="flex-1 min-w-0">
@@ -386,7 +384,7 @@ export default function DashboardPage() {
                   </Button>
                </div>
                <div className="absolute bottom-0 right-0 w-32 h-32 opacity-30 group-hover:scale-105 transition-transform">
-                 <Image src="https://picsum.photos/seed/comm/200/200" alt="Pets" fill className="object-contain object-right-bottom" />
+                 <Image src={placeholderImages.sidebar.community.url} alt="Pets" fill className="object-contain object-right-bottom" data-ai-hint={placeholderImages.sidebar.community.hint} />
                </div>
             </Card>
 

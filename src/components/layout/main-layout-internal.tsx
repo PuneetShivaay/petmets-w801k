@@ -1,3 +1,4 @@
+
 "use client"; 
 
 import * as React from "react";
@@ -6,6 +7,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { AppLogo } from "@/components/icons";
 import { navItems, quickLinks } from "@/config/nav";
 import { cn } from "@/lib/utils";
+import placeholderImages from "@/app/lib/placeholder-images.json";
 import {
   SidebarProvider, 
   Sidebar,
@@ -170,10 +172,12 @@ function MainLayoutChild({ children }: { children: React.ReactNode }) {
               </div>
               <div className="absolute -bottom-2 -right-2 w-16 h-16 opacity-30 rotate-12">
                 <Image 
-                  src="https://picsum.photos/seed/footer-dog/100/100" 
+                  src={placeholderImages.sidebar.footer.url} 
                   alt="Pet" 
-                  fill
+                  width={placeholderImages.sidebar.footer.width}
+                  height={placeholderImages.sidebar.footer.height}
                   className="object-contain"
+                  data-ai-hint={placeholderImages.sidebar.footer.hint}
                 />
               </div>
             </div>
