@@ -15,10 +15,11 @@ import { Button } from "@/components/ui/button";
 import Image from "next/image";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { PawPrint, Star, Search, MapPin, Loader2 } from "lucide-react";
+import { PawPrint, Star, Search, MapPin, Loader2, Filter, Sparkles, Navigation } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { useLoading } from "@/contexts/loading-context";
+import { cn } from "@/lib/utils";
 
 interface Provider {
   id: string;
@@ -30,6 +31,16 @@ interface Provider {
   rating: number;
   createdAt: any;
 }
+
+const SERVICE_CATEGORIES = [
+  { value: "all", label: "All Services", icon: Sparkles },
+  { value: "Walking", label: "Walkers", icon: Navigation },
+  { value: "Grooming", label: "Groomers", icon: PawPrint },
+  { value: "Training", label: "Trainers", icon: Sparkles },
+  { value: "Boarding", label: "Boarding", icon: MapPin },
+  { value: "Photography", label: "Photos", icon: Sparkles },
+  { value: "Playzone", label: "Playzone", icon: Sparkles },
+];
 
 export default function ServiceProvidersPage() {
   const { user } = useAuth();
@@ -88,84 +99,100 @@ export default function ServiceProvidersPage() {
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col items-center justify-between gap-4 md:flex-row text-center sm:text-left">
-        <p className="text-muted-foreground max-w-2xl">Browse profiles of expert pet walkers, groomers, trainers, and boarding facilities. View galleries and book appointments directly.</p>
+    <div className="space-y-8 animate-in fade-in duration-500">
+      <div className="flex flex-col gap-2">
+        <h1 className="text-3xl font-bold font-headline tracking-tight text-slate-900">Expert Pet Care Nearby</h1>
+        <p className="text-slate-500 max-w-2xl">Find the best local professionals to pamper, train, and walk your furry friends. Every vendor is verified for your peace of mind.</p>
       </div>
 
-      <Card className="shadow-sm">
-        <CardContent className="p-4">
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-            <div className="relative md:col-span-2">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input 
-                placeholder="Search by name, bio or location..." 
-                className="pl-10" 
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-              />
-            </div>
-            <Select value={serviceFilter} onValueChange={setServiceFilter}>
-              <SelectTrigger>
-                <SelectValue placeholder="Filter by service type" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Services</SelectItem>
-                <SelectItem value="Walking">Pet Walkers</SelectItem>
-                <SelectItem value="Grooming">Pet Groomers</SelectItem>
-                <SelectItem value="Training">Pet Trainers</SelectItem>
-                <SelectItem value="Boarding">Pet Boarding</SelectItem>
-                <SelectItem value="Photography">Pet Photography</SelectItem>
-                <SelectItem value="Playzone">Pet Playzone</SelectItem>
-              </SelectContent>
-            </Select>
+      {/* Filter Bar */}
+      <section className="sticky top-20 z-30 flex flex-col gap-4 bg-[#F8FAFC]/80 backdrop-blur-md py-4">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div className="md:col-span-2 relative">
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400" />
+            <Input 
+              placeholder="Search by name, bio or location..." 
+              className="pl-12 bg-white border-none shadow-sm rounded-2xl h-14 focus-visible:ring-primary/20" 
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
           </div>
-        </CardContent>
-      </Card>
+          
+          <div className="flex items-center gap-2 overflow-x-auto no-scrollbar pb-2 md:pb-0 md:col-span-2">
+            {SERVICE_CATEGORIES.map((cat) => (
+              <Button
+                key={cat.value}
+                variant={serviceFilter === cat.value ? "default" : "outline"}
+                className={cn(
+                  "rounded-full h-11 px-6 font-bold text-xs shrink-0 transition-all border-none shadow-sm",
+                  serviceFilter === cat.value ? "bg-primary text-white" : "bg-white text-slate-600 hover:bg-slate-50"
+                )}
+                onClick={() => setServiceFilter(cat.value)}
+              >
+                {cat.label}
+              </Button>
+            ))}
+          </div>
+        </div>
+      </section>
 
+      {/* Results Grid */}
       <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
         {loading ? (
           [...Array(6)].map((_, i) => (
-            <Card key={i} className="shadow-md"><Skeleton className="h-52 w-full" /><CardContent className="p-4"><Skeleton className="h-6 w-3/4 mb-2" /><Skeleton className="h-4 w-1/2" /></CardContent></Card>
+            <Card key={i} className="rounded-[2rem] border-none shadow-sm overflow-hidden bg-white">
+              <Skeleton className="h-56 w-full" />
+              <CardContent className="p-6 space-y-4">
+                <Skeleton className="h-6 w-3/4" />
+                <Skeleton className="h-4 w-1/2" />
+                <Skeleton className="h-12 w-full" />
+              </CardContent>
+            </Card>
           ))
         ) : filteredProviders.length === 0 ? (
-          <div className="col-span-full text-center py-24 bg-card rounded-lg border-2 border-dashed">
-            <PawPrint className="mx-auto h-16 w-16 text-muted-foreground/20" />
-            <p className="mt-4 text-lg font-medium text-muted-foreground">No matching providers found</p>
-            <Button variant="link" onClick={() => { setSearchTerm(""); setServiceFilter("all"); }}>Clear filters</Button>
+          <div className="col-span-full text-center py-32 bg-white rounded-[3rem] border-2 border-dashed border-slate-100 shadow-sm">
+            <div className="h-20 w-20 bg-slate-50 rounded-3xl flex items-center justify-center mx-auto text-slate-200 mb-6">
+              <Search className="h-10 w-10" />
+            </div>
+            <p className="text-xl font-bold text-slate-900">No matching providers found</p>
+            <p className="text-slate-500 mt-2">Try adjusting your filters or search terms.</p>
+            <Button variant="link" className="mt-4 text-primary font-bold" onClick={() => { setSearchTerm(""); setServiceFilter("all"); }}>
+              Clear all filters
+            </Button>
           </div>
         ) : (
           filteredProviders.map((provider) => (
-            <Card key={provider.id} className="flex flex-col overflow-hidden rounded-lg shadow-lg hover:shadow-xl transition-shadow border-none bg-card">
-              <div className="relative h-56 w-full">
+            <Card key={provider.id} className="group flex flex-col overflow-hidden rounded-[2rem] shadow-sm hover:shadow-xl transition-all duration-300 border-none bg-white">
+              <div className="relative h-56 w-full overflow-hidden">
                 <Image 
                   src={provider.image} 
                   alt={provider.name} 
                   fill 
-                  className="object-cover"
+                  className="object-cover group-hover:scale-110 transition-transform duration-500"
                 />
-                <Badge className="absolute top-3 right-3 shadow-lg" variant="secondary">{provider.service}</Badge>
+                <Badge className="absolute top-4 left-4 bg-white/90 backdrop-blur-sm text-slate-900 border-none shadow-lg px-3 py-1 rounded-full font-bold text-[10px]" variant="secondary">
+                  {provider.service}
+                </Badge>
+                <div className="absolute bottom-4 right-4 flex items-center gap-1 bg-white/90 backdrop-blur-sm px-3 py-1 rounded-full shadow-lg">
+                  <Star className="h-3 w-3 fill-yellow-400 text-yellow-400" />
+                  <span className="font-bold text-xs text-slate-900">{provider.rating}</span>
+                </div>
               </div>
-              <CardHeader className="p-4 pb-2">
-                <CardTitle className="text-xl font-headline">{provider.name}</CardTitle>
-                <div className="flex items-center gap-2 text-sm text-muted-foreground mt-1">
-                  <MapPin className="h-4 w-4 shrink-0 text-primary" />
+              <CardHeader className="p-6 pb-2">
+                <CardTitle className="text-xl font-bold font-headline text-slate-900 leading-tight">{provider.name}</CardTitle>
+                <div className="flex items-center gap-1.5 text-xs font-bold text-slate-400 mt-1">
+                  <MapPin className="h-3.5 w-3.5 text-primary" />
                   <span className="truncate">{provider.location}</span>
                 </div>
               </CardHeader>
-              <CardContent className="flex-grow p-4 pt-0">
-                <div className="flex items-center gap-1 text-sm mb-3">
-                  <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-                  <span className="font-bold">{provider.rating}</span>
-                  <span className="text-muted-foreground">(5.0)</span>
-                </div>
-                <p className="text-sm text-muted-foreground line-clamp-2 italic leading-relaxed">
+              <CardContent className="flex-grow p-6 pt-2">
+                <p className="text-sm text-slate-500 line-clamp-3 italic leading-relaxed">
                   "{provider.bio}"
                 </p>
               </CardContent>
-              <CardFooter className="p-4 pt-0">
-                <Button className="w-full bg-accent hover:bg-accent/90" onClick={() => handleOpenDetails(provider.id)}>
-                    <PawPrint className="mr-2 h-4 w-4" /> View Details & Book
+              <CardFooter className="p-6 pt-0">
+                <Button className="w-full h-12 rounded-2xl bg-slate-900 hover:bg-slate-800 text-white font-bold transition-all shadow-md group-hover:shadow-lg" onClick={() => handleOpenDetails(provider.id)}>
+                    View Full Profile & Book
                 </Button>
               </CardFooter>
             </Card>
