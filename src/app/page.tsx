@@ -253,7 +253,7 @@ export default function DashboardPage() {
                   <Card className="border-none shadow-sm rounded-2xl overflow-hidden group hover:shadow-md transition-all bg-white">
                     <div className="relative aspect-square">
                       <Image 
-                        src={provider.imageUrl || `https://picsum.photos/seed/${provider.id}/200/200`} 
+                        src={provider.image || provider.businessImage || provider.imageUrl || provider.avatar || `https://picsum.photos/seed/${provider.id}/300/300`} 
                         alt={provider.name} 
                         fill 
                         className="object-cover group-hover:scale-105 transition-transform duration-300" 
