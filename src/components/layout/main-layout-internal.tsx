@@ -5,7 +5,7 @@ import * as React from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { AppLogo } from "@/components/icons";
-import { navItems, type NavItem } from "@/config/nav";
+import { navItems } from "@/config/nav";
 import { cn } from "@/lib/utils";
 import {
   SidebarProvider, 
@@ -19,16 +19,15 @@ import {
   SidebarMenuButton,
   useSidebar,        
 } from "@/components/ui/sidebar";
-import { Button } from "@/components/ui/button"; 
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { LogOut } from "lucide-react";
 import { useLoading } from "@/contexts/loading-context";
 import { useAuth } from "@/contexts/auth-context";
 import { useToast } from "@/hooks/use-toast";
+import { BottomNav } from "./bottom-nav";
 
 function MainLayoutChild({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
-  const router = useRouter();
   const { isMobile, setOpenMobile } = useSidebar();
   const { showLoading } = useLoading();
   const { user, userRole, userSignOut } = useAuth();
@@ -68,11 +67,15 @@ function MainLayoutChild({ children }: { children: React.ReactNode }) {
   
   const defaultTitle = navItems.find(item => item.href === pathname)?.title;
   const isDynamicPage = pathname.startsWith('/chats/') || pathname.startsWith('/profile/');
-  const headerIsVisible = !isDynamicPage;
+  
+  // Header is hidden on mobile if it's the dashboard (custom mobile header there)
+  // or dynamic pages.
+  const isDashboard = pathname === '/';
+  const headerIsVisible = !isDynamicPage && (!isMobile || !isDashboard);
 
   return (
     <>
-      <Sidebar className="border-r border-sidebar-border">
+      <Sidebar className="border-r border-sidebar-border hidden md:flex">
         <SidebarHeader className="p-4">
           <Link href="/" onClick={handleLinkClick} className="block">
             <AppLogo />
@@ -133,11 +136,12 @@ function MainLayoutChild({ children }: { children: React.ReactNode }) {
                 </div>
             </header>
           )}
-        <main className={cn("flex-1 overflow-auto", isDynamicPage && "h-screen")}>
-          <div className={cn(!isDynamicPage && "p-4 sm:p-6")}>
+        <main className={cn("flex-1 overflow-auto", isDynamicPage && "h-screen", "pb-20 md:pb-0")}>
+          <div className={cn(!isDynamicPage && !isDashboard && "p-4 sm:p-6")}>
             {children}
           </div>
         </main>
+        <BottomNav />
       </div>
     </>
   );

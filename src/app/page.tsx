@@ -4,7 +4,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useAuth } from "@/contexts/auth-context";
-import { collection, query, where, onSnapshot, doc } from "firebase/firestore";
+import { collection, query, where, onSnapshot, doc, getDocs, limit } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -19,7 +19,6 @@ import {
   CheckCircle, 
   Clock,
   ChevronRight,
-  RefreshCw,
   Sun,
   Activity,
   Footprints,
@@ -31,10 +30,12 @@ import {
   Dog,
   Scissors,
   GraduationCap,
-  Trees,
   MapPin,
   Star,
-  Navigation
+  Navigation,
+  Droplets,
+  Heart,
+  ChevronDown
 } from "lucide-react";
 
 export default function DashboardPage() {
@@ -46,6 +47,7 @@ export default function DashboardPage() {
   const [matchedProfilesCount, setMatchedProfilesCount] = useState(0);
   const [upcomingBooking, setUpcomingBooking] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [localProviders, setLocalProviders] = useState<any[]>([]);
 
   // Provider specific state
   const [newBookings, setNewBookings] = useState<any[]>([]);
@@ -83,6 +85,14 @@ export default function DashboardPage() {
           setUpcomingBooking(null);
         }
       });
+
+      // Fetch local providers for "In your neighborhood"
+      const fetchLocal = async () => {
+        const q = query(collection(db, "service_providers"), limit(3));
+        const snap = await getDocs(q);
+        setLocalProviders(snap.docs.map(d => ({ id: d.id, ...d.data() })));
+      };
+      fetchLocal();
 
       return () => {
         unsubscribePet();
@@ -129,287 +139,286 @@ export default function DashboardPage() {
   // Render Owner Dashboard
   if (userRole === 'owner') {
     return (
-      <div className="flex flex-col gap-8 pb-10 animate-in fade-in duration-500">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <div>
-            <h1 className="text-3xl font-bold tracking-tight font-headline flex items-center gap-2">
-              Good morning, {user?.displayName?.split(' ')[0] || 'Nandini'}! <Sun className="h-8 w-8 text-yellow-500" />
-            </h1>
-            <p className="text-muted-foreground mt-1">
-              Here's what's happening with {petData?.name || 'Bruno'} today.
-            </p>
+      <div className="flex flex-col min-h-screen bg-[#FDFBF9] animate-in fade-in duration-700">
+        {/* Mobile Header */}
+        <div className="sticky top-0 z-30 bg-[#FDFBF9]/80 backdrop-blur-md px-4 py-4 flex items-center justify-between md:hidden border-b border-orange-100">
+          <div className="flex items-center gap-2">
+            <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center">
+               <PawPrintIcon className="h-4 w-4 text-primary" />
+            </div>
+            <div className="flex flex-col">
+              <div className="flex items-center gap-1">
+                 <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Active Pet</span>
+                 <ChevronDown className="h-3 w-3 text-muted-foreground" />
+              </div>
+              <span className="text-sm font-bold">{petData?.name || 'Milo'} • {petData?.breed || 'Golden Retriever'}</span>
+            </div>
           </div>
           <div className="flex items-center gap-3">
-            <Button variant="outline" className="rounded-full bg-white shadow-sm border-none flex items-center gap-2 pr-2">
-              <Avatar className="h-6 w-6">
-                <AvatarImage src={petData?.avatar || "/images/logo.png"} />
-                <AvatarFallback>{petData?.name?.charAt(0)}</AvatarFallback>
-              </Avatar>
-              <span className="text-sm font-medium">Switch Pet ({petData?.name || 'Bruno'})</span>
-              <ChevronRight className="h-4 w-4 rotate-90" />
-            </Button>
-            <Button variant="outline" size="icon" className="rounded-full bg-white shadow-sm border-none">
-              <RefreshCw className="h-4 w-4" />
-            </Button>
+             <div className="relative">
+                <Bell className="h-6 w-6 text-muted-foreground" />
+                {pendingRequests > 0 && (
+                  <div className="absolute top-0 right-0 h-2 w-2 rounded-full bg-primary border-2 border-[#FDFBF9]" />
+                )}
+             </div>
+             <Avatar className="h-8 w-8 border border-muted shadow-sm">
+                <AvatarImage src={user?.photoURL || "/images/logo.png"} />
+                <AvatarFallback><User /></AvatarFallback>
+             </Avatar>
           </div>
         </div>
 
-        {/* Quick Essentials Row */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-6 gap-4">
-          {[
-            { label: 'Walkers', icon: Trees, color: 'bg-green-100 text-green-600', href: '/providers?service=Walking' },
-            { label: 'Grooming', icon: Scissors, color: 'bg-blue-100 text-blue-600', href: '/providers?service=Grooming' },
-            { label: 'Training', icon: GraduationCap, color: 'bg-orange-100 text-orange-600', href: '/providers?service=Training' },
-            { label: 'Playzone', icon: Activity, color: 'bg-purple-100 text-purple-600', href: '/providers?service=Playzone' },
-            { label: 'Boarding', icon: Briefcase, color: 'bg-pink-100 text-pink-600', href: '/providers?service=Boarding' },
-            { label: 'Photography', icon: Navigation, color: 'bg-yellow-100 text-yellow-600', href: '/providers?service=Photography' },
-          ].map((item, i) => (
-            <Link key={i} href={item.href}>
-              <Card className="hover:shadow-md transition-all cursor-pointer border-none bg-white">
-                <CardContent className="p-4 flex flex-col items-center gap-2">
-                  <div className={`h-12 w-12 rounded-2xl flex items-center justify-center ${item.color}`}>
-                    <item.icon className="h-6 w-6" />
-                  </div>
-                  <span className="text-xs font-bold text-center">{item.label}</span>
-                </CardContent>
-              </Card>
-            </Link>
-          ))}
-        </div>
-
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-          <div className="lg:col-span-8 space-y-8">
-            <Card className="border-none shadow-sm bg-white overflow-hidden rounded-2xl">
-              <CardContent className="p-0">
-                <div className="p-8 space-y-8">
-                  <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
-                    <div className="flex items-center gap-4">
-                      <div className="relative">
-                        <Avatar className="h-24 w-24 border-4 border-white shadow-lg rounded-2xl overflow-hidden">
-                          <AvatarImage src={petData?.avatar || "/images/logo.png"} className="object-cover" />
-                          <AvatarFallback><PawPrintIcon className="h-10 w-10" /></AvatarFallback>
-                        </Avatar>
-                        <div className="absolute -bottom-1 -right-1 bg-green-500 border-2 border-white h-6 w-6 rounded-full flex items-center justify-center">
-                          <CheckCircle className="h-4 w-4 text-white" />
-                        </div>
-                      </div>
-                      <div>
-                        <div className="flex items-center gap-2">
-                          <h2 className="text-3xl font-bold">{petData?.name || 'Bruno'}</h2>
-                          <Badge className="bg-green-100 text-green-700 hover:bg-green-100 border-none px-3 py-0.5 rounded-full text-xs font-bold">
-                            • Healthy & Active
-                          </Badge>
-                        </div>
-                        <p className="text-muted-foreground font-medium mt-1">
-                          {petData?.breed || 'Golden Retriever'} • {petData?.age || '2 yrs 3 mos'}
-                        </p>
-                      </div>
-                    </div>
-
-                    <div className="w-full md:w-auto space-y-3">
-                      <div className="flex justify-between items-end mb-1">
-                        <span className="text-sm font-bold flex items-center gap-1">
-                          <CheckCircle className="h-4 w-4 text-primary" /> Today's Wellness Plan
-                        </span>
-                        <span className="text-xs font-bold text-primary">75%</span>
-                      </div>
-                      <Progress value={75} className="h-2 bg-muted w-full md:w-64" />
-                      <div className="grid grid-cols-2 gap-2">
-                        <Badge variant="outline" className="bg-green-50 border-green-100 text-[10px] py-1 justify-start">
-                          <CheckCircle className="h-3 w-3 mr-1 text-green-600" /> Morning Walk
-                        </Badge>
-                        <Badge variant="outline" className="bg-muted border-none text-[10px] py-1 justify-start">
-                          <Clock className="h-3 w-3 mr-1" /> Feeding Time
-                        </Badge>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 pt-6 border-t border-dashed">
-                    <div className="flex items-center gap-3">
-                      <div className="h-10 w-10 rounded-xl bg-muted/50 flex items-center justify-center">
-                        <Scale className="h-5 w-5 text-muted-foreground" />
-                      </div>
-                      <div>
-                        <p className="text-[10px] font-bold text-muted-foreground uppercase">Weight</p>
-                        <p className="text-sm font-bold">{petData?.weight || '31.2'} kg</p>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-3">
-                      <div className="h-10 w-10 rounded-xl bg-muted/50 flex items-center justify-center">
-                        <Footprints className="h-5 w-5 text-muted-foreground" />
-                      </div>
-                      <div>
-                        <p className="text-[10px] font-bold text-muted-foreground uppercase">Activity</p>
-                        <p className="text-sm font-bold">{petData?.currentActivity || '4.2'} km</p>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-3">
-                      <div className="h-10 w-10 rounded-xl bg-muted/50 flex items-center justify-center">
-                        <Activity className="h-5 w-5 text-muted-foreground" />
-                      </div>
-                      <div>
-                        <p className="text-[10px] font-bold text-muted-foreground uppercase">Checkup</p>
-                        <p className="text-sm font-bold">{petData?.nextCheckup || 'Oct 24'}</p>
-                      </div>
-                    </div>
-                    <div className="flex items-center justify-end">
-                      <Link href="/records">
-                        <Button variant="link" className="text-primary text-xs font-bold p-0">
-                          View Records <ChevronRight className="h-3 w-3 ml-1" />
-                        </Button>
-                      </Link>
-                    </div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <Card className="border-none shadow-sm bg-white rounded-2xl overflow-hidden">
-                <CardHeader>
-                  <CardTitle className="text-lg flex items-center gap-2">
-                    <Calendar className="h-5 w-5 text-primary" /> Featured Appointment
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  {upcomingBooking ? (
-                    <div className="space-y-4">
-                      <div className="p-5 bg-primary/5 rounded-2xl border border-primary/10 relative overflow-hidden group">
-                        <div className="absolute top-0 right-0 p-3">
-                           <div className="h-10 w-10 rounded-full bg-white shadow-sm flex items-center justify-center">
-                              <Calendar className="h-5 w-5 text-primary" />
-                           </div>
-                        </div>
-                        <div className="space-y-1">
-                          <p className="font-bold text-xl text-primary">{upcomingBooking.serviceType}</p>
-                          <p className="text-sm text-muted-foreground flex items-center gap-1">
-                            <Briefcase className="h-3 w-3" /> {upcomingBooking.serviceProviderName}
-                          </p>
-                        </div>
-                        <div className="flex items-center gap-3 mt-4">
-                          <div className="bg-white px-3 py-1.5 rounded-xl shadow-sm">
-                            <p className="text-[10px] font-bold text-muted-foreground uppercase">Date</p>
-                            <p className="text-sm font-bold">{upcomingBooking.date}</p>
-                          </div>
-                          <div className="bg-white px-3 py-1.5 rounded-xl shadow-sm">
-                            <p className="text-[10px] font-bold text-muted-foreground uppercase">Time</p>
-                            <p className="text-sm font-bold">{upcomingBooking.time}</p>
-                          </div>
-                        </div>
-                        <div className="mt-4 flex gap-2">
-                           <Button size="sm" className="flex-1 rounded-xl">View Details</Button>
-                           <Button size="sm" variant="outline" className="flex-1 rounded-xl">Get Directions</Button>
-                        </div>
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="text-center py-10 text-muted-foreground border-2 border-dashed rounded-2xl flex flex-col items-center">
-                      <Calendar className="h-10 w-10 opacity-10 mb-2" />
-                      <p className="text-sm font-medium">No sessions scheduled.</p>
-                      <Link href="/providers">
-                        <Button variant="link" className="text-xs text-primary mt-1 font-bold">Book a service now</Button>
-                      </Link>
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-
-              <Card className="border-none shadow-sm bg-white rounded-2xl">
-                <CardHeader>
-                  <CardTitle className="text-lg flex items-center gap-2">
-                    <TrendingUp className="h-5 w-5 text-green-500" /> Neighborhood Trends
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                   <div className="flex items-center justify-between p-3 rounded-xl bg-muted/20">
-                     <div className="flex items-center gap-3">
-                        <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center text-primary">
-                           <Dog className="h-4 w-4" />
-                        </div>
-                        <p className="text-sm font-bold">Nearby Playmates</p>
-                     </div>
-                     <span className="font-bold text-sm bg-white px-2 py-0.5 rounded-md shadow-sm">12 Active</span>
-                   </div>
-                   <div className="flex items-center justify-between p-3 rounded-xl bg-muted/20">
-                     <div className="flex items-center gap-3">
-                        <div className="h-8 w-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-600">
-                           <Scissors className="h-4 w-4" />
-                        </div>
-                        <p className="text-sm font-bold">Grooming Deals</p>
-                     </div>
-                     <span className="font-bold text-sm text-primary">2 Local</span>
-                   </div>
-                   <Link href="/match" className="block mt-2">
-                    <Button variant="secondary" className="w-full text-xs font-bold rounded-xl py-5">
-                       Find Local Playmates <ChevronRight className="h-4 w-4 ml-1" />
-                    </Button>
-                   </Link>
-                </CardContent>
-              </Card>
+        {/* Dashboard Content */}
+        <div className="flex-1 space-y-8 p-4 md:p-8">
+          {/* Greeting & Summary */}
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div className="space-y-1">
+              <p className="text-[10px] font-bold text-primary uppercase tracking-[0.2em]">Happy Sunday ☀️</p>
+              <div className="flex items-center gap-3">
+                <h1 className="text-3xl font-bold tracking-tight font-headline">
+                  Good morning, {user?.displayName?.split(' ')[0] || 'Nandini'}!
+                </h1>
+                <Badge variant="outline" className="bg-green-50 text-green-700 border-green-100 px-2 py-0.5 rounded-full flex items-center gap-1 font-bold text-[10px]">
+                   <CheckCircle className="h-3 w-3" /> Active Parent
+                </Badge>
+              </div>
             </div>
           </div>
 
-          <div className="lg:col-span-4 space-y-6">
-            <Card className="border-none shadow-sm bg-white rounded-2xl overflow-hidden">
-              <CardHeader className="flex flex-row items-center justify-between pb-2">
-                <CardTitle className="text-sm flex items-center gap-2 uppercase tracking-tighter text-muted-foreground font-bold">
-                  <Bell className="h-4 w-4" /> Match Requests
-                </CardTitle>
-                {pendingRequests > 0 && (
-                  <Badge className="bg-orange-100 text-orange-600 border-none rounded-full px-2 py-0">
-                    {pendingRequests} New
-                  </Badge>
-                )}
-              </CardHeader>
-              <CardContent>
-                {pendingRequests > 0 ? (
-                  <div className="space-y-3">
-                    <div className="p-4 bg-muted/30 rounded-2xl">
-                        <p className="text-xs font-bold text-muted-foreground leading-relaxed">
-                          You have {pendingRequests} new match requests from pet owners nearby.
-                        </p>
-                    </div>
-                    <Link href="/match">
-                      <Button className="w-full bg-accent text-accent-foreground hover:bg-accent/90 text-xs rounded-xl py-5">
-                         Review All Requests
-                      </Button>
-                    </Link>
+          {/* Main Pet Status Card */}
+          <Card className="border-none shadow-xl shadow-orange-900/5 bg-white rounded-[2.5rem] overflow-hidden p-6 sm:p-8">
+            <div className="flex flex-col gap-6">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-4">
+                  <div className="relative">
+                    <Avatar className="h-20 w-20 border-4 border-white shadow-xl rounded-2xl overflow-hidden">
+                      <AvatarImage src={petData?.avatar || "/images/logo.png"} className="object-cover" />
+                      <AvatarFallback><PawPrintIcon className="h-8 w-8 text-muted" /></AvatarFallback>
+                    </Avatar>
+                    <div className="absolute -bottom-1 -right-1 bg-green-500 border-2 border-white h-5 w-5 rounded-full" />
                   </div>
-                ) : (
-                  <div className="text-center py-8">
-                     <PawPrintIcon className="mx-auto h-8 w-8 text-muted/30 mb-2" />
-                     <p className="text-xs text-muted-foreground">No new requests today.</p>
+                  <div>
+                    <h2 className="text-2xl font-bold">{petData?.name || 'Bruno'}</h2>
+                    <p className="text-sm text-muted-foreground font-medium">
+                      {petData?.breed || 'Golden Retriever'} • {petData?.age || '2 yrs 3 mos'}
+                    </p>
+                    <Badge className="bg-green-100 text-green-700 hover:bg-green-100 border-none px-3 mt-1 rounded-full text-[9px] font-bold">
+                      Healthy & Active
+                    </Badge>
                   </div>
-                )}
-              </CardContent>
-            </Card>
+                </div>
+                <div className="hidden sm:flex flex-col items-end text-right">
+                   <div className="flex items-center gap-2 text-green-600 font-bold text-sm">
+                      <CheckCircle className="h-4 w-4" /> Morning Walk Done
+                   </div>
+                   <div className="flex items-center gap-2 text-primary font-bold text-sm mt-1">
+                      <div className="h-2 w-2 rounded-full bg-primary" /> Shots in 12d
+                   </div>
+                </div>
+              </div>
 
-            <Card className="border-none shadow-sm bg-white rounded-2xl overflow-hidden">
-              <CardHeader>
-                <CardTitle className="text-sm flex items-center gap-2 uppercase tracking-tighter text-muted-foreground font-bold">
-                  <MessageSquare className="h-4 w-4" /> Recent Chats
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                 <div className="space-y-3">
-                    <div className="p-4 bg-muted/30 rounded-2xl flex items-center gap-3">
-                       <div className="h-10 w-10 rounded-full bg-primary/20 flex items-center justify-center text-primary font-bold text-lg">
-                          {matchedProfilesCount}
-                       </div>
-                       <div>
-                          <p className="text-sm font-bold">Active Chats</p>
-                          <p className="text-xs text-muted-foreground">Stay connected with matches.</p>
-                       </div>
-                    </div>
-                    <Link href="/chats">
-                      <Button variant="outline" className="w-full text-xs rounded-xl py-5">
-                        Open All Messages
-                      </Button>
-                    </Link>
+              {/* Milestones / Wellness Progress */}
+              <div className="space-y-3 pt-4 border-t border-dashed">
+                <div className="flex justify-between items-center">
+                   <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Today's Wellness Plan</span>
+                   <span className="text-xs font-bold text-primary">3 of 4 Milestones</span>
+                </div>
+                <Progress value={75} className="h-2.5 bg-muted rounded-full overflow-hidden" />
+              </div>
+
+              {/* Reminders Row Mobile */}
+              <div className="flex sm:hidden items-center justify-between gap-4 py-2">
+                 <div className="flex items-center gap-2 text-[10px] font-bold text-green-600">
+                    <CheckCircle className="h-3 w-3" /> Morning Walk Done
                  </div>
-              </CardContent>
-            </Card>
+                 <div className="flex items-center gap-2 text-[10px] font-bold text-primary">
+                    <div className="h-1.5 w-1.5 rounded-full bg-primary" /> Shots in 12d
+                 </div>
+              </div>
+            </div>
+          </Card>
+
+          {/* Match Alert Banner */}
+          {pendingRequests > 0 && (
+            <div className="bg-primary/10 border border-primary/20 rounded-3xl p-5 flex items-center justify-between gap-4 animate-in slide-in-from-bottom-4 duration-500">
+               <div className="flex items-center gap-4">
+                  <div className="flex -space-x-3">
+                     {[...Array(2)].map((_, i) => (
+                       <Avatar key={i} className="h-10 w-10 border-2 border-white">
+                          <AvatarImage src={`https://picsum.photos/seed/${i+100}/100/100`} />
+                       </Avatar>
+                     ))}
+                  </div>
+                  <div>
+                    <p className="text-[10px] font-bold text-primary uppercase tracking-widest">Playdate Alerts</p>
+                    <p className="text-sm font-bold text-accent">{pendingRequests} pet matches waiting for...</p>
+                  </div>
+               </div>
+               <Link href="/match">
+                 <Button size="sm" className="rounded-xl px-4 py-5 font-bold flex items-center gap-2">
+                   Review <ChevronRight className="h-4 w-4" />
+                 </Button>
+               </Link>
+            </div>
+          )}
+
+          {/* Quick Care Actions */}
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <h3 className="font-bold text-lg">Quick Care Actions</h3>
+              <Link href="/providers" className="text-xs font-bold text-primary">All Services (8)</Link>
+            </div>
+            <div className="flex overflow-x-auto pb-4 gap-4 no-scrollbar -mx-4 px-4 sm:mx-0 sm:px-0">
+              {[
+                { label: 'Walker', icon: User, color: 'text-red-500', href: '/providers?service=Walking' },
+                { label: 'Grooming', icon: Scissors, color: 'text-orange-500', href: '/providers?service=Grooming' },
+                { label: 'Playdate', icon: Dog, color: 'text-amber-600', href: '/match' },
+                { label: 'Records', icon: FileTextIcon, color: 'text-green-600', href: '/records' },
+                { label: 'Adopt', icon: Heart, color: 'text-blue-500', href: '/adoption' },
+              ].map((item, i) => (
+                <Link key={i} href={item.href} className="flex-shrink-0">
+                  <Card className="w-20 sm:w-24 border-none shadow-sm bg-white hover:shadow-md transition-all rounded-3xl">
+                    <CardContent className="p-4 flex flex-col items-center gap-3">
+                      <div className={cn("h-12 w-12 rounded-2xl flex items-center justify-center bg-muted/30", item.color)}>
+                        <item.icon className="h-6 w-6" />
+                      </div>
+                      <span className="text-[10px] font-bold text-center uppercase tracking-wider">{item.label}</span>
+                    </CardContent>
+                  </Card>
+                </Link>
+              ))}
+            </div>
+          </div>
+
+          {/* Upcoming Appointment */}
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <h3 className="font-bold text-lg">Upcoming Appointment</h3>
+              <span className="text-xs font-bold text-muted-foreground uppercase">Tomorrow</span>
+            </div>
+            {upcomingBooking ? (
+              <Card className="border-none shadow-xl shadow-orange-900/5 bg-white rounded-[2rem] p-6 relative overflow-hidden">
+                <div className="absolute -top-10 -right-10 h-40 w-40 bg-primary/5 rounded-full blur-3xl" />
+                <div className="flex flex-col gap-6 relative z-10">
+                  <div className="flex items-center gap-4">
+                    <div className="h-12 w-12 rounded-xl bg-primary/10 flex items-center justify-center text-primary">
+                       <Droplets className="h-6 w-6" />
+                    </div>
+                    <div>
+                      <div className="flex items-center gap-2">
+                         <Badge className="bg-green-100 text-green-700 border-none font-bold text-[9px] uppercase tracking-wider">Confirmed</Badge>
+                         <span className="text-xs font-medium text-muted-foreground">• Spa & De-shed</span>
+                      </div>
+                      <h4 className="text-xl font-bold mt-1">{upcomingBooking.serviceProviderName}</h4>
+                    </div>
+                  </div>
+                  
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="bg-muted/30 p-3 rounded-2xl flex items-center gap-2">
+                       <Clock className="h-4 w-4 text-primary" />
+                       <span className="text-xs font-bold">Tomorrow, {upcomingBooking.time}</span>
+                    </div>
+                    <div className="bg-muted/30 p-3 rounded-2xl flex items-center gap-2">
+                       <MapPin className="h-4 w-4 text-primary" />
+                       <span className="text-xs font-bold truncate">1.8 km • Indiranagar</span>
+                    </div>
+                  </div>
+
+                  <div className="flex gap-3">
+                     <Button variant="outline" className="flex-1 rounded-2xl font-bold py-6 text-xs bg-muted/20 border-none">
+                        <Navigation className="h-4 w-4 mr-2" /> Directions
+                     </Button>
+                     <Link href="/bookings" className="flex-1">
+                       <Button className="w-full rounded-2xl font-bold py-6 text-xs shadow-lg shadow-orange-900/20">
+                          <Briefcase className="h-4 w-4 mr-2" /> View Booking
+                       </Button>
+                     </Link>
+                  </div>
+                </div>
+              </Card>
+            ) : (
+              <div className="text-center py-10 text-muted-foreground border-2 border-dashed rounded-[2rem] flex flex-col items-center">
+                <Calendar className="h-10 w-10 opacity-10 mb-2" />
+                <p className="text-sm font-medium">No sessions scheduled.</p>
+                <Link href="/providers">
+                  <Button variant="link" className="text-xs text-primary mt-1 font-bold">Book a service now</Button>
+                </Link>
+              </div>
+            )}
+          </div>
+
+          {/* In Your Neighborhood */}
+          <div className="space-y-4">
+             <div className="flex items-center justify-between">
+                <h3 className="font-bold text-lg">In Your Neighborhood 🟢</h3>
+                <Link href="/providers" className="text-xs font-bold text-primary">See Map</Link>
+             </div>
+             <div className="flex overflow-x-auto pb-4 gap-6 no-scrollbar -mx-4 px-4 sm:mx-0 sm:px-0">
+                {localProviders.map((provider) => (
+                   <Card key={provider.id} className="w-72 sm:w-80 border-none shadow-md bg-white rounded-[2rem] overflow-hidden flex-shrink-0">
+                      <div className="relative h-48 w-full">
+                         <AvatarImage src={provider.image} className="w-full h-full object-cover" />
+                         <div className="absolute top-3 left-3 flex items-center gap-1 bg-white/90 backdrop-blur-md px-2 py-1 rounded-full shadow-sm">
+                            <Star className="h-3 w-3 fill-yellow-400 text-yellow-400" />
+                            <span className="text-[10px] font-bold">{provider.rating} (128)</span>
+                         </div>
+                         <div className="absolute bottom-3 right-3 bg-white/90 backdrop-blur-md px-2 py-1 rounded-full shadow-sm">
+                            <span className="text-[10px] font-bold">1.2 km away</span>
+                         </div>
+                      </div>
+                      <CardContent className="p-5">
+                         <div className="flex items-center justify-between mb-2">
+                            <h4 className="font-bold text-base truncate">{provider.name}</h4>
+                            <Badge className="bg-primary/10 text-primary border-none text-[8px] font-bold uppercase tracking-wider">Book</Badge>
+                         </div>
+                         <p className="text-xs text-muted-foreground">Organic Treats • Agility Training</p>
+                         <div className="flex items-center justify-between mt-4 pt-4 border-t border-dashed">
+                            <span className="text-[10px] font-bold text-green-600">Open till 8 PM</span>
+                         </div>
+                      </CardContent>
+                   </Card>
+                ))}
+             </div>
+          </div>
+
+          {/* Messages & Community */}
+          <div className="space-y-4">
+             <div className="flex items-center justify-between">
+                <h3 className="font-bold text-lg">Messages & Community</h3>
+                <Link href="/chats" className="text-xs font-bold text-primary">Open Chats</Link>
+             </div>
+             <div className="space-y-3">
+                <Link href="/chats">
+                   <Card className="border-none shadow-sm bg-white rounded-3xl p-4 flex items-center justify-between hover:shadow-md transition-all">
+                      <div className="flex items-center gap-4">
+                         <Avatar className="h-12 w-12 border border-muted shadow-sm">
+                            <AvatarImage src="https://picsum.photos/seed/user1/100/100" />
+                            <AvatarFallback>R</AvatarFallback>
+                         </Avatar>
+                         <div className="space-y-1">
+                            <p className="text-sm font-bold">Ratnesh • Milo's Dad <span className="text-[10px] text-muted-foreground font-normal ml-2">14m</span></p>
+                            <p className="text-xs text-muted-foreground truncate max-w-[200px]">Available for park playdate this Sunday?</p>
+                         </div>
+                      </div>
+                      <div className="flex items-center gap-2">
+                         <div className="h-2 w-2 rounded-full bg-primary" />
+                         <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                      </div>
+                   </Card>
+                </Link>
+
+                <Card className="border-none shadow-sm bg-orange-50/50 rounded-3xl p-6 flex items-start gap-4">
+                   <div className="h-10 w-10 rounded-full bg-white flex items-center justify-center text-primary shadow-sm flex-shrink-0">
+                      <Sun className="h-5 w-5" />
+                   </div>
+                   <div className="space-y-1">
+                      <h4 className="text-sm font-bold">Hydration Tip for {petData?.breed || 'Golden Retrievers'}</h4>
+                      <p className="text-xs text-muted-foreground leading-relaxed">
+                        Keep a portable silicone bowl on today's afternoon walk. Humidity is up 18%.
+                      </p>
+                   </div>
+                </Card>
+             </div>
           </div>
         </div>
       </div>
@@ -571,6 +580,29 @@ function PawPrintIcon(props: any) {
       <circle cx="14" cy="5" r="2" />
       <path d="M12 13c-2 0-4 1-4 3 0 2 2 4 4 4s4-2 4-4c0-2-2-3-4-3Z" />
       <path d="M12 21c-3.1 0-6-2.3-6-5.5s2.9-5.5 6-5.5 6 2.3 6 5.5-2.9 5.5-6 5.5Z" />
+    </svg>
+  )
+}
+
+function FileTextIcon(props: any) {
+  return (
+    <svg
+      {...props}
+      xmlns="http://www.w3.org/2000/svg"
+      width="24"
+      height="24"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z" />
+      <polyline points="14 2 14 8 20 8" />
+      <line x1="16" y1="13" x2="8" y2="13" />
+      <line x1="16" y1="17" x2="8" y2="17" />
+      <line x1="10" y1="9" x2="8" y2="9" />
     </svg>
   )
 }
