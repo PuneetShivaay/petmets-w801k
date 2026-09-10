@@ -4,7 +4,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useAuth } from "@/contexts/auth-context";
-import { collection, query, where, onSnapshot, doc, orderBy, limit } from "firebase/firestore";
+import { collection, query, where, onSnapshot, doc, limit } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -62,16 +62,18 @@ export default function DashboardPage() {
       );
       const unsubscribeRequests = onSnapshot(requestsQuery, (snapshot) => setPendingRequests(snapshot.size));
 
+      // Removed orderBy to avoid composite index error
       const bookingsQuery = query(
         collection(db, "bookings"), 
         where("ownerId", "==", user.uid),
-        where("status", "==", "accepted"),
-        orderBy("date", "asc"),
-        limit(1)
+        where("status", "==", "accepted")
       );
       const unsubscribeBookings = onSnapshot(bookingsQuery, (snapshot) => {
         if (!snapshot.empty) {
-          setUpcomingBooking({ id: snapshot.docs[0].id, ...snapshot.docs[0].data() });
+          const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+          // Sort client-side by date
+          data.sort((a: any, b: any) => a.date.localeCompare(b.date));
+          setUpcomingBooking(data[0]);
         } else {
           setUpcomingBooking(null);
         }
@@ -83,15 +85,21 @@ export default function DashboardPage() {
         unsubscribeBookings();
       };
     } else if (userRole === 'provider') {
+      // Removed orderBy to avoid composite index error
       const providerBookingsQuery = query(
         collection(db, "bookings"),
         where("serviceProviderId", "==", user.uid),
-        where("status", "==", "pending"),
-        orderBy("createdAt", "desc"),
-        limit(3)
+        where("status", "==", "pending")
       );
       const unsubscribeProviderBookings = onSnapshot(providerBookingsQuery, (snapshot) => {
-        setNewBookings(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+        const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        // Sort client-side by creation date
+        data.sort((a: any, b: any) => {
+          const timeA = a.createdAt?.toDate?.() || new Date(0);
+          const timeB = b.createdAt?.toDate?.() || new Date(0);
+          return timeB - timeA;
+        });
+        setNewBookings(data.slice(0, 3));
         setLoading(false);
       });
 
