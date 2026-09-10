@@ -131,13 +131,13 @@ export default function DashboardPage() {
   if (userRole === 'owner') {
     return (
       <div className="flex flex-col min-h-screen bg-[#F8FAFC]">
-        <div className="flex-1 grid grid-cols-1 lg:grid-cols-12 gap-8 p-6 lg:p-10 max-w-[1600px] mx-auto w-full">
+        <div className="flex-1 grid grid-cols-1 lg:grid-cols-12 gap-8 p-4 sm:p-6 lg:p-10 max-w-[1600px] mx-auto w-full">
           
           {/* Main Dashboard Feed */}
-          <div className="lg:col-span-8 space-y-10">
+          <div className="lg:col-span-8 space-y-8 md:space-y-10">
             
-            {/* Hero Section */}
-            <section className="relative rounded-[2.5rem] overflow-hidden aspect-[2.4/1] shadow-lg group">
+            {/* Hero Section - Improved Mobile Responsiveness */}
+            <section className="relative rounded-[2rem] md:rounded-[2.5rem] overflow-hidden aspect-[1.5/1] sm:aspect-[2.4/1] shadow-lg group">
               <Image 
                 src={HERO_SLIDES[0].image} 
                 alt="Pet Happiness" 
@@ -145,24 +145,26 @@ export default function DashboardPage() {
                 className="object-cover"
                 data-ai-hint="happy dog and cat"
               />
-              <div className="absolute inset-0 bg-gradient-to-r from-black/50 to-transparent flex flex-col justify-center px-12 text-white">
-                <h1 className="text-3xl md:text-4xl font-bold font-headline max-w-md leading-tight">
-                  Your Pet's Happiness Our Priority
+              <div className="absolute inset-0 bg-gradient-to-r from-black/60 via-black/30 to-transparent flex flex-col justify-center px-6 sm:px-12 text-white">
+                <h1 className="text-xl sm:text-3xl md:text-4xl font-bold font-headline max-w-xs sm:max-w-md leading-tight">
+                  {HERO_SLIDES[0].title}
                 </h1>
-                <p className="mt-4 text-xs opacity-90 max-w-sm">
-                  All pet care services, products and community - in one place.
+                <p className="mt-2 sm:mt-4 text-[9px] sm:text-xs opacity-90 max-w-[200px] sm:max-w-sm">
+                  {HERO_SLIDES[0].description}
                 </p>
                 
-                <div className="mt-8 flex items-center bg-white rounded-full p-1.5 shadow-xl max-w-xl">
-                  <div className="flex flex-1 items-center px-4">
-                    <Search className="h-5 w-5 text-slate-400 mr-2" />
+                <div className="mt-4 sm:mt-8 flex items-center bg-white rounded-full p-1 sm:p-1.5 shadow-xl w-full max-w-sm sm:max-w-xl">
+                  <div className="flex flex-1 items-center px-2 sm:px-4">
+                    <Search className="h-4 w-4 sm:h-5 sm:w-5 text-slate-400 mr-1 sm:mr-2" />
                     <input 
                       type="text" 
-                      placeholder="Search for services, products or vendors..."
-                      className="w-full text-slate-800 text-[10px] py-2 bg-transparent border-none focus:ring-0"
+                      placeholder="Search for services..."
+                      className="w-full text-slate-800 text-[9px] sm:text-[10px] py-1 sm:py-2 bg-transparent border-none focus:ring-0"
                     />
                   </div>
-                  <Button className="bg-primary hover:bg-primary/90 rounded-full px-8 font-bold h-9 text-[10px] text-white">Search</Button>
+                  <Button className="bg-primary hover:bg-primary/90 rounded-full px-4 sm:px-8 font-bold h-7 sm:h-9 text-[9px] sm:text-[10px] text-white">
+                    Search
+                  </Button>
                 </div>
               </div>
             </section>
@@ -171,11 +173,11 @@ export default function DashboardPage() {
             <section className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-4">
               {SERVICE_GRID.map((item, i) => (
                 <Link key={i} href={item.href} className="group flex flex-col items-center">
-                  <div className={cn("h-16 w-16 rounded-3xl flex items-center justify-center transition-all duration-300 group-hover:scale-105 group-hover:shadow-md mb-3", item.bg, item.color)}>
-                    <item.icon className="h-8 w-8" />
+                  <div className={cn("h-12 w-12 sm:h-16 sm:w-16 rounded-2xl sm:rounded-3xl flex items-center justify-center transition-all duration-300 group-hover:scale-105 group-hover:shadow-md mb-2 sm:mb-3", item.bg, item.color)}>
+                    <item.icon className="h-6 w-6 sm:h-8 sm:w-8" />
                   </div>
-                  <h4 className="text-[10px] font-bold text-slate-800 text-center uppercase tracking-wider">{item.title}</h4>
-                  <p className="text-[9px] text-slate-400 text-center mt-1 leading-tight">{item.desc}</p>
+                  <h4 className="text-[9px] sm:text-[10px] font-bold text-slate-800 text-center uppercase tracking-wider">{item.title}</h4>
+                  <p className="text-[8px] sm:text-[9px] text-slate-400 text-center mt-1 leading-tight hidden sm:block">{item.desc}</p>
                 </Link>
               ))}
             </section>
@@ -267,8 +269,8 @@ export default function DashboardPage() {
             </section>
           </div>
 
-          {/* Right Sidebar */}
-          <div className="lg:col-span-4 space-y-8">
+          {/* Right Sidebar - Desktop Only */}
+          <div className="lg:col-span-4 space-y-8 hidden lg:block">
             
             {/* User Greeting & Pet Card */}
             <Card className="border-none shadow-sm rounded-[2rem] p-6 bg-white space-y-6">
