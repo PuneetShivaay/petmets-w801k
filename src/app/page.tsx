@@ -336,19 +336,6 @@ export default function DashboardPage() {
                   </div>
                   <ChevronDown className="h-3 w-3 text-slate-300 mr-1" />
                </div>
-
-               {/* Secondary Pet Selection */}
-               <div className="flex items-center gap-3 p-2 opacity-50 hover:opacity-100 transition-opacity cursor-pointer">
-                  <Avatar className="h-8 w-8 border border-white shadow-sm">
-                    <AvatarImage src="https://picsum.photos/seed/mochi/80/80" />
-                    <AvatarFallback>M</AvatarFallback>
-                  </Avatar>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-[10px] font-bold text-slate-800 leading-none">Mochi</p>
-                    <p className="text-[8px] text-slate-400 mt-0.5 uppercase tracking-tighter">1 year • Female</p>
-                  </div>
-                  <ChevronDown className="h-2.5 w-2.5 text-slate-200 mr-1" />
-               </div>
             </div>
           </div>
 
