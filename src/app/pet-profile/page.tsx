@@ -8,21 +8,40 @@ import { updateProfile } from "firebase/auth";
 import { doc, getDoc, setDoc, serverTimestamp } from "firebase/firestore";
 import { ref as storageRef, uploadBytes, getDownloadURL } from "firebase/storage";
 
-import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardFooter, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { PawPrint, User, Edit3, Mail, Phone, Home, Save, XCircle, Loader2, Upload } from "lucide-react";
+import { 
+  Dog, 
+  User, 
+  Edit3, 
+  Mail, 
+  Phone, 
+  Home, 
+  Save, 
+  XCircle, 
+  Loader2, 
+  Upload, 
+  ShieldCheck, 
+  Heart, 
+  Award,
+  Zap,
+  Calendar,
+  MoreVertical
+} from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Badge } from "@/components/ui/badge";
 
 import { auth, db, storage } from "@/lib/firebase";
 import { useAuth } from "@/contexts/auth-context";
 import { useToast } from "@/hooks/use-toast";
 import { errorEmitter } from "@/firebase/error-emitter";
 import { FirestorePermissionError } from "@/firebase/errors";
+import { cn } from "@/lib/utils";
 
 const petSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters.").max(50),
@@ -51,12 +70,12 @@ const defaultPetData = {
 };
 
 const defaultOwnerData = {
-    name: "Pet Owner",
+    name: "Pet Parent",
     email: "loading...",
     phone: "",
     address: "",
     avatar: "/images/logo.png",
-    dataAiHint: "paw print logo",
+    dataAiHint: "parent profile",
 };
 
 export default function PetProfilePage() {
@@ -74,8 +93,8 @@ export default function PetProfilePage() {
   const [isUploadingOwnerAvatar, setIsUploadingOwnerAvatar] = useState(false);
 
 
-  const [petData, setPetData] = useState(defaultPetData);
-  const [ownerData, setOwnerData] = useState(defaultOwnerData);
+  const [petData, setPetData] = useState<any>(defaultPetData);
+  const [ownerData, setOwnerData] = useState<any>(defaultOwnerData);
 
   const { control: petControl, register: registerPet, handleSubmit: handlePetSubmit, reset: resetPetForm, formState: { errors: petErrors } } = useForm<PetFormData>({
     resolver: zodResolver(petSchema),
@@ -143,7 +162,7 @@ export default function PetProfilePage() {
     setDoc(petDocRef, dataToSave, { merge: true })
       .then(() => {
         setPetData(dataToSave);
-        toast({ title: "Success", description: "Pet details updated." });
+        toast({ title: "Profile Updated", description: `${data.name}'s details have been saved.` });
         setIsEditingPet(false);
       })
       .catch(async (error) => {
@@ -172,7 +191,7 @@ export default function PetProfilePage() {
       setDoc(userDocRef, dataToSave, { merge: true })
         .then(() => {
           setOwnerData(dataToSave);
-          toast({ title: "Success", description: "Your profile has been updated." });
+          toast({ title: "Account Updated", description: "Your contact information has been saved." });
           setIsEditingOwner(false);
         })
         .catch(async (error) => {
@@ -204,8 +223,8 @@ export default function PetProfilePage() {
 
       setDoc(petDocRef, updateData, { merge: true })
         .then(() => {
-          setPetData(prev => ({ ...prev, avatar: downloadURL }));
-          toast({ title: 'Avatar Updated!', description: "Your pet's new picture is saved." });
+          setPetData((prev: any) => ({ ...prev, avatar: downloadURL }));
+          toast({ title: 'Avatar Updated!', description: "Pet's new picture is saved." });
         })
         .catch(async (error) => {
           errorEmitter.emit('permission-error', new FirestorePermissionError({
@@ -215,7 +234,7 @@ export default function PetProfilePage() {
           }));
         });
     } catch (error) {
-      toast({ variant: 'destructive', title: 'Upload Failed', description: 'There was an error uploading your image.' });
+      toast({ variant: 'destructive', title: 'Upload Failed', description: 'Error uploading image.' });
     } finally {
       setIsUploadingPetAvatar(false);
     }
@@ -236,8 +255,8 @@ export default function PetProfilePage() {
 
       setDoc(userDocRef, updateData, { merge: true })
         .then(() => {
-          setOwnerData(prev => ({ ...prev, avatar: downloadURL }));
-          toast({ title: 'Profile Picture Updated!', description: 'Your new picture is saved.' });
+          setOwnerData((prev: any) => ({ ...prev, avatar: downloadURL }));
+          toast({ title: 'Profile Updated!', description: 'Your new picture is saved.' });
         })
         .catch(async (error) => {
           errorEmitter.emit('permission-error', new FirestorePermissionError({
@@ -247,7 +266,7 @@ export default function PetProfilePage() {
           }));
         });
     } catch (error) {
-      toast({ variant: 'destructive', title: 'Upload Failed', description: 'There was an error uploading your image.' });
+      toast({ variant: 'destructive', title: 'Upload Failed', description: 'Error uploading image.' });
     } finally {
       setIsUploadingOwnerAvatar(false);
     }
@@ -255,251 +274,291 @@ export default function PetProfilePage() {
 
   if (isLoading) {
     return (
-        <div className="space-y-6">
-            <p className="text-muted-foreground">View and manage your pet's details and your account information.</p>
-            <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-                <Card><CardHeader><Skeleton className="h-24 w-full" /></CardHeader><CardContent><Skeleton className="h-20 w-full" /></CardContent><CardFooter><Skeleton className="h-10 w-full" /></CardFooter></Card>
-                <Card><CardHeader><Skeleton className="h-24 w-full" /></CardHeader><CardContent><Skeleton className="h-20 w-full" /></CardContent><CardFooter><Skeleton className="h-10 w-full" /></CardFooter></Card>
+        <div className="space-y-6 max-w-5xl mx-auto p-4 md:p-8">
+            <Skeleton className="h-12 w-1/3" />
+            <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
+                <Skeleton className="h-[400px] w-full rounded-[2rem]" />
+                <Skeleton className="h-[400px] w-full rounded-[2rem]" />
             </div>
         </div>
     )
   }
 
   return (
-    <div className="space-y-6">
-      <p className="text-muted-foreground">View and manage your pet's details and your account information.</p>
-      <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-        <Card className="shadow-lg">
-          <form onSubmit={handlePetSubmit(onPetSubmit)}>
-            <CardHeader className="p-4">
-              <div className="flex items-center gap-4">
-                <div className="relative group">
-                    <Avatar className="h-20 w-20 border-2 border-primary">
-                      <AvatarImage src={petData.avatar} alt={petData.name} data-ai-hint={petData.dataAiHint} />
-                      <AvatarFallback><PawPrint className="h-10 w-10" /></AvatarFallback>
+    <div className="max-w-6xl mx-auto space-y-8 p-4 md:p-8 animate-in fade-in duration-700">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+          <h1 className="text-3xl font-bold font-headline tracking-tight text-slate-900">Pet Identity Hub</h1>
+          <p className="text-slate-500 mt-1">Manage your pet's digital ID and your parent account settings.</p>
+        </div>
+        <div className="flex gap-2">
+          <Badge variant="secondary" className="bg-primary/10 text-primary border-none px-4 py-1 h-fit">
+            <ShieldCheck className="h-3 w-3 mr-1" /> Verified Parent
+          </Badge>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 gap-8 lg:grid-cols-12">
+        {/* Pet Digital ID Card */}
+        <div className="lg:col-span-7 space-y-6">
+          <Card className="relative overflow-hidden rounded-[2.5rem] border-none shadow-2xl bg-white group transition-all duration-500">
+            <div className="absolute top-0 right-0 p-8 opacity-10">
+               <Dog className="h-40 w-40 -rotate-12 group-hover:rotate-0 transition-transform duration-700" />
+            </div>
+            
+            <form onSubmit={handlePetSubmit(onPetSubmit)}>
+              <CardHeader className="p-8 md:p-10 bg-slate-50/50 border-b border-dashed">
+                <div className="flex flex-col sm:flex-row items-center gap-6">
+                  <div className="relative group/avatar">
+                    <Avatar className="h-32 w-32 border-4 border-white shadow-2xl ring-4 ring-primary/10">
+                      <AvatarImage src={petData.avatar} alt={petData.name} className="object-cover" />
+                      <AvatarFallback className="bg-orange-50"><Dog className="h-16 w-16 text-primary" /></AvatarFallback>
                     </Avatar>
-                    <input
-                      type="file"
-                      ref={petAvatarInputRef}
-                      onChange={handlePetAvatarUpload}
-                      className="hidden"
-                      accept="image/*"
-                      disabled={isUploadingPetAvatar}
-                    />
+                    <input type="file" ref={petAvatarInputRef} onChange={handlePetAvatarUpload} className="hidden" accept="image/*" disabled={isUploadingPetAvatar} />
                     <Button
                       type="button"
                       size="icon"
                       variant="outline"
-                      className="absolute -bottom-2 -right-2 h-8 w-8 rounded-full bg-background"
+                      className="absolute -bottom-2 -right-2 h-10 w-10 rounded-full bg-white shadow-xl hover:bg-primary hover:text-white transition-all border-none"
                       onClick={() => petAvatarInputRef.current?.click()}
                       disabled={isUploadingPetAvatar}
                     >
-                      {isUploadingPetAvatar ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
+                      {isUploadingPetAvatar ? <Loader2 className="h-5 w-5 animate-spin" /> : <Upload className="h-5 w-5" />}
                     </Button>
-                </div>
-                <div>
-                  {isEditingPet ? (
-                     <Input id="petName" {...registerPet("name")} className="font-headline text-2xl p-2 h-auto" />
-                  ) : (
-                    <CardTitle className="font-headline text-2xl">{petData.name}</CardTitle>
-                  )}
-                  {petErrors.name && <p className="text-sm text-destructive">{petErrors.name.message}</p>}
+                  </div>
                   
-                  {isEditingPet ? (
-                     <Input id="petBreed" {...registerPet("breed")} className="mt-1" />
-                  ) : (
-                    <p className="text-muted-foreground">{petData.breed}</p>
-                  )}
-                  {petErrors.breed && <p className="text-sm text-destructive">{petErrors.breed.message}</p>}
+                  <div className="flex-1 text-center sm:text-left space-y-2">
+                    {isEditingPet ? (
+                      <div className="space-y-2">
+                        <Input id="petName" {...registerPet("name")} className="font-headline text-3xl h-auto py-2 bg-white border-primary/20" placeholder="Pet Name" />
+                        <Input id="petBreed" {...registerPet("breed")} className="bg-white border-primary/10" placeholder="Breed" />
+                      </div>
+                    ) : (
+                      <>
+                        <h2 className="text-4xl font-bold font-headline text-slate-900 leading-tight">{petData.name}</h2>
+                        <div className="flex flex-wrap items-center justify-center sm:justify-start gap-3">
+                           <Badge variant="secondary" className="bg-primary text-white border-none px-3 font-bold">{petData.breed}</Badge>
+                           <Badge variant="outline" className="border-slate-200 text-slate-500">{petData.gender}</Badge>
+                        </div>
+                      </>
+                    )}
+                  </div>
                 </div>
-              </div>
-            </CardHeader>
-            <CardContent className="space-y-4 p-4 pt-0">
-              {isEditingPet ? (
-                <>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-1">
-                      <Label htmlFor="petAge">Age</Label>
-                      <Input id="petAge" {...registerPet("age")} />
-                      {petErrors.age && <p className="text-sm text-destructive">{petErrors.age.message}</p>}
+              </CardHeader>
+
+              <CardContent className="p-8 md:p-10 space-y-8">
+                {isEditingPet ? (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                    <div className="space-y-2">
+                      <Label className="text-xs font-bold uppercase tracking-widest text-slate-400">Age / Date of Birth</Label>
+                      <Input id="petAge" {...registerPet("age")} className="h-12 rounded-xl bg-slate-50 border-none" />
+                      {petErrors.age && <p className="text-xs text-destructive">{petErrors.age.message}</p>}
                     </div>
-                     <div className="space-y-1">
-                      <Label>Gender</Label>
+                    <div className="space-y-2">
+                      <Label className="text-xs font-bold uppercase tracking-widest text-slate-400">Gender Identity</Label>
                       <Controller
                         control={petControl}
                         name="gender"
                         render={({ field }) => (
-                          <RadioGroup
-                            onValueChange={field.onChange}
-                            defaultValue={field.value}
-                            className="flex items-center space-x-4 pt-2"
-                          >
-                            <div className="flex items-center space-x-2">
+                          <RadioGroup onValueChange={field.onChange} defaultValue={field.value} className="flex gap-4 h-12 items-center">
+                            <div className="flex items-center space-x-2 bg-slate-50 px-4 py-2 rounded-xl flex-1 justify-center border border-transparent has-[:checked]:border-primary/20 has-[:checked]:bg-white transition-all">
                               <RadioGroupItem value="Male" id="male" />
-                              <Label htmlFor="male">Male</Label>
+                              <Label htmlFor="male" className="cursor-pointer font-bold">Male</Label>
                             </div>
-                            <div className="flex items-center space-x-2">
+                            <div className="flex items-center space-x-2 bg-slate-50 px-4 py-2 rounded-xl flex-1 justify-center border border-transparent has-[:checked]:border-primary/20 has-[:checked]:bg-white transition-all">
                               <RadioGroupItem value="Female" id="female" />
-                              <Label htmlFor="female">Female</Label>
+                              <Label htmlFor="female" className="cursor-pointer font-bold">Female</Label>
                             </div>
                           </RadioGroup>
                         )}
                       />
-                      {petErrors.gender && <p className="text-sm text-destructive">{petErrors.gender.message}</p>}
+                    </div>
+                    <div className="sm:col-span-2 space-y-2">
+                      <Label className="text-xs font-bold uppercase tracking-widest text-slate-400">About {petData.name}</Label>
+                      <Textarea id="petBio" {...registerPet("bio")} rows={4} className="rounded-xl bg-slate-50 border-none resize-none" placeholder="Describe personality, favorite treats, or funny habits..." />
                     </div>
                   </div>
-                  <div className="space-y-1">
-                    <Label htmlFor="petBio">Bio</Label>
-                    <Textarea id="petBio" {...registerPet("bio")} rows={3} />
-                    {petErrors.bio && <p className="text-sm text-destructive">{petErrors.bio.message}</p>}
-                  </div>
-                </>
-              ) : (
-                <>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <span className="text-sm font-medium text-muted-foreground">Age</span>
-                      <p className="text-base sm:text-lg">{petData.age}</p>
+                ) : (
+                  <div className="space-y-10">
+                    <div className="grid grid-cols-2 gap-8">
+                       <div className="space-y-1">
+                          <p className="text-xs font-bold uppercase tracking-widest text-slate-400 flex items-center gap-2">
+                            <Calendar className="h-3 w-3" /> Age Range
+                          </p>
+                          <p className="text-xl font-bold text-slate-800">{petData.age}</p>
+                       </div>
+                       <div className="space-y-1">
+                          <p className="text-xs font-bold uppercase tracking-widest text-slate-400 flex items-center gap-2">
+                            <Heart className="h-3 w-3" /> Personality
+                          </p>
+                          <p className="text-xl font-bold text-slate-800">Friendly & Active</p>
+                       </div>
                     </div>
-                     <div>
-                      <span className="text-sm font-medium text-muted-foreground">Gender</span>
-                      <p className="text-base sm:text-lg">{petData.gender}</p>
+                    
+                    <div className="space-y-4">
+                       <p className="text-xs font-bold uppercase tracking-widest text-slate-400">Quick Bio</p>
+                       <p className="text-lg text-slate-600 leading-relaxed italic border-l-4 border-primary/20 pl-6 py-1">
+                         "{petData.bio || 'No bio shared yet.'}"
+                       </p>
                     </div>
-                  </div>
-                  <div>
-                    <span className="text-sm font-medium text-muted-foreground">Bio</span>
-                    <p className="text-base italic text-foreground">{petData.bio || "No bio set."}</p>
-                  </div>
-                </>
-              )}
-            </CardContent>
-            <CardFooter className="p-4 pt-0">
-              {isEditingPet ? (
-                <div className="flex w-full gap-2">
-                  <Button type="submit" disabled={isSubmittingPet} className="flex-1">
-                    {isSubmittingPet ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
-                    Save
-                  </Button>
-                  <Button type="button" variant="outline" onClick={() => { setIsEditingPet(false); resetPetForm(petData); }}>
-                    <XCircle className="mr-2 h-4 w-4" /> Cancel
-                  </Button>
-                </div>
-              ) : (
-                <Button type="button" variant="outline" className="w-full" onClick={() => { resetPetForm(petData); setIsEditingPet(true); }}>
-                  <Edit3 className="mr-2 h-4 w-4" /> Edit Pet Details
-                </Button>
-              )}
-            </CardFooter>
-          </form>
-        </Card>
 
-        <Card className="shadow-lg">
-          <form onSubmit={handleOwnerSubmit(onOwnerSubmit)}>
-            <CardHeader className="p-4">
-              <div className="flex items-center gap-4">
-                 <div className="relative group">
-                    <Avatar className="h-20 w-20 border-2 border-accent">
-                      <AvatarImage src={ownerData.avatar} alt={ownerData.name} data-ai-hint={ownerData.dataAiHint} />
-                      <AvatarFallback><User className="h-10 w-10" /></AvatarFallback>
-                    </Avatar>
-                     <input
-                      type="file"
-                      ref={ownerAvatarInputRef}
-                      onChange={handleOwnerAvatarUpload}
-                      className="hidden"
-                      accept="image/*"
-                      disabled={isUploadingOwnerAvatar}
-                    />
-                    <Button
-                      type="button"
-                      size="icon"
-                      variant="outline"
-                      className="absolute -bottom-2 -right-2 h-8 w-8 rounded-full bg-background"
-                      onClick={() => ownerAvatarInputRef.current?.click()}
-                      disabled={isUploadingOwnerAvatar}
-                    >
-                      {isUploadingOwnerAvatar ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                       <div className="p-4 rounded-3xl bg-green-50 flex items-center gap-3">
+                          <Zap className="h-5 w-5 text-green-600" />
+                          <span className="text-[10px] font-bold uppercase tracking-wider text-green-700">Healthy</span>
+                       </div>
+                       <div className="p-4 rounded-3xl bg-blue-50 flex items-center gap-3">
+                          <Award className="h-5 w-5 text-blue-600" />
+                          <span className="text-[10px] font-bold uppercase tracking-wider text-blue-700">Trained</span>
+                       </div>
+                       <div className="p-4 rounded-3xl bg-orange-50 flex items-center gap-3">
+                          <ShieldCheck className="h-5 w-5 text-orange-600" />
+                          <span className="text-[10px] font-bold uppercase tracking-wider text-orange-700">Verified</span>
+                       </div>
+                    </div>
+                  </div>
+                )}
+              </CardContent>
+
+              <CardFooter className="p-8 md:p-10 pt-0 bg-slate-50/20">
+                {isEditingPet ? (
+                  <div className="flex w-full gap-4">
+                    <Button type="submit" disabled={isSubmittingPet} className="flex-1 h-14 rounded-2xl bg-primary text-lg font-bold shadow-xl hover:scale-[1.02] transition-all">
+                      {isSubmittingPet ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : <Save className="mr-2 h-5 w-5" />}
+                      Save Identity
                     </Button>
-                </div>
-                <div>
-                   {isEditingOwner ? (
-                     <>
-                      <Input id="ownerName" {...registerOwner("name")} className="font-headline text-2xl p-2 h-auto" />
-                      {ownerErrors.name && <p className="text-sm text-destructive">{ownerErrors.name.message}</p>}
-                     </>
-                   ) : (
-                    <CardTitle className="font-headline text-2xl">{ownerData.name}</CardTitle>
-                   )}
-                  <p className="text-muted-foreground">Pet Owner</p>
-                </div>
-              </div>
-            </CardHeader>
-            <CardContent className="space-y-4 p-4 pt-0">
-              <div className="flex items-center gap-2">
-                <Mail className="h-5 w-5 text-muted-foreground" />
-                <p className="truncate text-base">{ownerData.email}</p>
-              </div>
-              {isEditingOwner ? (
-                <>
-                  <div className="space-y-1">
-                    <Label htmlFor="ownerPhone">Phone</Label>
-                    <div className="flex items-center gap-2">
-                      <Phone className="h-5 w-5 text-muted-foreground" />
-                      <Input id="ownerPhone" {...registerOwner("phone")} placeholder="555-123-4567" />
-                    </div>
-                     {ownerErrors.phone && <p className="text-sm text-destructive">{ownerErrors.phone.message}</p>}
+                    <Button type="button" variant="outline" onClick={() => { setIsEditingPet(false); resetPetForm(petData); }} className="px-6 h-14 rounded-2xl font-bold border-slate-200">
+                      Cancel
+                    </Button>
                   </div>
-                  <div className="space-y-1">
-                    <Label htmlFor="ownerAddress">Address</Label>
-                    <div className="flex items-start gap-2">
-                      <Home className="h-5 w-5 text-muted-foreground mt-2" />
-                      <Input id="ownerAddress" {...registerOwner("address")} placeholder="123 Pet Street, Pawville" />
-                    </div>
-                     {ownerErrors.address && <p className="text-sm text-destructive">{ownerErrors.address.message}</p>}
-                  </div>
-                </>
-              ) : (
-                <>
-                  <div className="flex items-center gap-2">
-                    <Phone className="h-5 w-5 text-muted-foreground" />
-                    <p className="text-base">{ownerData.phone || "Not set"}</p>
-                  </div>
-                  <div className="flex items-start gap-2">
-                    <Home className="h-5 w-5 text-muted-foreground mt-1" />
-                    <p className="text-base">{ownerData.address || "Not set"}</p>
-                  </div>
-                </>
-              )}
-            </CardContent>
-            <CardFooter className="p-4 pt-0">
-              {isEditingOwner ? (
-                 <div className="flex w-full gap-2">
-                  <Button type="submit" disabled={isSubmittingOwner} className="flex-1">
-                    {isSubmittingOwner ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
-                    Save
+                ) : (
+                  <Button type="button" variant="outline" className="w-full h-14 rounded-2xl font-bold text-slate-600 border-slate-200 hover:bg-slate-50 group/btn shadow-sm" onClick={() => { resetPetForm(petData); setIsEditingPet(true); }}>
+                    <Edit3 className="mr-2 h-5 w-5 text-primary group-hover/btn:scale-110 transition-transform" /> 
+                    Edit Digital Identity
                   </Button>
-                  <Button type="button" variant="outline" onClick={() => { setIsEditingOwner(false); resetOwnerForm({ name: ownerData.name, phone: ownerData.phone, address: ownerData.address }); }}>
-                    <XCircle className="mr-2 h-4 w-4" /> Cancel
-                  </Button>
-                </div>
-              ) : (
-                <Button type="button" variant="outline" className="w-full" onClick={() => { resetOwnerForm({ name: ownerData.name, phone: ownerData.phone, address: ownerData.address }); setIsEditingOwner(true); }}>
-                  <Edit3 className="mr-2 h-4 w-4" /> Edit Account Details
-                </Button>
-              )}
-            </CardFooter>
-          </form>
-        </Card>
-      </div>
+                )}
+              </CardFooter>
+            </form>
+          </Card>
+        </div>
 
-      <Card className="mt-8 bg-primary/10">
-        <CardContent className="p-4 sm:p-6">
-          <h3 className="font-headline text-xl font-semibold text-primary">Your Information Hub!</h3>
-          <p className="mt-2 text-muted-foreground">
-            Keep your pet's and your own information up-to-date. This helps us provide the best service and ensures smooth communication for bookings and emergencies.
-          </p>
-        </CardContent>
-      </Card>
+        {/* Parent Account Card */}
+        <div className="lg:col-span-5 space-y-8">
+           <Card className="rounded-[2.5rem] border-none shadow-xl bg-white overflow-hidden">
+              <form onSubmit={handleOwnerSubmit(onOwnerSubmit)}>
+                <CardHeader className="p-8 pb-0">
+                   <div className="flex items-center justify-between mb-6">
+                      <h3 className="text-2xl font-bold font-headline text-slate-900">Parent Account</h3>
+                      {!isEditingOwner && (
+                        <Button variant="ghost" size="icon" className="rounded-full hover:bg-slate-50" onClick={() => { resetOwnerForm(ownerData); setIsEditingOwner(true); }}>
+                          <Edit3 className="h-5 w-5 text-slate-400" />
+                        </Button>
+                      )}
+                   </div>
+                   
+                   <div className="flex items-center gap-6 mb-8">
+                      <div className="relative">
+                        <Avatar className="h-24 w-24 border-4 border-white shadow-lg ring-2 ring-accent/5">
+                          <AvatarImage src={ownerData.avatar} className="object-cover" />
+                          <AvatarFallback className="bg-slate-50"><User className="h-10 w-10 text-slate-300" /></AvatarFallback>
+                        </Avatar>
+                        <input type="file" ref={ownerAvatarInputRef} onChange={handleOwnerAvatarUpload} className="hidden" accept="image/*" disabled={isUploadingOwnerAvatar} />
+                        <Button
+                          type="button"
+                          size="icon"
+                          variant="outline"
+                          className="absolute -bottom-1 -right-1 h-8 w-8 rounded-full bg-white shadow-lg border-none"
+                          onClick={() => ownerAvatarInputRef.current?.click()}
+                          disabled={isUploadingOwnerAvatar}
+                        >
+                          {isUploadingOwnerAvatar ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
+                        </Button>
+                      </div>
+                      <div className="flex-1 space-y-1">
+                         {isEditingOwner ? (
+                            <Input {...registerOwner("name")} className="font-bold text-xl h-auto py-1 bg-slate-50 border-none" />
+                         ) : (
+                           <h4 className="text-2xl font-bold text-slate-800">{ownerData.name}</h4>
+                         )}
+                         <p className="text-sm font-medium text-primary">Chief Pet Parent</p>
+                      </div>
+                   </div>
+                </CardHeader>
+                
+                <CardContent className="p-8 space-y-6">
+                   <div className="space-y-4">
+                      <div className="flex items-start gap-4 p-4 rounded-[1.5rem] bg-slate-50/50 border border-slate-100/50">
+                         <div className="h-10 w-10 rounded-xl bg-white shadow-sm flex items-center justify-center text-primary shrink-0">
+                            <Mail className="h-5 w-5" />
+                         </div>
+                         <div className="overflow-hidden">
+                            <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Email Address</p>
+                            <p className="text-sm font-bold text-slate-700 truncate">{ownerData.email}</p>
+                         </div>
+                      </div>
+
+                      <div className="flex items-start gap-4 p-4 rounded-[1.5rem] bg-slate-50/50 border border-slate-100/50">
+                         <div className="h-10 w-10 rounded-xl bg-white shadow-sm flex items-center justify-center text-primary shrink-0">
+                            <Phone className="h-5 w-5" />
+                         </div>
+                         <div className="flex-1 min-w-0">
+                            <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Mobile Number</p>
+                            {isEditingOwner ? (
+                              <Input {...registerOwner("phone")} className="h-auto py-0 px-0 bg-transparent border-none text-sm font-bold text-slate-700 focus-visible:ring-0" placeholder="Add phone..." />
+                            ) : (
+                              <p className="text-sm font-bold text-slate-700">{ownerData.phone || 'Not set'}</p>
+                            )}
+                         </div>
+                      </div>
+
+                      <div className="flex items-start gap-4 p-4 rounded-[1.5rem] bg-slate-50/50 border border-slate-100/50">
+                         <div className="h-10 w-10 rounded-xl bg-white shadow-sm flex items-center justify-center text-primary shrink-0">
+                            <Home className="h-5 w-5" />
+                         </div>
+                         <div className="flex-1 min-w-0">
+                            <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Home Address</p>
+                            {isEditingOwner ? (
+                              <Input {...registerOwner("address")} className="h-auto py-0 px-0 bg-transparent border-none text-sm font-bold text-slate-700 focus-visible:ring-0" placeholder="Add address..." />
+                            ) : (
+                              <p className="text-sm font-bold text-slate-700 leading-snug">{ownerData.address || 'Location not specified'}</p>
+                            )}
+                         </div>
+                      </div>
+                   </div>
+                </CardContent>
+
+                {isEditingOwner && (
+                  <CardFooter className="p-8 pt-0 flex gap-3">
+                    <Button type="submit" disabled={isSubmittingOwner} className="flex-1 h-12 rounded-xl bg-slate-900 font-bold">
+                       {isSubmittingOwner ? <Loader2 className="h-4 w-4 animate-spin" /> : "Save Changes"}
+                    </Button>
+                    <Button type="button" variant="ghost" onClick={() => setIsEditingOwner(false)} className="h-12 rounded-xl">
+                       Cancel
+                    </Button>
+                  </CardFooter>
+                )}
+              </form>
+           </Card>
+
+           <div className="p-8 rounded-[2.5rem] bg-accent text-white shadow-2xl relative overflow-hidden group">
+              <div className="relative z-10 space-y-4">
+                 <div className="flex items-center gap-3">
+                    <div className="h-10 w-10 rounded-2xl bg-white/10 flex items-center justify-center">
+                       <ShieldCheck className="h-6 w-6 text-white" />
+                    </div>
+                    <h4 className="text-xl font-bold font-headline">Privacy First 🔒</h4>
+                 </div>
+                 <p className="text-xs opacity-70 leading-relaxed font-medium">
+                   Your pet's health data and your contact details are encrypted and only shared with verified service providers when you confirm a booking.
+                 </p>
+                 <Button variant="secondary" className="w-full h-10 rounded-xl font-bold text-xs bg-white text-accent hover:bg-slate-50 transition-colors">
+                    Security Settings
+                 </Button>
+              </div>
+              <div className="absolute -bottom-4 -right-4 h-32 w-32 bg-white/5 rounded-full group-hover:scale-150 transition-transform duration-1000" />
+           </div>
+        </div>
+      </div>
     </div>
   );
 }
