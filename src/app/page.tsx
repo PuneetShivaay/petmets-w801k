@@ -75,11 +75,20 @@ export default function DashboardPage() {
   
   // Data State
   const [petData, setPetData] = useState<any>(null);
+  const [userData, setUserData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [localProviders, setLocalProviders] = useState<any[]>([]);
 
   useEffect(() => {
     if (!user) return;
+
+    // Fetch User Data from Firestore for the most up-to-date name/avatar
+    const userRef = doc(db, "users", user.uid);
+    const unsubscribeUser = onSnapshot(userRef, (docSnap) => {
+      if (docSnap.exists()) {
+        setUserData(docSnap.data());
+      }
+    });
 
     if (userRole === 'owner') {
       const petRef = doc(db, "pets", user.uid);
@@ -97,9 +106,13 @@ export default function DashboardPage() {
       };
       fetchLocal();
 
-      return () => unsubscribePet();
+      return () => {
+        unsubscribePet();
+        unsubscribeUser();
+      };
     } else {
       setLoading(false);
+      return () => unsubscribeUser();
     }
   }, [user, userRole]);
 
@@ -111,6 +124,9 @@ export default function DashboardPage() {
       </div>
     );
   }
+
+  const displayName = userData?.name || user?.displayName || 'Pet Parent';
+  const userAvatar = userData?.avatar || user?.photoURL || "https://picsum.photos/seed/user/100/100";
 
   if (userRole === 'owner') {
     return (
@@ -259,11 +275,11 @@ export default function DashboardPage() {
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-4">
                   <Avatar className="h-12 w-12 shadow-md">
-                    <AvatarImage src={user?.photoURL || "https://picsum.photos/seed/user/100/100"} />
+                    <AvatarImage src={userAvatar} />
                     <AvatarFallback><UserIcon /></AvatarFallback>
                   </Avatar>
                   <div>
-                    <h2 className="text-lg font-bold font-headline text-slate-900 leading-tight">Hello, {user?.displayName?.split(' ')[0] || 'Puneet'}!</h2>
+                    <h2 className="text-lg font-bold font-headline text-slate-900 leading-tight">Hello, {displayName.split(' ')[0]}!</h2>
                     <p className="text-[10px] text-slate-400">A better life for your pet, always.</p>
                   </div>
                 </div>

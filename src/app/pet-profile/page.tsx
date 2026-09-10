@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect, useCallback, useRef } from "react";
@@ -254,7 +255,11 @@ export default function PetProfilePage() {
       const updateData = { avatar: downloadURL };
 
       setDoc(userDocRef, updateData, { merge: true })
-        .then(() => {
+        .then(async () => {
+          // Also update the Auth profile so the photoURL is synced globally
+          if (auth.currentUser) {
+            await updateProfile(auth.currentUser, { photoURL: downloadURL });
+          }
           setOwnerData((prev: any) => ({ ...prev, avatar: downloadURL }));
           toast({ title: 'Profile Updated!', description: 'Your new picture is saved.' });
         })

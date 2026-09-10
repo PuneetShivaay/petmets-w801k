@@ -29,6 +29,8 @@ import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Input } from "@/components/ui/input";
 import Image from "next/image";
+import { doc, onSnapshot } from "firebase/firestore";
+import { db } from "@/lib/firebase";
 
 function MainLayoutChild({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -36,6 +38,22 @@ function MainLayoutChild({ children }: { children: React.ReactNode }) {
   const { showLoading } = useLoading();
   const { user, userRole, userSignOut } = useAuth();
   const { toast } = useToast();
+
+  const [userData, setUserData] = React.useState<any>(null);
+
+  React.useEffect(() => {
+    if (!user) {
+      setUserData(null);
+      return;
+    }
+    const userRef = doc(db, "users", user.uid);
+    const unsubscribe = onSnapshot(userRef, (docSnap) => {
+      if (docSnap.exists()) {
+        setUserData(docSnap.data());
+      }
+    });
+    return () => unsubscribe();
+  }, [user]);
 
   const handleLinkClick = () => {
     showLoading();
@@ -69,6 +87,8 @@ function MainLayoutChild({ children }: { children: React.ReactNode }) {
   const isDynamicPage = pathname.startsWith('/chats/') || pathname.startsWith('/profile/');
   const isDashboard = pathname === '/';
   const headerIsVisible = !isDynamicPage;
+
+  const headerAvatar = userData?.avatar || user?.photoURL || "https://picsum.photos/seed/userhead/100/100";
 
   return (
     <>
@@ -181,7 +201,7 @@ function MainLayoutChild({ children }: { children: React.ReactNode }) {
 
               <div className="flex items-center gap-3 pl-6 border-l border-slate-100">
                 <Avatar className="h-10 w-10 border-2 border-white shadow-md ring-1 ring-slate-100">
-                  <AvatarImage src={user?.photoURL || "https://picsum.photos/seed/userhead/100/100"} />
+                  <AvatarImage src={headerAvatar} />
                   <AvatarFallback><User /></AvatarFallback>
                 </Avatar>
               </div>
