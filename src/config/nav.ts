@@ -1,23 +1,18 @@
-
 import type { LucideIcon } from 'lucide-react';
 import {
-  Trees,
-  Users,
   Dog,
-  GraduationCap,
-  Scissors,
-  Hotel,
   FileText,
   CalendarDays,
   LayoutDashboard,
-  LogIn,
   User,
   MessageSquare,
-  Bell,
-  Camera,
+  Search,
   Heart,
   Briefcase,
-  Search,
+  HelpCircle,
+  Settings,
+  Users,
+  Wallet,
 } from 'lucide-react';
 
 export interface NavItem {
@@ -28,11 +23,12 @@ export interface NavItem {
   disabled?: boolean;
   external?: boolean;
   roles?: ('owner' | 'provider')[];
+  badge?: number;
 }
 
 export const navItems: NavItem[] = [
   {
-    title: 'Dashboard',
+    title: 'Home',
     href: '/',
     icon: LayoutDashboard,
     roles: ['owner', 'provider'],
@@ -40,7 +36,7 @@ export const navItems: NavItem[] = [
   {
     title: 'Match Your Pet',
     href: '/match',
-    icon: Heart,
+    icon: Users,
     roles: ['owner'],
   },
   {
@@ -50,22 +46,35 @@ export const navItems: NavItem[] = [
     roles: ['owner', 'provider'],
   },
   {
+    title: 'Profile',
+    href: '/pet-profile',
+    icon: Dog,
+    roles: ['owner', 'provider'],
+  },
+  {
+    title: 'Adoption',
+    href: '/adoption',
+    icon: Heart,
+    roles: ['owner'],
+  },
+  {
     title: 'Bookings',
     href: '/bookings',
     icon: CalendarDays,
     roles: ['owner', 'provider'],
   },
   {
-    title: 'Pet Chats',
+    title: 'Pet Reports',
+    href: '/records',
+    icon: FileText,
+    roles: ['owner'],
+  },
+  {
+    title: 'Messages',
     href: '/chats',
     icon: MessageSquare,
     roles: ['owner', 'provider'],
-  },
-  {
-    title: 'Pet Profile',
-    href: '/pet-profile',
-    icon: User,
-    roles: ['owner'],
+    badge: 3,
   },
   {
     title: 'My Business Listing',
@@ -74,20 +83,27 @@ export const navItems: NavItem[] = [
     roles: ['provider'],
   },
   {
-    title: 'Digital Records',
-    href: '/records',
-    icon: FileText,
+    title: 'Wallet & Offers',
+    href: '#',
+    icon: Wallet,
     roles: ['owner'],
   },
+];
+
+export const quickLinks: NavItem[] = [
   {
-    title: 'Adoption',
-    href: '/adoption',
-    icon: Dog,
-    roles: ['owner', 'provider'],
+    title: 'Support',
+    href: '#',
+    icon: HelpCircle,
   },
   {
-    title: 'Login / Sign Up',
-    href: '/login',
-    icon: LogIn,
+    title: 'Help Center',
+    href: '#',
+    icon: HelpCircle,
+  },
+  {
+    title: 'Settings',
+    href: '#',
+    icon: Settings,
   },
 ];

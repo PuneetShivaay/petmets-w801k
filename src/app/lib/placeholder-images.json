@@ -1,0 +1,79 @@
+
+{
+  "hero": {
+    "dashboard": {
+      "url": "/images/banner.jpeg",
+      "hint": "happy dog cat",
+      "width": 1200,
+      "height": 500
+    }
+  },
+  "promos": {
+    "promo1": {
+      "url": "https://picsum.photos/seed/promo-healthy/400/400",
+      "hint": "healthy dog",
+      "width": 400,
+      "height": 400
+    },
+    "promo2": {
+      "url": "https://picsum.photos/seed/promo-love/400/400",
+      "hint": "cute puppy",
+      "width": 400,
+      "height": 400
+    },
+    "promo3": {
+      "url": "https://picsum.photos/seed/promo-reports/400/400",
+      "hint": "pet health chart",
+      "width": 400,
+      "height": 400
+    }
+  },
+  "sidebar": {
+    "footer": {
+      "url": "https://picsum.photos/seed/footer-dog/100/100",
+      "hint": "happy puppy",
+      "width": 100,
+      "height": 100
+    },
+    "community": {
+      "url": "https://picsum.photos/seed/comm/300/300",
+      "hint": "pet community",
+      "width": 300,
+      "height": 300
+    }
+  },
+  "playzone": {
+    "garden": {
+      "url": "https://picsum.photos/seed/garden/600/400",
+      "hint": "pet garden",
+      "width": 600,
+      "height": 400
+    },
+    "pool": {
+      "url": "https://picsum.photos/seed/pool/600/400",
+      "hint": "dog pool",
+      "width": 600,
+      "height": 400
+    }
+  },
+  "recentlyViewed": [
+    {
+      "title": "Dog Grooming",
+      "price": "₹1,499",
+      "rating": "4.8",
+      "url": "https://picsum.photos/seed/groom/100/100",
+      "hint": "dog grooming",
+      "width": 100,
+      "height": 100
+    },
+    {
+      "title": "Pet Boarding",
+      "price": "₹699/day",
+      "rating": "4.9",
+      "url": "https://picsum.photos/seed/board/100/100",
+      "hint": "pet boarding",
+      "width": 100,
+      "height": 100
+    }
+  ]
+}

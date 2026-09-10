@@ -2,11 +2,28 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import Image from "next/image";
 import { Waves, Sun } from "lucide-react";
+import placeholderImages from "@/app/lib/placeholder-images.json";
 
 export default function PetPlayzonePage() {
   const playzoneFeatures = [
-    { title: "Spacious Garden", description: "Acres of green for your pet to roam freely.", image: "https://placehold.co/600x400.png", dataAiHint: "pet garden", icon: Sun },
-    { title: "Swimming Pool", description: "A dedicated pool for pets to cool off and have fun.", image: "https://placehold.co/600x400.png", dataAiHint: "dog pool", icon: Waves },
+    { 
+      title: "Spacious Garden", 
+      description: "Acres of green for your pet to roam freely.", 
+      image: placeholderImages.playzone.garden.url, 
+      dataAiHint: placeholderImages.playzone.garden.hint,
+      width: placeholderImages.playzone.garden.width,
+      height: placeholderImages.playzone.garden.height,
+      icon: Sun 
+    },
+    { 
+      title: "Swimming Pool", 
+      description: "A dedicated pool for pets to cool off and have fun.", 
+      image: placeholderImages.playzone.pool.url, 
+      dataAiHint: placeholderImages.playzone.pool.hint,
+      width: placeholderImages.playzone.pool.width,
+      height: placeholderImages.playzone.pool.height,
+      icon: Waves 
+    },
   ];
 
   return (

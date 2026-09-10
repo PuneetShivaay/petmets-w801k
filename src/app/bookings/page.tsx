@@ -2,7 +2,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { collection, query, where, orderBy, onSnapshot, doc, deleteDoc, updateDoc, serverTimestamp } from "firebase/firestore";
+import { collection, query, where, onSnapshot, doc, deleteDoc, updateDoc, serverTimestamp } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { useAuth } from "@/contexts/auth-context";
 import { useToast } from "@/hooks/use-toast";
@@ -42,14 +42,16 @@ export default function BookingManagementPage() {
     if (!user || !userRole) return;
 
     const fieldToFilter = userRole === 'provider' ? 'serviceProviderId' : 'ownerId';
+    // Removed orderBy to avoid composite index error
     const q = query(
       collection(db, "bookings"),
-      where(fieldToFilter, "==", user.uid),
-      orderBy("date", "asc")
+      where(fieldToFilter, "==", user.uid)
     );
 
     const unsubscribe = onSnapshot(q, (snapshot) => {
       const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Booking));
+      // Sort client-side by date
+      data.sort((a, b) => a.date.localeCompare(b.date));
       setBookings(data);
       setLoading(false);
     }, (error) => {

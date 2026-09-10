@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect } from "react";
@@ -10,9 +9,10 @@ import { useToast } from "@/hooks/use-toast";
 import { useLoading } from "@/contexts/loading-context";
 import { errorEmitter } from "@/firebase/error-emitter";
 import { FirestorePermissionError } from "@/firebase/errors";
+import { cn } from "@/lib/utils";
 
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Calendar } from "@/components/ui/calendar";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
@@ -26,7 +26,11 @@ import {
   Clock, 
   Image as ImageIcon, 
   Loader2,
-  CheckCircle2
+  CheckCircle2,
+  ShieldCheck,
+  Award,
+  Zap,
+  Ticket
 } from "lucide-react";
 import Image from "next/image";
 import { format } from "date-fns";
@@ -129,8 +133,8 @@ export default function ProviderDetailPage() {
 
   if (loading) {
     return (
-      <div className="container max-w-4xl mx-auto p-4 space-y-8">
-        <Loader2 className="h-12 w-12 animate-spin text-primary mx-auto mt-20" />
+      <div className="container max-w-5xl mx-auto p-8 flex justify-center">
+        <Loader2 className="h-16 w-16 animate-spin text-primary mt-20" />
       </div>
     );
   }
@@ -138,15 +142,15 @@ export default function ProviderDetailPage() {
   if (!provider) return null;
 
   return (
-    <div className="container max-w-5xl mx-auto pb-20">
-      <Button variant="ghost" onClick={() => router.back()} className="mb-6">
-        <ArrowLeft className="mr-2 h-4 w-4" /> Back to Search
+    <div className="container max-w-6xl mx-auto pb-20 px-4 md:px-8">
+      <Button variant="ghost" onClick={() => router.back()} className="mb-8 hover:bg-white text-slate-500 font-bold">
+        <ArrowLeft className="mr-2 h-4 w-4" /> Back to Discover
       </Button>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 md:gap-12">
         {/* Left Column: Info and Gallery */}
-        <div className="lg:col-span-2 space-y-8">
-          <div className="relative h-64 sm:h-96 w-full rounded-2xl overflow-hidden shadow-xl border">
+        <div className="lg:col-span-7 space-y-8 md:space-y-12">
+          <section className="relative h-[25rem] md:h-[32rem] w-full rounded-[3rem] overflow-hidden shadow-2xl border-none">
             <Image 
               src={provider.image} 
               alt={provider.name} 
@@ -154,126 +158,162 @@ export default function ProviderDetailPage() {
               className="object-cover"
               priority
             />
-            <Badge className="absolute top-4 right-4 text-lg py-1 px-4 shadow-2xl" variant="secondary">
-              {provider.service}
+            <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
+            <Badge className="absolute top-8 right-8 text-sm font-bold py-2 px-6 shadow-2xl bg-white/90 backdrop-blur-md text-slate-900 border-none rounded-full" variant="secondary">
+              {provider.service} Specialist
             </Badge>
-          </div>
-
-          <div className="space-y-4">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-              <h1 className="text-3xl sm:text-4xl font-bold font-headline">{provider.name}</h1>
-              <div className="flex items-center gap-2 bg-muted/50 px-4 py-2 rounded-full w-fit">
-                <Star className="h-5 w-5 fill-yellow-400 text-yellow-400" />
-                <span className="font-bold text-lg">{provider.rating}</span>
-                <span className="text-muted-foreground">(5.0 Rating)</span>
-              </div>
+            <div className="absolute bottom-8 left-8 text-white space-y-2">
+               <h1 className="text-4xl md:text-5xl font-bold font-headline leading-tight">{provider.name}</h1>
+               <div className="flex items-center gap-4 text-sm font-bold opacity-90">
+                 <div className="flex items-center gap-1">
+                   <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
+                   <span>{provider.rating} (5.0 Rating)</span>
+                 </div>
+                 <div className="flex items-center gap-1">
+                   <MapPin className="h-4 w-4 text-primary" />
+                   <span>{provider.location}</span>
+                 </div>
+               </div>
             </div>
+          </section>
 
-            <div className="flex flex-wrap gap-4 text-muted-foreground">
-              <div className="flex items-center gap-2">
-                <MapPin className="h-5 w-5 text-primary" />
-                <span>{provider.location}</span>
-              </div>
-              {provider.email && (
-                <div className="flex items-center gap-2">
-                  <Mail className="h-5 w-5 text-primary" />
-                  <span className="truncate max-w-[200px] sm:max-w-none">{provider.email}</span>
-                </div>
-              )}
+          <section className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+             {[
+               { label: 'Verified', icon: ShieldCheck, color: 'bg-green-50 text-green-600' },
+               { label: 'Top Rated', icon: Award, color: 'bg-orange-50 text-orange-600' },
+               { label: 'Fast Response', icon: Zap, color: 'bg-blue-50 text-blue-600' },
+             ].map((badge, i) => (
+               <div key={i} className={cn("p-4 rounded-3xl flex items-center gap-3", badge.color)}>
+                 <badge.icon className="h-5 w-5" />
+                 <span className="text-xs font-bold uppercase tracking-wider">{badge.label}</span>
+               </div>
+             ))}
+          </section>
+
+          <section className="space-y-6">
+            <div className="flex items-center justify-between">
+              <h3 className="text-2xl font-bold font-headline text-slate-900">About Our Services</h3>
+              <div className="h-px flex-1 mx-8 bg-slate-100 hidden sm:block" />
             </div>
-
-            <Card className="bg-muted/30 border-none shadow-none">
-              <CardContent className="p-6">
-                <h3 className="text-lg font-semibold mb-2">About Our Services</h3>
-                <p className="text-foreground/80 leading-relaxed italic whitespace-pre-wrap">
+            <Card className="bg-white border-none shadow-sm rounded-[2rem]">
+              <CardContent className="p-8">
+                <p className="text-slate-600 leading-relaxed italic text-lg whitespace-pre-wrap">
                   "{provider.bio}"
                 </p>
               </CardContent>
             </Card>
-          </div>
+          </section>
 
           {provider.gallery && provider.gallery.length > 0 && (
-            <div className="space-y-4">
-              <h4 className="text-xl font-bold flex items-center gap-2">
-                <ImageIcon className="h-6 w-6 text-primary" />
+            <section className="space-y-6">
+              <h4 className="text-2xl font-bold font-headline flex items-center gap-3 text-slate-900">
+                <ImageIcon className="h-7 w-7 text-primary" />
                 Service Showcase
               </h4>
-              <ScrollArea className="w-full whitespace-nowrap rounded-xl pb-4">
-                <div className="flex w-max space-x-4">
+              <ScrollArea className="w-full whitespace-nowrap rounded-[2rem] pb-4">
+                <div className="flex w-max space-x-6">
                   {provider.gallery.map((url, idx) => (
-                    <div key={idx} className="relative w-64 h-48 sm:w-80 sm:h-60 rounded-xl overflow-hidden border shadow-md">
-                      <Image src={url} alt={`Gallery ${idx}`} fill className="object-cover" />
+                    <div key={idx} className="relative w-72 h-56 sm:w-96 sm:h-72 rounded-[2rem] overflow-hidden shadow-lg group">
+                      <Image src={url} alt={`Gallery ${idx}`} fill className="object-cover transition-transform duration-500 group-hover:scale-110" />
                     </div>
                   ))}
                 </div>
                 <ScrollBar orientation="horizontal" />
               </ScrollArea>
-            </div>
+            </section>
           )}
         </div>
 
-        {/* Right Column: Booking Form */}
-        <div className="lg:col-span-1">
-          <Card className="sticky top-24 shadow-2xl border-primary/20">
-            <CardHeader className="bg-primary/5 border-b">
-              <CardTitle className="flex items-center gap-2 text-xl">
-                <CalendarIcon className="h-5 w-5 text-primary" />
-                Schedule Session
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="p-6 space-y-6">
-              <div className="space-y-3">
-                <label className="text-sm font-bold uppercase tracking-wider text-muted-foreground">1. Select Date</label>
-                <div className="flex justify-center border rounded-xl p-2 bg-background">
-                  <Calendar
-                    mode="single"
-                    selected={selectedDate}
-                    onSelect={setSelectedDate}
-                    disabled={(date) => date < new Date() || date < new Date("1900-01-01")}
-                    className="w-full"
-                  />
+        {/* Right Column: Redesigned Booking Ticket */}
+        <div className="lg:col-span-5">
+          <div className="sticky top-24 space-y-6">
+            <Card className="relative overflow-hidden rounded-[3rem] border-none shadow-2xl bg-white animate-in slide-in-from-right-8 duration-700">
+              <div className="absolute top-0 right-0 p-8 opacity-5">
+                 <Ticket className="h-32 w-32 -rotate-12" />
+              </div>
+              
+              <CardHeader className="bg-slate-50/50 border-b border-dashed p-8">
+                <div className="flex items-center gap-4">
+                  <div className="h-14 w-14 rounded-2xl bg-primary/10 flex items-center justify-center text-primary">
+                    <CalendarIcon className="h-7 w-7" />
+                  </div>
+                  <div>
+                    <CardTitle className="text-2xl font-bold font-headline">Schedule Session</CardTitle>
+                    <CardDescription className="text-sm font-bold text-primary">{provider.service} Appointment</CardDescription>
+                  </div>
                 </div>
-              </div>
+              </CardHeader>
+              
+              <CardContent className="p-8 space-y-8">
+                <div className="space-y-4">
+                  <label className="text-xs font-bold uppercase tracking-widest text-slate-400">1. Preferred Date</label>
+                  <div className="flex justify-center bg-slate-50/50 rounded-3xl p-2 border border-slate-100">
+                    <Calendar
+                      mode="single"
+                      selected={selectedDate}
+                      onSelect={setSelectedDate}
+                      disabled={(date) => date < new Date()}
+                      className="rounded-3xl border-none"
+                    />
+                  </div>
+                </div>
 
-              <div className="space-y-3">
-                <label className="text-sm font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
-                  <Clock className="h-4 w-4" />
-                  2. Preferred Time
-                </label>
-                <Select value={selectedTime} onValueChange={setSelectedTime}>
-                  <SelectTrigger className="w-full h-12">
-                    <SelectValue placeholder="Choose a time" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {TIME_SLOTS.map(slot => (
-                      <SelectItem key={slot} value={slot}>{slot}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
+                <div className="space-y-4">
+                  <label className="text-xs font-bold uppercase tracking-widest text-slate-400 flex items-center gap-2">
+                    <Clock className="h-4 w-4" />
+                    2. Arrival Time
+                  </label>
+                  <Select value={selectedTime} onValueChange={setSelectedTime}>
+                    <SelectTrigger className="w-full h-14 rounded-2xl bg-slate-50/50 border-slate-100 font-bold text-slate-700">
+                      <SelectValue placeholder="Choose a time" />
+                    </SelectTrigger>
+                    <SelectContent className="rounded-2xl shadow-xl">
+                      {TIME_SLOTS.map(slot => (
+                        <SelectItem key={slot} value={slot} className="font-bold py-3">{slot}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
 
-              <div className="bg-primary/10 p-4 rounded-xl space-y-2">
-                <p className="text-xs text-primary font-bold uppercase tracking-tighter">Booking Summary</p>
-                <div className="flex items-start gap-2">
-                  <CheckCircle2 className="h-4 w-4 text-primary mt-1" />
-                  <p className="text-sm leading-snug">
-                    <span className="font-bold">{provider.name}</span> for <span className="font-bold">{selectedDate ? format(selectedDate, 'PPPP') : '...'}</span> at <span className="font-bold">{selectedTime}</span>
+                <div className="bg-primary/5 p-6 rounded-[2rem] border border-primary/10 space-y-3">
+                  <p className="text-[10px] text-primary font-bold uppercase tracking-[0.2em]">Summary</p>
+                  <div className="flex items-start gap-3">
+                    <CheckCircle2 className="h-5 w-5 text-primary mt-0.5" />
+                    <div>
+                      <p className="text-sm font-bold text-slate-800 leading-snug">
+                        {provider.name}
+                      </p>
+                      <p className="text-xs font-bold text-slate-500">
+                        {selectedDate ? format(selectedDate, 'EEEE, MMM do') : '...'} • {selectedTime}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                <Button 
+                  className="w-full h-16 text-lg font-bold shadow-xl rounded-2xl bg-primary hover:bg-primary/90 transition-all hover:scale-[1.02] active:scale-[0.98]" 
+                  onClick={handleBookSession}
+                  disabled={isBooking || !selectedDate}
+                >
+                  {isBooking ? <Loader2 className="mr-2 h-6 w-6 animate-spin" /> : "Confirm & Pay Later"}
+                </Button>
+                
+                <p className="text-center text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                  Secure Professional Care
+                </p>
+              </CardContent>
+            </Card>
+
+            <div className="bg-[#2D4A22] text-white p-8 rounded-[3rem] shadow-xl relative overflow-hidden group">
+               <div className="relative z-10 space-y-4">
+                  <h4 className="text-xl font-bold font-headline">Safety First 🧡</h4>
+                  <p className="text-xs opacity-80 leading-relaxed font-medium">
+                    All PetMets providers carry professional insurance and are trained in pet first aid. Your pet's safety is our top priority.
                   </p>
-                </div>
-              </div>
-
-              <Button 
-                className="w-full h-14 text-lg font-bold shadow-lg" 
-                onClick={handleBookSession}
-                disabled={isBooking || !selectedDate}
-              >
-                {isBooking ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : "Confirm Booking"}
-              </Button>
-              <p className="text-center text-xs text-muted-foreground">
-                You'll be notified once the provider accepts your request.
-              </p>
-            </CardContent>
-          </Card>
+               </div>
+               <ShieldCheck className="absolute -bottom-4 -right-4 h-24 w-24 opacity-10 group-hover:scale-110 transition-transform" />
+            </div>
+          </div>
         </div>
       </div>
     </div>
