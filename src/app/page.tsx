@@ -3,6 +3,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { useAuth } from "@/contexts/auth-context";
 import { collection, query, where, onSnapshot, doc, getDoc, orderBy, limit } from "firebase/firestore";
 import { db } from "@/lib/firebase";
@@ -11,6 +12,8 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Progress } from "@/components/ui/progress";
 import { 
   ArrowRight, 
   Bell, 
@@ -26,337 +29,298 @@ import {
   Heart, 
   ExternalLink,
   Clock,
-  ChevronRight
+  ChevronRight,
+  Search,
+  RefreshCw,
+  Sun,
+  MapPin,
+  MoreVertical,
+  Navigation,
+  Activity,
+  Footprints,
+  Scale
 } from "lucide-react";
-
-interface StatCardProps {
-  title: string;
-  value: string | number;
-  description: string;
-  icon: React.ElementType;
-  href: string;
-  actionText: string;
-}
-
-function StatCard({ title, value, description, icon: Icon, href, actionText }: StatCardProps) {
-  return (
-    <Card className="shadow-lg">
-      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-        <CardTitle className="text-sm font-medium">{title}</CardTitle>
-        <Icon className="h-4 w-4 text-muted-foreground" />
-      </CardHeader>
-      <CardContent>
-        <div className="text-2xl font-bold">{value}</div>
-        <p className="text-xs text-muted-foreground">{description}</p>
-        <Link href={href} passHref>
-          <Button variant="outline" size="sm" className="mt-4 w-full sm:w-auto">
-            {actionText} <ArrowRight className="ml-2 h-4 w-4" />
-          </Button>
-        </Link>
-      </CardContent>
-    </Card>
-  );
-}
-
-function StatCardSkeleton() {
-    return (
-        <Card className="shadow-lg">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <Skeleton className="h-5 w-2/5" />
-                <Skeleton className="h-4 w-4" />
-            </CardHeader>
-            <CardContent>
-                <Skeleton className="h-8 w-1/4 mt-1" />
-                <Skeleton className="h-4 w-3/4 mt-2" />
-                <Skeleton className="h-9 w-[120px] mt-4" />
-            </CardContent>
-        </Card>
-    );
-}
 
 export default function DashboardPage() {
   const { user, userRole } = useAuth();
   
-  // Owner Stats
+  // Data State
+  const [petData, setPetData] = useState<any>(null);
   const [pendingRequests, setPendingRequests] = useState(0);
   const [matchedProfilesCount, setMatchedProfilesCount] = useState(0);
-  const [upcomingBooking, setUpcomingBooking] = useState<{service: string, date: string} | null>(null);
-  const [isProfileComplete, setIsProfileComplete] = useState(true);
-  
-  // Provider Stats
-  const [pendingAppointments, setPendingAppointments] = useState(0);
-  const [completedServices, setCompletedServices] = useState(0);
-  const [averageRating, setAverageRating] = useState(5.0);
-  const [isBusinessListed, setIsBusinessListed] = useState(false);
-  const [recentPendingBookings, setRecentPendingBookings] = useState<any[]>([]);
-
-  const [loadingStats, setLoadingStats] = useState(true);
+  const [upcomingBooking, setUpcomingBooking] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     if (!user) return;
 
-    if (userRole === 'owner') {
-      const checkProfileCompleteness = async () => {
-          const userDocRef = doc(db, "users", user.uid);
-          const userDocSnap = await getDoc(userDocRef);
-          if (userDocSnap.exists()) {
-              const userData = userDocSnap.data();
-              if (!userData.phone || !userData.address) setIsProfileComplete(false);
-          } else {
-              setIsProfileComplete(false);
-          }
-      };
+    // Fetch Pet Data
+    const petRef = doc(db, "pets", user.uid);
+    const unsubscribePet = onSnapshot(petRef, (docSnap) => {
+      if (docSnap.exists()) {
+        setPetData({ id: docSnap.id, ...docSnap.data() });
+      }
+      setLoading(false);
+    });
 
-      const requestsQuery = query(
-        collection(db, "matchRequests"),
-        where("targetOwnerId", "==", user.uid),
-        where("status", "==", "pending")
-      );
-      const unsubscribeRequests = onSnapshot(requestsQuery, (snapshot) => setPendingRequests(snapshot.size));
+    // Fetch Match Requests
+    const requestsQuery = query(
+      collection(db, "matchRequests"),
+      where("targetOwnerId", "==", user.uid),
+      where("status", "==", "pending")
+    );
+    const unsubscribeRequests = onSnapshot(requestsQuery, (snapshot) => setPendingRequests(snapshot.size));
 
-      const chatsQuery = query(collection(db, "chats"), where("participants", "array-contains", user.uid));
-      const unsubscribeChats = onSnapshot(chatsQuery, (snapshot) => setMatchedProfilesCount(snapshot.size));
-      
-      const bookingsQuery = query(
-        collection(db, "bookings"), 
-        where("ownerId", "==", user.uid),
-        where("status", "==", "pending")
-      );
-      const unsubscribeBookings = onSnapshot(bookingsQuery, (snapshot) => {
-          if (!snapshot.empty) {
-              const b = snapshot.docs[0].data();
-              setUpcomingBooking({ service: b.serviceType, date: b.date });
-          } else {
-              setUpcomingBooking(null);
-          }
-      });
+    // Fetch Chats
+    const chatsQuery = query(collection(db, "chats"), where("participants", "array-contains", user.uid));
+    const unsubscribeChats = onSnapshot(chatsQuery, (snapshot) => setMatchedProfilesCount(snapshot.size));
+    
+    // Fetch Bookings
+    const bookingsQuery = query(
+      collection(db, "bookings"), 
+      where("ownerId", "==", user.uid),
+      where("status", "==", "accepted"),
+      orderBy("date", "asc"),
+      limit(1)
+    );
+    const unsubscribeBookings = onSnapshot(bookingsQuery, (snapshot) => {
+      if (!snapshot.empty) {
+        setUpcomingBooking({ id: snapshot.docs[0].id, ...snapshot.docs[0].data() });
+      } else {
+        setUpcomingBooking(null);
+      }
+    });
 
-      checkProfileCompleteness();
-      setLoadingStats(false);
+    return () => {
+      unsubscribePet();
+      unsubscribeRequests();
+      unsubscribeChats();
+      unsubscribeBookings();
+    };
+  }, [user]);
 
-      return () => {
-        unsubscribeRequests();
-        unsubscribeChats();
-        unsubscribeBookings();
-      };
-    } else if (userRole === 'provider') {
-      const checkBusinessListing = async () => {
-          const providerDocRef = doc(db, "service_providers", user.uid);
-          const providerDocSnap = await getDoc(providerDocRef);
-          if (providerDocSnap.exists()) {
-              setIsBusinessListed(true);
-              setAverageRating(providerDocSnap.data().rating || 5.0);
-          } else {
-              setIsBusinessListed(false);
-          }
-      };
-
-      const providerBookingsQuery = query(
-        collection(db, "bookings"), 
-        where("serviceProviderId", "==", user.uid)
-      );
-      
-      const unsubscribeProviderBookings = onSnapshot(providerBookingsQuery, (snapshot) => {
-          const bookings = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
-          const pending = bookings.filter((d: any) => d.status === 'pending');
-          const completed = bookings.filter((d: any) => d.status === 'completed' || d.status === 'accepted').length;
-          
-          setPendingAppointments(pending.length);
-          setCompletedServices(completed);
-          setRecentPendingBookings(pending.slice(0, 3));
-      });
-
-      checkBusinessListing();
-      setLoadingStats(false);
-
-      return () => unsubscribeProviderBookings();
-    }
-  }, [user, userRole]);
-
-  if (userRole === 'provider') {
+  if (loading) {
     return (
-      <div className="space-y-6">
-        <div className="space-y-0.5">
-          <h2 className="text-2xl font-bold tracking-tight">Vendor Dashboard</h2>
-          <p className="text-muted-foreground">Manage your pet services and connect with owners.</p>
+      <div className="space-y-6 p-6">
+        <Skeleton className="h-12 w-1/3" />
+        <Skeleton className="h-[300px] w-full" />
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <Skeleton className="h-[200px] w-full" />
+          <Skeleton className="h-[200px] w-full" />
+          <Skeleton className="h-[200px] w-full" />
         </div>
-
-        {!loadingStats && !isBusinessListed && (
-           <Card className="shadow-lg bg-primary/10 border-primary">
-              <CardHeader className="flex flex-row items-center gap-4">
-                  <AlertTriangle className="h-8 w-8 text-primary" />
-                  <div>
-                      <CardTitle className="text-xl sm:text-2xl">List Your Business</CardTitle>
-                      <CardDescription className="text-primary/90">
-                          Register as a provider to start appearing in search results and receiving bookings.
-                      </CardDescription>
-                  </div>
-              </CardHeader>
-              <CardContent>
-                  <Link href="/business-profile" passHref>
-                      <Button size="sm">
-                          Set Up Listing <ArrowRight className="ml-2 h-4 w-4" />
-                      </Button>
-                  </Link>
-              </CardContent>
-          </Card>
-        )}
-
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-          <StatCard
-            title="Pending Appointments"
-            value={pendingAppointments}
-            description="Requests awaiting your attention."
-            icon={Calendar}
-            href="/bookings"
-            actionText="View Schedule"
-          />
-          <StatCard
-            title="Completed Services"
-            value={completedServices}
-            description="Total services provided to date."
-            icon={CheckCircle}
-            href="/bookings"
-            actionText="View History"
-          />
-          <StatCard
-            title="Average Rating"
-            value={averageRating.toFixed(1)}
-            description="Based on customer feedback."
-            icon={Star}
-            href="/business-profile"
-            actionText="View Profile"
-          />
-          <Card className="shadow-lg lg:col-span-1">
-               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Quick Access</CardTitle>
-                  <Briefcase className="h-4 w-4 text-muted-foreground" />
-              </CardHeader>
-              <CardContent className="flex flex-col space-y-2 pt-2">
-                   <p className="text-xs text-muted-foreground">Manage your presence.</p>
-                  <Link href="/business-profile" passHref><Button variant="secondary" className="w-full justify-start"><User className="mr-2 h-4 w-4" />Business Profile</Button></Link>
-                  <Link href="/providers" passHref><Button variant="secondary" className="w-full justify-start"><ExternalLink className="mr-2 h-4 w-4" />Preview Listing</Button></Link>
-                  <Link href="/chats" passHref><Button variant="secondary" className="w-full justify-start"><MessageSquare className="mr-2 h-4 w-4" />Customer Chats</Button></Link>
-              </CardContent>
-          </Card>
-        </div>
-
-        {recentPendingBookings.length > 0 && (
-          <Card className="shadow-lg border-primary/10">
-            <CardHeader>
-              <CardTitle className="text-lg flex items-center gap-2">
-                <Clock className="h-5 w-5 text-primary" />
-                New Booking Requests
-              </CardTitle>
-              <CardDescription>Action these quickly to confirm sessions with pet owners.</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                {recentPendingBookings.map((booking) => (
-                  <div key={booking.id} className="flex items-center justify-between p-4 rounded-xl border bg-muted/20">
-                    <div>
-                      <p className="font-bold">{booking.serviceType}</p>
-                      <p className="text-sm text-muted-foreground">{booking.date} at {booking.time}</p>
-                    </div>
-                    <Link href="/bookings">
-                      <Button size="sm" variant="ghost">
-                        Manage <ChevronRight className="ml-1 h-4 w-4" />
-                      </Button>
-                    </Link>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        )}
       </div>
     );
   }
 
-  // Owner Dashboard (Default)
   return (
-    <div className="space-y-6">
-      <div className="space-y-0.5">
-        <h2 className="text-2xl font-bold tracking-tight">
-          Welcome back, {user?.displayName || 'Pet Owner'}!
-        </h2>
-        <p className="text-muted-foreground">
-          Here's a quick overview of what's happening in your pet's world.
-        </p>
+    <div className="flex flex-col gap-8 pb-10">
+      {/* Top Header Section */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight font-headline flex items-center gap-2">
+            Good morning, {user?.displayName?.split(' ')[0] || 'Nandini'}! <Sun className="h-8 w-8 text-yellow-500" />
+          </h1>
+          <p className="text-muted-foreground mt-1">
+            Here's what's happening with {petData?.name || 'Bruno'} today.
+          </p>
+        </div>
+        <div className="flex items-center gap-3">
+          <Button variant="outline" className="rounded-full bg-white shadow-sm border-none flex items-center gap-2 pr-2">
+            <Avatar className="h-6 w-6">
+              <AvatarImage src={petData?.avatar || "/images/logo.png"} />
+              <AvatarFallback>{petData?.name?.charAt(0)}</AvatarFallback>
+            </Avatar>
+            <span className="text-sm font-medium">Switch Pet ({petData?.name || 'Bruno'})</span>
+            <ChevronRight className="h-4 w-4 rotate-90" />
+          </Button>
+          <Button variant="outline" size="icon" className="rounded-full bg-white shadow-sm border-none">
+            <RefreshCw className="h-4 w-4" />
+          </Button>
+        </div>
       </div>
 
-      {!loadingStats && !isProfileComplete && (
-         <Card className="shadow-lg bg-primary/10 border-primary">
-            <CardHeader className="flex flex-row items-center gap-4">
-                <AlertTriangle className="h-8 w-8 text-primary" />
-                <div>
-                    <CardTitle className="text-xl sm:text-2xl">Complete Your Profile</CardTitle>
-                    <CardDescription className="text-primary/90">
-                        Fill out your pet and owner details to get the most out of PetMets.
-                    </CardDescription>
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+        {/* Main Feed Column */}
+        <div className="lg:col-span-8 space-y-8">
+          
+          {/* Wellness Plan Card */}
+          <Card className="border-none shadow-sm bg-white overflow-hidden">
+            <CardContent className="p-0">
+              <div className="p-8 space-y-8">
+                <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+                  <div className="flex items-center gap-4">
+                    <div className="relative">
+                      <Avatar className="h-24 w-24 border-4 border-white shadow-lg rounded-2xl">
+                        <AvatarImage src={petData?.avatar || "/images/logo.png"} className="object-cover" />
+                        <AvatarFallback><PawPrint className="h-10 w-10" /></AvatarFallback>
+                      </Avatar>
+                      <div className="absolute -bottom-1 -right-1 bg-green-500 border-2 border-white h-6 w-6 rounded-full flex items-center justify-center">
+                        <CheckCircle className="h-4 w-4 text-white" />
+                      </div>
+                    </div>
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <h2 className="text-3xl font-bold">{petData?.name || 'Bruno'}</h2>
+                        <Badge className="bg-green-100 text-green-700 hover:bg-green-100 border-none px-3 py-0.5 rounded-full text-xs font-bold">
+                          • Healthy & Active
+                        </Badge>
+                      </div>
+                      <p className="text-muted-foreground font-medium mt-1">
+                        {petData?.breed || 'Golden Retriever'} • {petData?.age || '2 yrs 3 mos'}
+                      </p>
+                      <p className="text-xs text-muted-foreground mt-1 flex items-center gap-1">
+                        ID: <span className="text-primary font-bold">#PM-8924-BLR</span>
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="w-full md:w-auto space-y-3">
+                    <div className="flex justify-between items-end mb-1">
+                      <span className="text-sm font-bold flex items-center gap-1">
+                        <CheckCircle className="h-4 w-4 text-primary" /> Today's Wellness Plan
+                      </span>
+                      <span className="text-xs font-bold text-primary">3 of 4 Milestones (75%)</span>
+                    </div>
+                    <Progress value={75} className="h-2 bg-muted w-full md:w-64" />
+                    
+                    <div className="grid grid-cols-2 gap-2">
+                      <Badge variant="outline" className="bg-green-50 border-green-100 text-[10px] py-1 justify-start">
+                        <CheckCircle className="h-3 w-3 mr-1 text-green-600" /> Morning Walk
+                      </Badge>
+                      <Badge variant="outline" className="bg-green-50 border-green-100 text-[10px] py-1 justify-start">
+                        <CheckCircle className="h-3 w-3 mr-1 text-green-600" /> Supplements
+                      </Badge>
+                      <Badge variant="outline" className="bg-orange-50 border-orange-100 text-[10px] py-1 justify-start text-orange-600">
+                        <Clock className="h-3 w-3 mr-1" /> Playdate 5:00 PM
+                      </Badge>
+                      <Badge variant="outline" className="bg-muted border-none text-[10px] py-1 justify-start">
+                        <Calendar className="h-3 w-3 mr-1" /> Rabies Booster
+                      </Badge>
+                    </div>
+                  </div>
                 </div>
+
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 pt-6 border-t border-dashed">
+                  <div className="flex items-center gap-3">
+                    <div className="h-10 w-10 rounded-xl bg-muted/50 flex items-center justify-center">
+                      <Scale className="h-5 w-5 text-muted-foreground" />
+                    </div>
+                    <div>
+                      <p className="text-[10px] font-bold text-muted-foreground uppercase">Weight</p>
+                      <p className="text-sm font-bold">31.2 kg <span className="text-green-600 font-medium">(Ideal)</span></p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <div className="h-10 w-10 rounded-xl bg-muted/50 flex items-center justify-center">
+                      <Footprints className="h-5 w-5 text-muted-foreground" />
+                    </div>
+                    <div>
+                      <p className="text-[10px] font-bold text-muted-foreground uppercase">Activity</p>
+                      <p className="text-sm font-bold">4.2 / 6.0 km</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <div className="h-10 w-10 rounded-xl bg-muted/50 flex items-center justify-center">
+                      <Activity className="h-5 w-5 text-muted-foreground" />
+                    </div>
+                    <div>
+                      <p className="text-[10px] font-bold text-muted-foreground uppercase">Next Checkup</p>
+                      <p className="text-sm font-bold">Oct 24, 2024</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center justify-end">
+                    <Link href="/records">
+                      <Button variant="link" className="text-primary text-xs font-bold p-0">
+                        View Full Health Records <ChevronRight className="h-3 w-3 ml-1" />
+                      </Button>
+                    </Link>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Placeholder for Quick Actions & Neighborhood */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 opacity-50 pointer-events-none">
+             <Skeleton className="h-[150px] w-full" />
+             <Skeleton className="h-[150px] w-full" />
+          </div>
+
+        </div>
+
+        {/* Sidebar Column */}
+        <div className="lg:col-span-4 space-y-6">
+          {/* Notifications Card */}
+          <Card className="border-none shadow-sm bg-white">
+            <CardHeader className="flex flex-row items-center justify-between pb-2">
+              <CardTitle className="text-lg flex items-center gap-2 uppercase tracking-tighter text-muted-foreground">
+                <Bell className="h-4 w-4" /> Playdate Requests
+              </CardTitle>
+              {pendingRequests > 0 && (
+                <Badge className="bg-orange-100 text-orange-600 hover:bg-orange-100 border-none rounded-full px-2 py-0">
+                  {pendingRequests} Pending
+                </Badge>
+              )}
             </CardHeader>
             <CardContent>
-                <Link href="/pet-profile" passHref>
-                    <Button size="sm">
-                        Go to Profile <ArrowRight className="ml-2 h-4 w-4" />
-                    </Button>
-                </Link>
+              <p className="text-xs text-muted-foreground mb-4">
+                Two pet buddies in your neighborhood want to meet {petData?.name || 'Bruno'} for an outdoor session.
+              </p>
+              <div className="space-y-4">
+                <Skeleton className="h-16 w-full" />
+                <Skeleton className="h-16 w-full" />
+              </div>
+              <Link href="/match" className="block text-center mt-4 text-xs font-bold text-primary hover:underline">
+                Browse All Match Recommendations →
+              </Link>
             </CardContent>
-        </Card>
-      )}
+          </Card>
 
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-        {loadingStats ? (
-          <StatCardSkeleton />
-        ) : (
-          <StatCard
-            title="Pending Match Requests"
-            value={pendingRequests}
-            description="Awaiting your response."
-            icon={Bell}
-            href="/match"
-            actionText="Review Requests"
-          />
-        )}
-        {loadingStats ? (
-          <StatCardSkeleton />
-        ) : (
-          <StatCard
-            title="Matched Profiles"
-            value={matchedProfilesCount}
-            description="Connections you have made."
-            icon={HeartHandshake}
-            href="/chats"
-            actionText="View Chats"
-          />
-        )}
-        {loadingStats ? (
-          <StatCardSkeleton />
-        ) : (
-          <StatCard
-            title="Upcoming Booking"
-            value={upcomingBooking?.service || "None"}
-            description={upcomingBooking ? `Scheduled for ${upcomingBooking.date}` : "No upcoming appointments."}
-            icon={Calendar}
-            href="/bookings"
-            actionText="View Bookings"
-          />
-        )}
-        <Card className="shadow-lg lg:col-span-1">
-             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Quick Actions</CardTitle>
-                <MessageSquare className="h-4 w-4 text-muted-foreground" />
+          <Card className="border-none shadow-sm bg-white">
+            <CardHeader>
+              <CardTitle className="text-lg flex items-center gap-2 uppercase tracking-tighter text-muted-foreground">
+                <MessageSquare className="h-4 w-4" /> Recent Pet Chats
+              </CardTitle>
             </CardHeader>
-            <CardContent className="flex flex-col space-y-2 pt-2">
-                 <p className="text-xs text-muted-foreground">Manage your pet's life.</p>
-                <Link href="/pet-profile" passHref><Button variant="secondary" className="w-full justify-start"><User className="mr-2 h-4 w-4" />View Pet Profile</Button></Link>
-                <Link href="/records" passHref><Button variant="secondary" className="w-full justify-start"><FileText className="mr-2 h-4 w-4" />Manage Documents</Button></Link>
-                <Link href="/providers" passHref><Button variant="secondary" className="w-full justify-start"><Calendar className="mr-2 h-4 w-4" />Book New Service</Button></Link>
-                <Link href="/adoption" passHref><Button variant="secondary" className="w-full justify-start"><Heart className="mr-2 h-4 w-4" />Pet Adoption</Button></Link>
+            <CardContent>
+               <div className="space-y-4">
+                  <Skeleton className="h-12 w-full" />
+                  <Skeleton className="h-12 w-full" />
+               </div>
+               <Link href="/chats">
+                <Button variant="secondary" className="w-full mt-4 text-xs font-bold bg-muted/50 border-none shadow-none">
+                  Open All Messages ({matchedProfilesCount} Unread) →
+                </Button>
+               </Link>
             </CardContent>
-        </Card>
+          </Card>
+        </div>
       </div>
     </div>
   );
+}
+
+function PawPrint(props: any) {
+  return (
+    <svg
+      {...props}
+      xmlns="http://www.w3.org/2000/svg"
+      width="24"
+      height="24"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <circle cx="11" cy="5" r="2" />
+      <circle cx="18" cy="9" r="2" />
+      <circle cx="7" cy="9" r="2" />
+      <circle cx="14" cy="5" r="2" />
+      <path d="M12 13c-2 0-4 1-4 3 0 2 2 4 4 4s4-2 4-4c0-2-2-3-4-3Z" />
+      <path d="M12 21c-3.1 0-6-2.3-6-5.5s2.9-5.5 6-5.5 6 2.3 6 5.5-2.9 5.5-6 5.5Z" />
+    </svg>
+  )
 }

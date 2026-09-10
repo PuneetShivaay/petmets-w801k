@@ -87,6 +87,23 @@
           "description": "URL to the pet's picture.",
           "format": "uri"
         },
+        "weight": {
+          "type": "number",
+          "description": "Current weight in kg."
+        },
+        "activityGoal": {
+          "type": "number",
+          "description": "Daily activity goal in km."
+        },
+        "currentActivity": {
+          "type": "number",
+          "description": "Activity completed today in km."
+        },
+        "nextCheckup": {
+          "type": "string",
+          "format": "date",
+          "description": "Date of next routine checkup."
+        },
         "createdAt": {
           "type": "string",
           "description": "Creation timestamp.",
