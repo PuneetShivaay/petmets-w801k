@@ -28,6 +28,7 @@ import { BottomNav } from "./bottom-nav";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Input } from "@/components/ui/input";
+import Image from "next/image";
 
 function MainLayoutChild({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -85,15 +86,16 @@ function MainLayoutChild({ children }: { children: React.ReactNode }) {
                   <Link href={item.href} passHref legacyBehavior>
                     <SidebarMenuButton
                       asChild={item.href.startsWith("/")}
+                      isActive={pathname === item.href}
                       className={cn(
-                        "w-full justify-start rounded-xl px-4 py-6",
-                        pathname === item.href ? "bg-primary text-white" : "text-slate-600 hover:bg-slate-50"
+                        "w-full justify-start rounded-xl px-4 py-6 transition-all",
+                        pathname === item.href ? "bg-primary text-white hover:bg-primary/90" : "text-slate-600 hover:bg-slate-50"
                       )}
                       onClick={item.href.startsWith("/") ? handleLinkClick : undefined}
                     >
                       <div className="flex items-center w-full">
                         <item.icon className={cn("mr-3 h-5 w-5", pathname === item.href ? "text-white" : "text-slate-400")} />
-                        <span className="font-medium">{item.title}</span>
+                        <span className="font-semibold">{item.title}</span>
                         {item.badge && (
                           <Badge className="ml-auto bg-primary text-white border-none h-5 w-5 flex items-center justify-center p-0 text-[10px]">
                             {item.badge}
@@ -125,9 +127,18 @@ function MainLayoutChild({ children }: { children: React.ReactNode }) {
           </ScrollArea>
         </SidebarContent>
         <SidebarFooter className="p-6 mt-auto">
-            <div className="space-y-4">
-              <div className="text-[10px] font-bold text-slate-600 italic">
-                Happy Pets<br/>Happy People<br/>Better World 🧡
+            <div className="space-y-6">
+              <div className="relative p-4 rounded-2xl bg-primary/5 overflow-hidden">
+                <div className="relative z-10 text-[10px] font-bold text-slate-600 italic leading-tight">
+                  Happy Pets<br/>Happy People<br/>Better World 🧡
+                </div>
+                <Image 
+                  src="https://picsum.photos/seed/footer-pet/200/200" 
+                  alt="Pet Illustration" 
+                  width={60} 
+                  height={60} 
+                  className="absolute -bottom-2 -right-2 opacity-20"
+                />
               </div>
               {user && (
                 <SidebarMenuButton
@@ -143,7 +154,7 @@ function MainLayoutChild({ children }: { children: React.ReactNode }) {
       </Sidebar>
 
       <div className="flex-1 flex flex-col bg-[#F8FAFC]">
-        {/* New Global Desktop Header */}
+        {/* Global Desktop Header */}
         {!isMobile && (
           <header className="sticky top-0 z-40 flex h-20 items-center justify-between gap-6 border-b bg-white px-8">
             <div className="flex flex-1 items-center max-w-2xl relative">
@@ -170,7 +181,7 @@ function MainLayoutChild({ children }: { children: React.ReactNode }) {
 
               <div className="flex items-center gap-3 pl-4 border-l">
                 <Avatar className="h-10 w-10 border-2 border-slate-50 shadow-sm">
-                  <AvatarImage src={user?.photoURL || "/images/logo.png"} />
+                  <AvatarImage src={user?.photoURL || "https://picsum.photos/seed/ghanist/100/100"} />
                   <AvatarFallback><User /></AvatarFallback>
                 </Avatar>
               </div>
