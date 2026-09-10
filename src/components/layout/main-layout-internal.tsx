@@ -43,6 +43,8 @@ function MainLayoutChild({ children }: { children: React.ReactNode }) {
   const [userData, setUserData] = React.useState<any>(null);
   const [headerSearch, setHeaderSearch] = React.useState("");
 
+  const displayName = userData?.name || user?.displayName || 'Pet Parent';
+
   React.useEffect(() => {
     if (!user) {
       setUserData(null);
