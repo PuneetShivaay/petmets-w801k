@@ -206,20 +206,20 @@ function MainLayoutChild({ children }: { children: React.ReactNode }) {
       <div className="flex-1 flex flex-col bg-[#F8FAFC]">
         {!isMobile && (
           <header className="sticky top-0 z-40 flex h-20 items-center justify-center bg-white/80 backdrop-blur-md shadow-sm border-b border-slate-100">
-            <div className="max-w-[1600px] w-full px-6 md:px-10 flex items-center justify-between gap-8">
-              <div className="flex flex-1 items-center max-w-2xl relative group">
+            <div className="max-w-[1400px] w-full px-6 flex items-center justify-between gap-6">
+              <div className="flex flex-1 items-center max-w-xl relative group">
                 <Search className="absolute left-5 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-300 group-focus-within:text-primary transition-colors" />
                 <Input 
                   className="w-full pl-14 bg-slate-50/50 border-none rounded-2xl h-12 text-sm font-medium focus-visible:ring-1 focus-visible:ring-primary/20 placeholder:text-slate-300 transition-all focus-visible:bg-white" 
-                  placeholder="Search for services, products, vets, trainers, or anything..."
+                  placeholder="Search for services, products, vets, trainers..."
                   value={headerSearch}
                   onChange={(e) => setHeaderSearch(e.target.value)}
                   onKeyDown={handleSidebarSearch}
                 />
               </div>
               
-              <div className="flex items-center gap-6">
-                <div className="flex items-center gap-2.5 px-4 py-2 rounded-2xl hover:bg-slate-50 cursor-pointer text-slate-600 transition-all border border-transparent hover:border-slate-100">
+              <div className="flex items-center gap-4">
+                <div className="flex items-center gap-2 px-3 py-2 rounded-2xl hover:bg-slate-50 cursor-pointer text-slate-600 transition-all border border-transparent hover:border-slate-100">
                   <MapPin className="h-4 w-4 text-primary" />
                   <span className="text-[10px] font-black uppercase tracking-[0.2em]">India</span>
                   <ChevronDown className="h-3 w-3 text-slate-300" />
@@ -232,7 +232,7 @@ function MainLayoutChild({ children }: { children: React.ReactNode }) {
                   </Badge>
                 </div>
 
-                <div className="flex items-center gap-4 pl-6 border-l border-slate-100">
+                <div className="flex items-center gap-4 pl-4 border-l border-slate-100">
                   <Avatar className="h-10 w-10 border-2 border-white shadow-lg ring-1 ring-slate-100 transition-transform hover:scale-105 cursor-pointer">
                     <AvatarImage src={userAvatar} className="object-cover" />
                     <AvatarFallback className="bg-slate-50"><User className="h-5 w-5 text-slate-300" /></AvatarFallback>
