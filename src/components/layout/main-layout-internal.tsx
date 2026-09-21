@@ -44,6 +44,7 @@ function MainLayoutChild({ children }: { children: React.ReactNode }) {
   const [headerSearch, setHeaderSearch] = React.useState("");
 
   const displayName = userData?.name || user?.displayName || 'Pet Parent';
+  const userAvatar = userData?.avatar || user?.photoURL || "https://picsum.photos/seed/userhead/100/100";
 
   React.useEffect(() => {
     if (!user) {
@@ -98,8 +99,6 @@ function MainLayoutChild({ children }: { children: React.ReactNode }) {
   const isDynamicPage = pathname.startsWith('/chats/') || pathname.startsWith('/profile/');
   const isDashboard = pathname === '/';
   const headerIsVisible = !isDynamicPage;
-
-  const userAvatar = userData?.avatar || user?.photoURL || "https://picsum.photos/seed/userhead/100/100";
 
   return (
     <>
@@ -206,37 +205,39 @@ function MainLayoutChild({ children }: { children: React.ReactNode }) {
 
       <div className="flex-1 flex flex-col bg-[#F8FAFC]">
         {!isMobile && (
-          <header className="sticky top-0 z-40 flex h-24 items-center justify-between gap-8 bg-white/80 backdrop-blur-md px-12 shadow-sm border-b border-slate-100">
-            <div className="flex flex-1 items-center max-w-2xl relative group">
-              <Search className="absolute left-5 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-300 group-focus-within:text-primary transition-colors" />
-              <Input 
-                className="w-full pl-14 bg-slate-50/50 border-none rounded-2xl h-14 text-sm font-medium focus-visible:ring-1 focus-visible:ring-primary/20 placeholder:text-slate-300 transition-all focus-visible:bg-white" 
-                placeholder="Search for services, products, vets, trainers, or anything..."
-                value={headerSearch}
-                onChange={(e) => setHeaderSearch(e.target.value)}
-                onKeyDown={handleSidebarSearch}
-              />
-            </div>
-            
-            <div className="flex items-center gap-10">
-              <div className="flex items-center gap-2.5 px-5 py-2.5 rounded-2xl hover:bg-slate-50 cursor-pointer text-slate-600 transition-all border border-transparent hover:border-slate-100">
-                <MapPin className="h-4 w-4 text-primary" />
-                <span className="text-[10px] font-black uppercase tracking-[0.2em]">India</span>
-                <ChevronDown className="h-3 w-3 text-slate-300" />
+          <header className="sticky top-0 z-40 flex h-20 items-center justify-center bg-white/80 backdrop-blur-md shadow-sm border-b border-slate-100">
+            <div className="max-w-[1600px] w-full px-6 md:px-10 flex items-center justify-between gap-8">
+              <div className="flex flex-1 items-center max-w-2xl relative group">
+                <Search className="absolute left-5 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-300 group-focus-within:text-primary transition-colors" />
+                <Input 
+                  className="w-full pl-14 bg-slate-50/50 border-none rounded-2xl h-12 text-sm font-medium focus-visible:ring-1 focus-visible:ring-primary/20 placeholder:text-slate-300 transition-all focus-visible:bg-white" 
+                  placeholder="Search for services, products, vets, trainers, or anything..."
+                  value={headerSearch}
+                  onChange={(e) => setHeaderSearch(e.target.value)}
+                  onKeyDown={handleSidebarSearch}
+                />
               </div>
+              
+              <div className="flex items-center gap-6">
+                <div className="flex items-center gap-2.5 px-4 py-2 rounded-2xl hover:bg-slate-50 cursor-pointer text-slate-600 transition-all border border-transparent hover:border-slate-100">
+                  <MapPin className="h-4 w-4 text-primary" />
+                  <span className="text-[10px] font-black uppercase tracking-[0.2em]">India</span>
+                  <ChevronDown className="h-3 w-3 text-slate-300" />
+                </div>
 
-              <div className="relative cursor-pointer hover:bg-slate-50 p-3 rounded-2xl transition-all border border-transparent hover:border-slate-100">
-                <Bell className="h-5 w-5 text-slate-600" />
-                <Badge className="absolute top-2.5 right-2.5 h-4 w-4 bg-[#FF4D4D] text-white border-2 border-white flex items-center justify-center p-0 text-[8px] rounded-full font-black shadow-sm">
-                  3
-                </Badge>
-              </div>
+                <div className="relative cursor-pointer hover:bg-slate-50 p-2.5 rounded-2xl transition-all border border-transparent hover:border-slate-100">
+                  <Bell className="h-5 w-5 text-slate-600" />
+                  <Badge className="absolute top-2 right-2 h-4 w-4 bg-[#FF4D4D] text-white border-2 border-white flex items-center justify-center p-0 text-[8px] rounded-full font-black shadow-sm">
+                    3
+                  </Badge>
+                </div>
 
-              <div className="flex items-center gap-4 pl-8 border-l border-slate-100">
-                <Avatar className="h-11 w-11 border-2 border-white shadow-xl ring-1 ring-slate-100 transition-transform hover:scale-105 cursor-pointer">
-                  <AvatarImage src={userAvatar} className="object-cover" />
-                  <AvatarFallback className="bg-slate-50"><User className="h-6 w-6 text-slate-300" /></AvatarFallback>
-                </Avatar>
+                <div className="flex items-center gap-4 pl-6 border-l border-slate-100">
+                  <Avatar className="h-10 w-10 border-2 border-white shadow-lg ring-1 ring-slate-100 transition-transform hover:scale-105 cursor-pointer">
+                    <AvatarImage src={userAvatar} className="object-cover" />
+                    <AvatarFallback className="bg-slate-50"><User className="h-5 w-5 text-slate-300" /></AvatarFallback>
+                  </Avatar>
+                </div>
               </div>
             </div>
           </header>
