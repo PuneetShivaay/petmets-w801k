@@ -31,7 +31,7 @@ export default function ComingSoonPage() {
       >
         <Link href="/">
           <ArrowLeft className="mr-2 h-4 w-4" />
-          Go back to home page
+          Go back to home
         </Link>
       </Button>
     </div>
