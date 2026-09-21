@@ -206,7 +206,7 @@ function MainLayoutChild({ children }: { children: React.ReactNode }) {
       <div className="flex-1 flex flex-col min-w-0 h-full overflow-hidden">
         {!isMobile && (
           <header className="sticky top-0 z-40 flex h-14 shrink-0 items-center justify-center bg-white/80 backdrop-blur-md shadow-sm border-b border-slate-100">
-            <div className="max-w-[1400px] w-full px-4 flex items-center justify-between gap-4">
+            <div className="max-w-[1300px] w-full px-10 flex items-center justify-between gap-6">
               <div className="flex flex-1 items-center max-w-lg relative group">
                 <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-300 group-focus-within:text-primary transition-colors" />
                 <Input 
@@ -218,7 +218,7 @@ function MainLayoutChild({ children }: { children: React.ReactNode }) {
                 />
               </div>
               
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-4">
                 <div className="flex items-center gap-1.5 px-2 py-1.5 rounded-lg hover:bg-slate-50 cursor-pointer text-slate-600 transition-all border border-transparent hover:border-slate-100">
                   <MapPin className="h-3.5 w-3.5 text-primary" />
                   <span className="text-[9px] font-black uppercase tracking-wider">India</span>
@@ -232,7 +232,7 @@ function MainLayoutChild({ children }: { children: React.ReactNode }) {
                   </Badge>
                 </div>
 
-                <div className="flex items-center gap-3 pl-3 border-l border-slate-100">
+                <div className="flex items-center gap-3 pl-4 border-l border-slate-100">
                   <Link href="/pet-profile" onClick={handleLinkClick}>
                     <Avatar className="h-8 w-8 border border-slate-100 shadow-sm transition-transform hover:scale-110 cursor-pointer">
                       <AvatarImage src={userAvatar} className="object-cover" />
