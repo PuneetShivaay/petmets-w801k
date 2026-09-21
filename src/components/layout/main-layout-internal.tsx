@@ -1,4 +1,3 @@
-
 "use client"; 
 
 import * as React from "react";
@@ -20,7 +19,7 @@ import {
   SidebarMenuButton,
   useSidebar,        
 } from "@/components/ui/sidebar";
-import { LogOut, Bell, Search, MapPin, User, ChevronDown } from "lucide-react";
+import { LogOut, Bell, Search, MapPin, User, ChevronDown, Settings } from "lucide-react";
 import { useLoading } from "@/contexts/loading-context";
 import { useAuth } from "@/contexts/auth-context";
 import { useToast } from "@/hooks/use-toast";
@@ -205,37 +204,37 @@ function MainLayoutChild({ children }: { children: React.ReactNode }) {
 
       <div className="flex-1 flex flex-col bg-[#F8FAFC]">
         {!isMobile && (
-          <header className="sticky top-0 z-40 flex h-20 items-center justify-center bg-white/80 backdrop-blur-md shadow-sm border-b border-slate-100">
-            <div className="max-w-[1400px] w-full px-6 flex items-center justify-between gap-6">
-              <div className="flex flex-1 items-center max-w-xl relative group">
-                <Search className="absolute left-5 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-300 group-focus-within:text-primary transition-colors" />
+          <header className="sticky top-0 z-40 flex h-14 items-center justify-center bg-white/80 backdrop-blur-md shadow-sm border-b border-slate-100">
+            <div className="max-w-[1400px] w-full px-4 flex items-center justify-between gap-4">
+              <div className="flex flex-1 items-center max-w-lg relative group">
+                <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-300 group-focus-within:text-primary transition-colors" />
                 <Input 
-                  className="w-full pl-14 bg-slate-50/50 border-none rounded-2xl h-12 text-sm font-medium focus-visible:ring-1 focus-visible:ring-primary/20 placeholder:text-slate-300 transition-all focus-visible:bg-white" 
-                  placeholder="Search for services, products, vets, trainers..."
+                  className="w-full pl-10 bg-slate-50 border-none rounded-xl h-9 text-xs font-medium focus-visible:ring-1 focus-visible:ring-primary/20 placeholder:text-slate-300 transition-all focus-visible:bg-white" 
+                  placeholder="Search services, products, vets..."
                   value={headerSearch}
                   onChange={(e) => setHeaderSearch(e.target.value)}
                   onKeyDown={handleSidebarSearch}
                 />
               </div>
               
-              <div className="flex items-center gap-4">
-                <div className="flex items-center gap-2 px-3 py-2 rounded-2xl hover:bg-slate-50 cursor-pointer text-slate-600 transition-all border border-transparent hover:border-slate-100">
-                  <MapPin className="h-4 w-4 text-primary" />
-                  <span className="text-[10px] font-black uppercase tracking-[0.2em]">India</span>
+              <div className="flex items-center gap-2">
+                <div className="flex items-center gap-1.5 px-2 py-1.5 rounded-lg hover:bg-slate-50 cursor-pointer text-slate-600 transition-all border border-transparent hover:border-slate-100">
+                  <MapPin className="h-3.5 w-3.5 text-primary" />
+                  <span className="text-[9px] font-black uppercase tracking-wider">India</span>
                   <ChevronDown className="h-3 w-3 text-slate-300" />
                 </div>
 
-                <div className="relative cursor-pointer hover:bg-slate-50 p-2.5 rounded-2xl transition-all border border-transparent hover:border-slate-100">
-                  <Bell className="h-5 w-5 text-slate-600" />
-                  <Badge className="absolute top-2 right-2 h-4 w-4 bg-[#FF4D4D] text-white border-2 border-white flex items-center justify-center p-0 text-[8px] rounded-full font-black shadow-sm">
+                <div className="relative cursor-pointer hover:bg-slate-50 p-1.5 rounded-lg transition-all border border-transparent hover:border-slate-100">
+                  <Bell className="h-4 w-4 text-slate-600" />
+                  <Badge className="absolute top-1 right-1 h-3.5 w-3.5 bg-destructive text-white border-2 border-white flex items-center justify-center p-0 text-[7px] rounded-full font-black shadow-sm">
                     3
                   </Badge>
                 </div>
 
-                <div className="flex items-center gap-4 pl-4 border-l border-slate-100">
-                  <Avatar className="h-10 w-10 border-2 border-white shadow-lg ring-1 ring-slate-100 transition-transform hover:scale-105 cursor-pointer">
+                <div className="flex items-center gap-3 pl-3 border-l border-slate-100">
+                  <Avatar className="h-8 w-8 border border-slate-100 shadow-sm transition-transform hover:scale-105 cursor-pointer">
                     <AvatarImage src={userAvatar} className="object-cover" />
-                    <AvatarFallback className="bg-slate-50"><User className="h-5 w-5 text-slate-300" /></AvatarFallback>
+                    <AvatarFallback className="bg-slate-50 text-[10px] font-bold">{displayName[0]}</AvatarFallback>
                   </Avatar>
                 </div>
               </div>
@@ -244,17 +243,17 @@ function MainLayoutChild({ children }: { children: React.ReactNode }) {
         )}
 
         {isMobile && headerIsVisible && (
-            <header className="sticky top-0 z-10 flex h-16 items-center justify-between gap-4 border-b bg-background px-4">
+            <header className="sticky top-0 z-10 flex h-14 items-center justify-between gap-4 border-b bg-background px-4">
                 <div className="flex w-full items-center gap-2">
                     <SidebarTrigger />
-                    <h1 className="font-headline text-lg font-bold truncate uppercase tracking-widest text-[10px]">
+                    <h1 className="font-headline text-xs font-bold truncate uppercase tracking-widest text-slate-900">
                         {navItems.find(item => item.href === pathname)?.title || 'PetMets'}
                     </h1>
                 </div>
             </header>
           )}
         <main className={cn("flex-1 overflow-auto", isDynamicPage && "h-screen", "pb-20 md:pb-0")}>
-          <div className={cn(!isDynamicPage && !isDashboard && "p-6 sm:p-10")}>
+          <div className={cn(!isDynamicPage && !isDashboard && "p-4 sm:p-8")}>
             {children}
           </div>
         </main>
