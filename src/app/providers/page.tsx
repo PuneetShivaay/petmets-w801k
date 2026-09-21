@@ -108,7 +108,7 @@ export default function ServiceProvidersPage() {
       </div>
 
       {/* Filter Bar */}
-      <section className="sticky top-20 z-30 flex flex-col gap-4 bg-[#F8FAFC]/80 backdrop-blur-md py-4">
+      <section className="flex flex-col gap-4 bg-[#F8FAFC]/80 backdrop-blur-md py-4">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           <div className="md:col-span-2 relative">
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400" />
