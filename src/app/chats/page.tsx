@@ -121,7 +121,7 @@ export default function ChatsListPage() {
                   {[...Array(3)].map((_,i) => <Skeleton key={i} className="h-20 w-full" />)}
               </div>
           ) : chats.length > 0 ? (
-              <div className="space-y-1">
+              <div className="divide-y divide-slate-100">
               {chats.map(chat => {
                   const otherUserId = getOtherParticipant(chat);
                   const profile = otherUserId ? userProfiles[otherUserId] : undefined;
