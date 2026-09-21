@@ -84,7 +84,7 @@ export const navItems: NavItem[] = [
   },
   {
     title: 'Wallet & Offers',
-    href: '#',
+    href: '/coming-soon',
     icon: Wallet,
     roles: ['owner'],
   },
@@ -93,17 +93,17 @@ export const navItems: NavItem[] = [
 export const quickLinks: NavItem[] = [
   {
     title: 'Support',
-    href: '#',
+    href: '/coming-soon',
     icon: HelpCircle,
   },
   {
     title: 'Help Center',
-    href: '#',
+    href: '/coming-soon',
     icon: HelpCircle,
   },
   {
     title: 'Settings',
-    href: '#',
+    href: '/pet-profile',
     icon: Settings,
   },
 ];

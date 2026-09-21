@@ -124,7 +124,7 @@ function MainLayoutChild({ children }: { children: React.ReactNode }) {
                       pathname === item.href 
                         ? "bg-primary text-white hover:bg-primary/95 shadow-md font-black" 
                         : "text-slate-500 hover:bg-slate-50 font-bold",
-                      state === 'collapsed' ? 'h-10 w-10 p-0 justify-center mx-auto' : 'px-4 py-4 justify-start'
+                      state === 'collapsed' ? 'h-10 w-10 p-0 justify-center mx-auto' : 'px-4 py-3 justify-start'
                     )}
                     onClick={item.href.startsWith("/") ? handleLinkClick : undefined}
                   >
@@ -148,18 +148,22 @@ function MainLayoutChild({ children }: { children: React.ReactNode }) {
 
             {quickLinks.map((item) => (
               <SidebarMenuItem key={item.title} className="w-full">
-                <SidebarMenuButton
-                  tooltip={item.title}
-                  className={cn(
-                    "w-full transition-all duration-200 rounded-xl text-slate-500 hover:bg-slate-50 font-bold",
-                    state === 'collapsed' ? 'h-10 w-10 p-0 justify-center mx-auto' : 'px-4 py-3.5'
-                  )}
-                >
-                  <div className={cn("flex items-center gap-3", state === 'collapsed' && 'justify-center gap-0')}>
-                    <item.icon className="h-4 w-4 text-slate-400 shrink-0" />
-                    <span className="text-xs group-data-[state=collapsed]:hidden truncate">{item.title}</span>
-                  </div>
-                </SidebarMenuButton>
+                <Link href={item.href} passHref legacyBehavior>
+                  <SidebarMenuButton
+                    asChild
+                    tooltip={item.title}
+                    className={cn(
+                      "w-full transition-all duration-200 rounded-xl text-slate-500 hover:bg-slate-50 font-bold",
+                      state === 'collapsed' ? 'h-10 w-10 p-0 justify-center mx-auto' : 'px-4 py-3'
+                    )}
+                    onClick={handleLinkClick}
+                  >
+                    <div className={cn("flex items-center gap-3", state === 'collapsed' && 'justify-center gap-0')}>
+                      <item.icon className="h-4 w-4 text-slate-400 shrink-0" />
+                      <span className="text-xs group-data-[state=collapsed]:hidden truncate">{item.title}</span>
+                    </div>
+                  </SidebarMenuButton>
+                </Link>
               </SidebarMenuItem>
             ))}
           </SidebarMenu>
@@ -167,7 +171,7 @@ function MainLayoutChild({ children }: { children: React.ReactNode }) {
         
         <SidebarFooter className={cn("mt-auto", state === 'collapsed' ? "p-2 items-center" : "p-4")}>
           <div className="space-y-4 w-full flex flex-col items-center">
-            <div className="relative p-4 rounded-[1.5rem] bg-slate-50 border border-slate-100 group-data-[state=collapsed]:hidden w-full overflow-hidden shadow-sm">
+            <div className="relative p-4 rounded-xl bg-slate-50 border border-slate-100 group-data-[state=collapsed]:hidden w-full overflow-hidden shadow-sm">
               <div className="relative z-10 text-[9px] font-black text-slate-800 italic leading-relaxed uppercase tracking-widest">
                 Happy Pets<br/>Happy People<br/>Better World 🧡
               </div>
@@ -206,7 +210,7 @@ function MainLayoutChild({ children }: { children: React.ReactNode }) {
       <div className="flex-1 flex flex-col min-w-0 h-full overflow-hidden">
         {!isMobile && (
           <header className="sticky top-0 z-40 flex h-14 shrink-0 items-center justify-center bg-white/80 backdrop-blur-md shadow-sm border-b border-slate-100">
-            <div className="max-w-[1400px] w-full px-8 flex items-center justify-between gap-6">
+            <div className="max-w-[1400px] w-full px-12 flex items-center justify-between gap-6">
               <div className="flex flex-1 items-center max-w-lg relative group">
                 <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-300 group-focus-within:text-primary transition-colors" />
                 <Input 
