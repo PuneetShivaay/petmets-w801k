@@ -147,6 +147,14 @@ export default function DashboardPage() {
               priority
             />
             <div className="absolute inset-0 bg-gradient-to-r from-black/10 to-transparent flex flex-col justify-center px-12">
+               <div className="max-w-md hidden md:block">
+                  <h1 className="text-white text-4xl font-black font-headline leading-tight drop-shadow-lg">
+                    Pet Premium Services
+                  </h1>
+                  <p className="text-white/80 text-xs font-bold mt-2 tracking-wide uppercase">
+                    Because they're more than just pets, they're family.
+                  </p>
+               </div>
               <form onSubmit={handleHeroSearch} className="mt-4 md:mt-8 flex items-center bg-white rounded-full p-0.5 md:p-1 shadow-lg w-[90%] md:w-full max-w-lg mx-auto md:mx-0">
                 <div className="flex flex-1 items-center px-2 md:px-4">
                   <Search className="h-3 w-3 md:h-4 md:w-4 text-slate-400 mr-1 md:mr-2" />
@@ -166,7 +174,7 @@ export default function DashboardPage() {
             {/* Pagination dots */}
             <div className="absolute bottom-6 right-12 flex gap-1.5">
               {[0, 1, 2, 3].map((i) => (
-                <div key={i} className={cn("h-1.5 w-1.5 rounded-full", i === 0 ? "bg-slate-900" : "bg-slate-900/40")}></div>
+                <div key={i} className={cn("h-1.5 w-1.5 rounded-full", i === 0 ? "bg-white" : "bg-white/40")}></div>
               ))}
             </div>
           </section>
@@ -178,8 +186,7 @@ export default function DashboardPage() {
                 <div className={cn("h-14 w-14 rounded-full flex items-center justify-center transition-all group-hover:shadow-md mb-3 shadow-sm", item.bg, item.color)}>
                   <item.icon className="h-6 w-6" />
                 </div>
-                <span className="text-[10px] font-bold text-slate-800 leading-tight">{item.title}</span>
-                <p className="text-[8px] text-slate-400 mt-1 max-w-[80px] hidden md:block">{item.desc}</p>
+                <span className="text-[10px] font-black uppercase tracking-widest text-slate-800 leading-tight">{item.title}</span>
                 <ArrowRight className="h-2 w-2 text-slate-300 mt-1 opacity-0 group-hover:opacity-100 transition-opacity" />
               </Link>
             ))}
@@ -193,9 +200,11 @@ export default function DashboardPage() {
                   <h3 className="text-lg font-bold font-headline leading-[1.1]">Healthy Pets<br/>Happier Lives</h3>
                   <p className="text-[9px] opacity-80 max-w-[140px] leading-relaxed">Book grooming, training, boarding and more — all in one place.</p>
                 </div>
-                <Button variant="secondary" size="sm" className="rounded-full font-bold h-8 text-[9px] bg-white text-[#466935] hover:bg-white/90 px-4">
-                  Explore Services <ArrowRight className="ml-1.5 h-3 w-3" />
-                </Button>
+                <Link href="/providers">
+                  <Button variant="secondary" size="sm" className="rounded-full font-bold h-8 text-[9px] bg-white text-[#466935] hover:bg-white/90 px-4">
+                    Explore Services <ArrowRight className="ml-1.5 h-3 w-3" />
+                  </Button>
+                </Link>
               </div>
               <div className="absolute bottom-3 right-3 w-28 h-28 group-hover:scale-105 transition-transform duration-500">
                 <Image src={placeholderImages.promos.promo1.url} alt="Promo 1" fill className="object-cover rounded-xl" />
@@ -208,9 +217,11 @@ export default function DashboardPage() {
                   <p className="text-[8px] font-bold uppercase tracking-wider opacity-60">Pet Store</p>
                   <h3 className="text-lg font-bold font-headline leading-[1.1]">Because Every<br/>Pet Deserves<br/>Love</h3>
                 </div>
-                <Button size="sm" className="bg-[#802D52] text-white rounded-full font-bold h-8 text-[9px] hover:bg-[#802D52]/90 px-4">
-                  Explore Pet Store <ArrowRight className="ml-1.5 h-3 w-3" />
-                </Button>
+                <Link href="/providers">
+                  <Button size="sm" className="bg-[#802D52] text-white rounded-full font-bold h-8 text-[9px] hover:bg-[#802D52]/90 px-4">
+                    Explore Pet Store <ArrowRight className="ml-1.5 h-3 w-3" />
+                  </Button>
+                </Link>
               </div>
               <div className="absolute bottom-3 right-3 w-28 h-28 group-hover:scale-105 transition-transform duration-500">
                 <Image src={placeholderImages.promos.promo2.url} alt="Promo 2" fill className="object-cover rounded-xl" />
@@ -221,14 +232,16 @@ export default function DashboardPage() {
               <div className="relative z-10 h-full flex flex-col justify-between items-start">
                 <div className="space-y-2">
                   <div className="flex items-center gap-1.5">
-                    <UsersIcon className="h-4 w-4" />
+                    <FileTextIcon className="h-4 w-4" />
                     <h3 className="text-lg font-bold font-headline leading-[1.1]">Pet Reports</h3>
                   </div>
                   <p className="text-[9px] opacity-80 max-w-[140px] leading-relaxed">Track health, activity, habits & more.</p>
                 </div>
-                <Button variant="secondary" size="sm" className="rounded-full font-bold h-8 text-[9px] bg-white text-[#0D2B2B] hover:bg-white/90 px-4">
-                  View Reports <ArrowRight className="ml-1.5 h-3 w-3" />
-                </Button>
+                <Link href="/records">
+                  <Button variant="secondary" size="sm" className="rounded-full font-bold h-8 text-[9px] bg-white text-[#0D2B2B] hover:bg-white/90 px-4">
+                    View Reports <ArrowRight className="ml-1.5 h-3 w-3" />
+                  </Button>
+                </Link>
               </div>
               <div className="absolute bottom-3 right-3 w-28 h-28 group-hover:scale-105 transition-transform duration-500">
                 <Image src={placeholderImages.promos.promo3.url} alt="Promo 3" fill className="object-cover rounded-xl" />
@@ -318,12 +331,12 @@ export default function DashboardPage() {
                   <p className="text-[9px] text-slate-400 font-medium">A better life for your pet, always.</p>
                 </div>
               </div>
-              <Settings className="h-4 w-4 text-slate-300 hover:text-slate-500 cursor-pointer transition-colors" />
+              <Settings className="h-4 w-4 text-slate-300 hover:text-slate-500 cursor-pointer transition-colors" onClick={() => router.push('/pet-profile')} />
             </div>
 
             <div className="space-y-3">
                {/* Primary Pet Selection */}
-               <div className="flex items-center gap-3 p-2 bg-[#F8FAFC] rounded-2xl border border-slate-50 group cursor-pointer hover:bg-white transition-all">
+               <Link href="/pet-profile" className="flex items-center gap-3 p-2 bg-[#F8FAFC] rounded-2xl border border-slate-50 group cursor-pointer hover:bg-white transition-all">
                   <Avatar className="h-10 w-10 border-2 border-white shadow-sm">
                     <AvatarImage src={petData?.avatar || "https://picsum.photos/seed/buddy/100/100"} />
                     <AvatarFallback className="bg-orange-50 text-primary font-bold">{petData?.name?.[0] || 'B'}</AvatarFallback>
@@ -335,7 +348,7 @@ export default function DashboardPage() {
                     </p>
                   </div>
                   <ChevronDown className="h-3 w-3 text-slate-300 mr-1" />
-               </div>
+               </Link>
             </div>
           </div>
 
@@ -361,7 +374,7 @@ export default function DashboardPage() {
                         <div className="flex-1 min-w-0">
                           <p className="text-[10px] font-bold text-slate-800 truncate leading-none">{booking.serviceType || 'Pet Walker'}</p>
                           <p className="text-[8px] text-slate-400 font-medium mt-1">Today • {booking.time || '5:00 PM'}</p>
-                          <p className="text-[9px] text-slate-600 font-bold mt-1.5">{booking.providerName || 'Riya Sharma'}</p>
+                          <p className="text-[9px] text-slate-600 font-bold mt-1.5">{booking.serviceProviderName || 'Riya Sharma'}</p>
                         </div>
                         <Badge className="bg-[#E0F2F1] text-[#2A9D8F] border-none text-[8px] font-bold uppercase px-2 py-0.5 rounded-full shrink-0">Confirmed</Badge>
                       </div>
@@ -385,9 +398,11 @@ export default function DashboardPage() {
                 <p className="text-[10px] font-medium text-slate-600 leading-relaxed max-w-[130px]">
                   Get <span className="text-[#FF642F] font-bold">50% off</span> on your first service booking!
                 </p>
-                <Button className="bg-[#FF642F] hover:bg-[#FF642F]/90 text-white rounded-full font-bold px-5 h-8 text-[9px] uppercase tracking-wider">
-                  Explore Now
-                </Button>
+                <Link href="/match">
+                  <Button className="bg-[#FF642F] hover:bg-[#FF642F]/90 text-white rounded-full font-bold px-5 h-8 text-[9px] uppercase tracking-wider">
+                    Explore Now
+                  </Button>
+                </Link>
              </div>
              <div className="absolute -bottom-2 -right-2 w-24 h-24 opacity-60 group-hover:scale-110 transition-transform">
                 <Image src={placeholderImages.sidebar.footer.url} alt="Promo" fill className="object-contain" />
@@ -398,11 +413,11 @@ export default function DashboardPage() {
           <div className="space-y-4 px-1">
              <div className="flex items-center justify-between">
                 <h3 className="font-bold text-[9px] uppercase tracking-wider text-slate-400">Recently Viewed</h3>
-                <Link href="/history" className="text-[9px] font-bold text-[#274E4A] hover:underline">View All</Link>
+                <Link href="/providers" className="text-[9px] font-bold text-[#274E4A] hover:underline">View All</Link>
              </div>
              <div className="space-y-3">
                {placeholderImages.recentlyViewed.map((item, i) => (
-                 <div key={i} className="flex items-center gap-3 group cursor-pointer bg-white hover:bg-slate-50 p-2 rounded-xl transition-all border border-white">
+                 <div key={i} className="flex items-center gap-3 group cursor-pointer bg-white hover:bg-slate-50 p-2 rounded-xl transition-all border border-white" onClick={() => router.push('/providers')}>
                     <div className="relative h-11 w-11 rounded-lg overflow-hidden shadow-sm shrink-0">
                       <Image src={item.url} alt={item.title} fill className="object-cover group-hover:scale-105 transition-transform" />
                     </div>
@@ -426,9 +441,11 @@ export default function DashboardPage() {
                 <p className="text-[9px] opacity-70 font-medium leading-relaxed max-w-[150px]">
                   Share stories, get expert tips, find pet parents near you!
                 </p>
-                <Button variant="secondary" className="rounded-full bg-white text-[#274E4A] hover:bg-white/90 font-bold px-4 h-7 text-[8px] uppercase tracking-wider">
-                  Join Now <ArrowRight className="ml-1 h-3 w-3" />
-                </Button>
+                <Link href="/match">
+                  <Button variant="secondary" className="rounded-full bg-white text-[#274E4A] hover:bg-white/90 font-bold px-4 h-7 text-[8px] uppercase tracking-wider">
+                    Join Now <ArrowRight className="ml-1.5 h-3 w-3" />
+                  </Button>
+                </Link>
              </div>
              <div className="absolute -bottom-2 -right-2 w-24 h-24 opacity-30 group-hover:scale-110 transition-transform">
                 <Image src={placeholderImages.sidebar.community.url} alt="Community" fill className="object-cover" />
