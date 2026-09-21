@@ -42,8 +42,9 @@ function MainLayoutChild({ children }: { children: React.ReactNode }) {
   const [userData, setUserData] = React.useState<any>(null);
   const [headerSearch, setHeaderSearch] = React.useState("");
 
-  const displayName = userData?.name || user?.displayName || 'Pet Parent';
-  const userAvatar = userData?.avatar || user?.photoURL || "https://picsum.photos/seed/userhead/100/100";
+  const displayName = userData?.name || user?.displayName || 'User';
+  const userAvatar = userData?.avatar || user?.photoURL;
+  const userInitial = displayName.charAt(0).toUpperCase();
 
   React.useEffect(() => {
     if (!user) {
@@ -100,8 +101,8 @@ function MainLayoutChild({ children }: { children: React.ReactNode }) {
   const headerIsVisible = !isDynamicPage;
 
   return (
-    <>
-      <Sidebar className="border-r border-sidebar-border hidden md:flex bg-white transition-all duration-300" collapsible="icon">
+    <div className="flex h-screen w-full overflow-hidden bg-[#F8FAFC]">
+      <Sidebar className="border-r border-sidebar-border hidden md:flex bg-white transition-all duration-300 h-full" collapsible="icon">
         <SidebarHeader className={cn("p-6 flex flex-row items-center justify-between gap-2", state === 'collapsed' && "justify-center p-2")}>
           <Link href="/" onClick={handleLinkClick} className="block group-data-[state=collapsed]:hidden overflow-hidden whitespace-nowrap">
             <AppLogo />
@@ -109,7 +110,7 @@ function MainLayoutChild({ children }: { children: React.ReactNode }) {
           <SidebarTrigger className={cn(state === 'collapsed' ? 'mx-auto' : 'ml-auto')} />
         </SidebarHeader>
         
-        <SidebarContent className="overflow-y-auto overflow-x-hidden px-4 py-2 flex flex-col justify-between">
+        <SidebarContent className="overflow-y-auto overflow-x-hidden px-4 py-2 flex flex-col justify-between scrollbar-hide">
           <SidebarMenu className={cn("gap-2 w-full", state === 'collapsed' && "items-center")}>
             {filteredNavItems.map((item) => (
               <SidebarMenuItem key={item.href} className="w-full">
@@ -192,7 +193,7 @@ function MainLayoutChild({ children }: { children: React.ReactNode }) {
               >
                 <div className="flex items-center w-full gap-4 justify-start group-data-[state=collapsed]:justify-center">
                   <div className="h-8 w-8 rounded-full bg-slate-900 flex items-center justify-center text-white text-[10px] font-black shrink-0">
-                    {displayName.charAt(0).toUpperCase()}
+                    {userInitial}
                   </div>
                   <span className="text-[10px] font-black uppercase tracking-widest group-data-[state=collapsed]:hidden">Logout</span>
                 </div>
@@ -202,9 +203,9 @@ function MainLayoutChild({ children }: { children: React.ReactNode }) {
         </SidebarFooter>
       </Sidebar>
 
-      <div className="flex-1 flex flex-col bg-[#F8FAFC]">
+      <div className="flex-1 flex flex-col min-w-0 h-full overflow-hidden">
         {!isMobile && (
-          <header className="sticky top-0 z-40 flex h-14 items-center justify-center bg-white/80 backdrop-blur-md shadow-sm border-b border-slate-100">
+          <header className="sticky top-0 z-40 flex h-14 shrink-0 items-center justify-center bg-white/80 backdrop-blur-md shadow-sm border-b border-slate-100">
             <div className="max-w-[1400px] w-full px-4 flex items-center justify-between gap-4">
               <div className="flex flex-1 items-center max-w-lg relative group">
                 <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-300 group-focus-within:text-primary transition-colors" />
@@ -234,7 +235,7 @@ function MainLayoutChild({ children }: { children: React.ReactNode }) {
                 <div className="flex items-center gap-3 pl-3 border-l border-slate-100">
                   <Avatar className="h-8 w-8 border border-slate-100 shadow-sm transition-transform hover:scale-105 cursor-pointer">
                     <AvatarImage src={userAvatar} className="object-cover" />
-                    <AvatarFallback className="bg-slate-50 text-[10px] font-bold">{displayName[0]}</AvatarFallback>
+                    <AvatarFallback className="bg-slate-50 text-[10px] font-bold">{userInitial}</AvatarFallback>
                   </Avatar>
                 </div>
               </div>
@@ -243,7 +244,7 @@ function MainLayoutChild({ children }: { children: React.ReactNode }) {
         )}
 
         {isMobile && headerIsVisible && (
-            <header className="sticky top-0 z-10 flex h-14 items-center justify-between gap-4 border-b bg-background px-4">
+            <header className="sticky top-0 z-10 flex h-14 shrink-0 items-center justify-between gap-4 border-b bg-background px-4">
                 <div className="flex w-full items-center gap-2">
                     <SidebarTrigger />
                     <h1 className="font-headline text-xs font-bold truncate uppercase tracking-widest text-slate-900">
@@ -252,20 +253,21 @@ function MainLayoutChild({ children }: { children: React.ReactNode }) {
                 </div>
             </header>
           )}
-        <main className={cn("flex-1 overflow-auto", isDynamicPage && "h-screen", "pb-20 md:pb-0")}>
+        
+        <main className={cn("flex-1 overflow-y-auto min-h-0", isDynamicPage && "h-full", "pb-20 md:pb-0")}>
           <div className={cn(!isDynamicPage && !isDashboard && "p-4 sm:p-8")}>
             {children}
           </div>
         </main>
         <BottomNav />
       </div>
-    </>
+    </div>
   );
 }
 
 export function MainLayoutInternal({ children }: { children: React.ReactNode }) {
   return (
-    <SidebarProvider defaultOpen>
+    <SidebarProvider defaultOpen className="h-screen overflow-hidden">
       <MainLayoutChild>{children}</MainLayoutChild>
     </SidebarProvider>
   );
