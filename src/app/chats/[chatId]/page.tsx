@@ -176,9 +176,19 @@ export default function ChatPage() {
                 <Skeleton className="h-10 w-2/5" />
             </div>
         ) : (
-            <div className="space-y-4">
-                {messages.map(message => (
-                    <div key={message.id} className={cn("flex items-end gap-2", message.senderId === user?.uid ? "justify-end" : "justify-start")}>
+            <div className="flex flex-col space-y-1 p-2">
+                {messages.map((message, index) => {
+                  const prevMessage = messages[index - 1];
+                  const isDifferentSender = !prevMessage || prevMessage.senderId !== message.senderId;
+
+                  return (
+                    <div key={message.id} 
+                        className={cn(
+                            "flex items-end gap-2", 
+                            message.senderId === user?.uid ? "justify-end" : "justify-start",
+                            isDifferentSender && index > 0 ? "mt-4" : ""
+                        )}
+                    >
                         <div className={cn(
                             "rounded-lg p-2 sm:p-3 max-w-[80%]",
                             message.senderId === user?.uid ? "bg-primary text-primary-foreground" : "bg-muted"
@@ -194,8 +204,9 @@ export default function ChatPage() {
                             )}
                         </div>
                     </div>
-                ))}
-                    <div ref={messagesEndRef} />
+                  );
+                })}
+                <div ref={messagesEndRef} />
             </div>
         )}
       </main>
