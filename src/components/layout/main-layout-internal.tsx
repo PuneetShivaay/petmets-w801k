@@ -233,10 +233,12 @@ function MainLayoutChild({ children }: { children: React.ReactNode }) {
                 </div>
 
                 <div className="flex items-center gap-3 pl-3 border-l border-slate-100">
-                  <Avatar className="h-8 w-8 border border-slate-100 shadow-sm transition-transform hover:scale-105 cursor-pointer">
-                    <AvatarImage src={userAvatar} className="object-cover" />
-                    <AvatarFallback className="bg-slate-50 text-[10px] font-bold">{userInitial}</AvatarFallback>
-                  </Avatar>
+                  <Link href="/pet-profile" onClick={handleLinkClick}>
+                    <Avatar className="h-8 w-8 border border-slate-100 shadow-sm transition-transform hover:scale-110 cursor-pointer">
+                      <AvatarImage src={userAvatar} className="object-cover" />
+                      <AvatarFallback className="bg-slate-50 text-[10px] font-bold">{userInitial}</AvatarFallback>
+                    </Avatar>
+                  </Link>
                 </div>
               </div>
             </div>
