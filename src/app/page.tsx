@@ -180,7 +180,8 @@ export default function DashboardPage() {
                 <div className={cn("h-12 w-12 md:h-14 md:w-14 rounded-full flex items-center justify-center transition-all group-hover:shadow-md mb-2 md:mb-3 shadow-sm", item.bg, item.color)}>
                   <item.icon className="h-5 w-5 md:h-6 md:w-6" />
                 </div>
-                <span className="text-[8px] md:text-[9px] font-black uppercase tracking-widest text-slate-800 leading-tight">{item.title}</span>
+                <span className="text-xs font-bold text-slate-800 leading-tight">{item.title}</span>
+                <p className="text-[10px] text-slate-500 mt-1 leading-tight">{item.desc}</p>
               </Link>
             ))}
           </section>
@@ -318,7 +319,7 @@ export default function DashboardPage() {
           {/* Upcoming Bookings */}
           <div className="space-y-4 px-1">
              <div className="flex items-center justify-between">
-                <h3 className="font-bold text-[8px] uppercase tracking-wider text-slate-400">Upcoming Sessions</h3>
+                <h3 className="font-bold text-[8px] uppercase tracking-wider text-slate-400">Upcoming Bookings</h3>
                 <Link href="/bookings" className="text-[8px] font-bold text-[#274E4A] hover:underline">View All</Link>
              </div>
              
@@ -348,6 +349,75 @@ export default function DashboardPage() {
                   <p className="text-[7px] font-bold text-slate-300 uppercase tracking-widest">No Bookings</p>
                </div>
              )}
+          </div>
+
+          {/* New to PetMets */}
+          <Card className="bg-[#FFF3E0] border-none rounded-xl overflow-hidden relative group shadow-sm p-5">
+            <div className="flex justify-between items-start">
+              <div className="space-y-2">
+                <h3 className="text-sm font-bold text-[#F4A261] flex items-center gap-2">
+                  <Ticket className="h-4 w-4" />
+                  New to PetMets?
+                </h3>
+                <p className="text-xs text-slate-700 font-medium leading-snug">
+                  Get <span className="font-bold text-primary">50% off</span> on your first<br/>service booking!
+                </p>
+                <Button className="bg-[#FF642F] hover:bg-[#FF642F]/90 text-white rounded-full px-6 font-bold h-8 text-[10px] uppercase tracking-wider mt-2">
+                  Explore Now
+                </Button>
+              </div>
+              <div className="w-24 h-24 absolute -bottom-5 -right-5 opacity-50">
+                <Image src={placeholderImages.hero.dashboard.url} alt="New to PetMets" fill className="object-cover" />
+              </div>
+            </div>
+          </Card>
+          
+          {/* Recently Viewed */}
+          <div className="space-y-4 px-1">
+             <div className="flex items-center justify-between">
+                <h3 className="font-bold text-[8px] uppercase tracking-wider text-slate-400">Recently Viewed</h3>
+                <Link href="/providers" className="text-[8px] font-bold text-[#274E4A] hover:underline">View All</Link>
+             </div>
+             <div className="space-y-3">
+              <Card className="rounded-xl border-none shadow-sm bg-white p-3 group hover:shadow-md transition-all">
+                <div className="flex items-center gap-3">
+                  <div className="h-12 w-12 rounded-lg overflow-hidden shadow-sm shrink-0">
+                     <Image
+                       src={`https://picsum.photos/seed/grooming/100/100`}
+                       alt="Dog Grooming"
+                       width={48} height={48} className="object-cover"
+                     />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-[10px] font-bold text-slate-800 truncate">Dog Grooming</p>
+                    <p className="text-[8px] text-slate-500 font-medium mt-1">₹1,499</p>
+                  </div>
+                  <div className="flex items-center gap-0.5">
+                    <Star className="h-3 w-3 fill-yellow-400 text-yellow-400" />
+                    <span className="text-[9px] font-bold text-slate-600">4.8</span>
+                  </div>
+                </div>
+              </Card>
+              <Card className="rounded-xl border-none shadow-sm bg-white p-3 group hover:shadow-md transition-all">
+                <div className="flex items-center gap-3">
+                  <div className="h-12 w-12 rounded-lg overflow-hidden shadow-sm shrink-0">
+                     <Image
+                       src={`https://picsum.photos/seed/boarding/100/100`}
+                       alt="Pet Boarding"
+                       width={48} height={48} className="object-cover"
+                     />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-[10px] font-bold text-slate-800 truncate">Pet Boarding</p>
+                    <p className="text-[8px] text-slate-500 font-medium mt-1">₹699/day</p>
+                  </div>
+                  <div className="flex items-center gap-0.5">
+                    <Star className="h-3 w-3 fill-yellow-400 text-yellow-400" />
+                    <span className="text-[9px] font-bold text-slate-600">4.9</span>
+                  </div>
+                </div>
+              </Card>
+             </div>
           </div>
 
           {/* Join Community Card */}
