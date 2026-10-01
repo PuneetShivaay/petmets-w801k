@@ -1,12 +1,12 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { useForm, type SubmitHandler, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { signInWithEmailAndPassword, createUserWithEmailAndPassword, sendPasswordResetEmail, updateProfile } from "firebase/auth";
-import { doc, setDoc, serverTimestamp } from "firebase/firestore";
+import { signInWithEmailAndPassword, createUserWithEmailAndPassword, sendPasswordResetEmail, updateProfile, GoogleAuthProvider, signInWithPopup, signOut as firebaseSignOut, type User } from "firebase/auth";
+import { doc, setDoc, getDoc, serverTimestamp } from "firebase/firestore";
 import { auth, db } from "@/lib/firebase";
 import { useAuth } from "@/contexts/auth-context";
 import { useLoading } from "@/contexts/loading-context";
@@ -52,6 +52,15 @@ export default function LoginPage() {
   const [isSignUp, setIsSignUp] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isGoogleSubmitting, setIsGoogleSubmitting] = useState(false);
+
+  // New Google user role selection
+  const googleFlowActiveRef = useRef(false);
+  const [isGoogleFlowActive, setIsGoogleFlowActive] = useState(false);
+  const [pendingGoogleUser, setPendingGoogleUser] = useState<User | null>(null);
+  const [googleRole, setGoogleRole] = useState<"owner" | "provider">("owner");
+  const [isSavingGoogleRole, setIsSavingGoogleRole] = useState(false);
+  const [googleRoleError, setGoogleRoleError] = useState<string | null>(null);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   
@@ -65,22 +74,23 @@ export default function LoginPage() {
   const { register: registerLogin, handleSubmit: handleLoginSubmit, formState: { errors: loginErrors } } = useForm<LoginFormData>({
     resolver: zodResolver(loginSchema),
   });
-  const { register: registerSignUp, handleSubmit: handleSignUpSubmit, control: signUpControl, formState: { errors: signUpErrors } } = useForm<SignUpFormData>({
+  const { register: registerSignUp, handleSubmit: handleSignUpSubmit, control: signUpControl, watch: watchSignUp, formState: { errors: signUpErrors } } = useForm<SignUpFormData>({
     resolver: zodResolver(signUpSchema),
     defaultValues: {
       role: "owner"
     }
   });
+  const signUpRole = watchSignUp("role") ?? "owner";
   const { register: registerForgotPassword, handleSubmit: handleForgotPasswordSubmit, formState: { errors: forgotPasswordErrors }, reset: resetForgotPasswordForm } = useForm<ForgotPasswordFormData>({
     resolver: zodResolver(forgotPasswordSchema),
   });
 
 
   useEffect(() => {
-    if (!authIsLoading && user) {
+    if (!authIsLoading && user && !isGoogleFlowActive && !googleFlowActiveRef.current) {
       router.push('/');
     }
-  }, [user, authIsLoading, router]);
+  }, [user, authIsLoading, router, isGoogleFlowActive]);
 
 
   const onLogin: SubmitHandler<LoginFormData> = async (data) => {
@@ -159,6 +169,104 @@ export default function LoginPage() {
     } finally {
         setIsSubmitting(false);
     }
+  };
+
+  const onGoogleSignIn = async () => {
+    setIsGoogleSubmitting(true);
+    setFormError(null);
+    try {
+      const provider = new GoogleAuthProvider();
+      provider.setCustomParameters({ prompt: "select_account" });
+      // Block the auto-redirect until we know whether this is a new user.
+      googleFlowActiveRef.current = true;
+      setIsGoogleFlowActive(true);
+      const { user: googleUser } = await signInWithPopup(auth, provider);
+
+      const existing = await getDoc(doc(db, "users", googleUser.uid));
+      if (existing.exists()) {
+        // Returning user — let the redirect effect take over.
+        googleFlowActiveRef.current = false;
+        setIsGoogleFlowActive(false);
+      } else {
+        // New user — ask them to choose a role before creating their profile.
+        setGoogleRole(isSignUp ? signUpRole : "owner");
+        setPendingGoogleUser(googleUser);
+      }
+    } catch (error: any) {
+      googleFlowActiveRef.current = false;
+      setIsGoogleFlowActive(false);
+      let message = "Google sign-in failed. Please try again.";
+      switch (error.code) {
+        case "auth/popup-closed-by-user":
+        case "auth/cancelled-popup-request":
+          message = "";
+          break;
+        case "auth/popup-blocked":
+          message = "The sign-in popup was blocked by your browser. Please allow popups and try again.";
+          break;
+        case "auth/account-exists-with-different-credential":
+          message = "An account already exists with this email using a different sign-in method. Please log in with email and password.";
+          break;
+        case "auth/operation-not-allowed":
+          message = "Google sign-in is not enabled for this project.";
+          break;
+        case "auth/unauthorized-domain":
+          message = "This domain is not authorized for Google sign-in. Add it in Firebase Console → Authentication → Settings → Authorized domains.";
+          break;
+      }
+      if (message) setFormError(message);
+    } finally {
+      setIsGoogleSubmitting(false);
+    }
+  };
+
+  const completeGoogleSignUp = async () => {
+    if (!pendingGoogleUser) return;
+    setIsSavingGoogleRole(true);
+    setGoogleRoleError(null);
+    const googleUser = pendingGoogleUser;
+    const role = googleRole;
+    try {
+      const defaultName = googleUser.displayName || (role === "owner" ? "Pet Owner" : "Service Provider");
+      await setDoc(doc(db, "users", googleUser.uid), {
+        name: defaultName,
+        email: googleUser.email,
+        role,
+        phone: googleUser.phoneNumber || "",
+        address: "",
+        avatar: googleUser.photoURL || "/images/logo.png",
+        dataAiHint: role === "owner" ? "paw print logo" : "business logo",
+        createdAt: serverTimestamp(),
+      });
+
+      if (role === "owner") {
+        await setDoc(doc(db, "pets", googleUser.uid), {
+          name: "Buddy",
+          breed: "Golden Retriever",
+          age: "3 years",
+          gender: "Male",
+          avatar: "/images/logo.png",
+          dataAiHint: "golden retriever",
+          bio: "Loves long walks in the park and playing fetch. A very good boy indeed!",
+          createdAt: serverTimestamp(),
+        });
+      }
+
+      // Full reload so AuthContext re-reads the freshly created role.
+      window.location.assign("/");
+    } catch (error) {
+      setGoogleRoleError("Could not create your account. Please try again.");
+      setIsSavingGoogleRole(false);
+    }
+  };
+
+  const cancelGoogleSignUp = async () => {
+    // No profile was created — sign the user back out so they aren't left half-registered.
+    setPendingGoogleUser(null);
+    setGoogleRoleError(null);
+    await firebaseSignOut(auth);
+    googleFlowActiveRef.current = false;
+    setIsGoogleFlowActive(false);
   };
 
   const onForgotPassword: SubmitHandler<ForgotPasswordFormData> = async (data) => {
@@ -324,9 +432,27 @@ export default function LoginPage() {
             )}
           </CardContent>
           <CardFooter className="flex flex-col gap-4">
-            <Button type="submit" className="w-full" size="lg" disabled={isSubmitting}>
+            <Button type="submit" className="w-full" size="lg" disabled={isSubmitting || isGoogleSubmitting}>
               {isSubmitting ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : (isSignUp ? <UserPlus className="mr-2 h-5 w-5" /> : <LogIn className="mr-2 h-5 w-5" />)}
               {isSignUp ? "Sign Up" : "Login"}
+            </Button>
+            <div className="flex w-full items-center gap-2">
+              <span className="h-px flex-1 bg-border" />
+              <span className="text-xs uppercase text-muted-foreground">or</span>
+              <span className="h-px flex-1 bg-border" />
+            </div>
+            <Button type="button" variant="outline" className="w-full" size="lg" onClick={onGoogleSignIn} disabled={isSubmitting || isGoogleSubmitting}>
+              {isGoogleSubmitting ? (
+                <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+              ) : (
+                <svg className="mr-2 h-5 w-5" viewBox="0 0 48 48" aria-hidden="true">
+                  <path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3C33.7 32.7 29.2 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.4-.4-3.5z" />
+                  <path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.7 15.1 19 12 24 12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 16.3 4 9.7 8.3 6.3 14.7z" />
+                  <path fill="#4CAF50" d="M24 44c5.2 0 9.9-2 13.4-5.2l-6.2-5.2C29.2 35.1 26.7 36 24 36c-5.2 0-9.6-3.3-11.3-8l-6.5 5C9.5 39.6 16.2 44 24 44z" />
+                  <path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.2-2.2 4.2-4.1 5.6l6.2 5.2C37 39.2 44 34 44 24c0-1.3-.1-2.4-.4-3.5z" />
+                </svg>
+              )}
+              Continue with Google
             </Button>
             <p className="text-center text-sm text-muted-foreground">
               {isSignUp ? "Already have an account?" : "Don't have an account?"}{' '}
@@ -337,6 +463,51 @@ export default function LoginPage() {
           </CardFooter>
         </form>
       </Card>
+
+      <Dialog open={!!pendingGoogleUser} onOpenChange={(open) => { if (!open && !isSavingGoogleRole) cancelGoogleSignUp(); }}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Welcome to PetMets{pendingGoogleUser?.displayName ? `, ${pendingGoogleUser.displayName.split(" ")[0]}` : ""}!</DialogTitle>
+            <DialogDescription>
+              How would you like to use PetMets? Choose an account type to finish creating your account.
+            </DialogDescription>
+          </DialogHeader>
+          {googleRoleError && (
+            <Alert variant="destructive">
+              <AlertDescription>{googleRoleError}</AlertDescription>
+            </Alert>
+          )}
+          <RadioGroup
+            value={googleRole}
+            onValueChange={(v) => setGoogleRole(v as "owner" | "provider")}
+            className="grid gap-3 py-2"
+          >
+            <Label htmlFor="g-owner" className="flex cursor-pointer items-start gap-3 rounded-lg border p-4 has-[:checked]:border-primary has-[:checked]:bg-primary/5">
+              <RadioGroupItem value="owner" id="g-owner" className="mt-0.5" />
+              <div>
+                <p className="font-semibold">Pet Owner</p>
+                <p className="text-sm font-normal text-muted-foreground">Create a pet profile, find matches and book services.</p>
+              </div>
+            </Label>
+            <Label htmlFor="g-provider" className="flex cursor-pointer items-start gap-3 rounded-lg border p-4 has-[:checked]:border-primary has-[:checked]:bg-primary/5">
+              <RadioGroupItem value="provider" id="g-provider" className="mt-0.5" />
+              <div>
+                <p className="font-semibold">Service Provider (Vendor)</p>
+                <p className="text-sm font-normal text-muted-foreground">Offer walking, grooming, training, boarding and more.</p>
+              </div>
+            </Label>
+          </RadioGroup>
+          <DialogFooter>
+            <Button type="button" variant="outline" onClick={cancelGoogleSignUp} disabled={isSavingGoogleRole}>
+              Cancel
+            </Button>
+            <Button type="button" onClick={completeGoogleSignUp} disabled={isSavingGoogleRole}>
+              {isSavingGoogleRole && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              Continue
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

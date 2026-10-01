@@ -27,8 +27,21 @@ import {
   Award,
   Zap,
   Calendar,
-  MoreVertical
+  MoreVertical,
+  LogOut
 } from "lucide-react";
+import { useRouter } from "next/navigation";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -79,7 +92,20 @@ const defaultOwnerData = {
 };
 
 export default function PetProfilePage() {
-  const { user } = useAuth();
+  const { user, userSignOut } = useAuth();
+  const router = useRouter();
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
+
+  const handleLogout = async () => {
+    setIsLoggingOut(true);
+    try {
+      await userSignOut();
+      router.push("/login");
+    } catch (error) {
+      toast({ variant: "destructive", title: "Logout failed", description: "Please try again." });
+      setIsLoggingOut(false);
+    }
+  };
   const { toast } = useToast();
   const petAvatarInputRef = useRef<HTMLInputElement>(null);
   const ownerAvatarInputRef = useRef<HTMLInputElement>(null);
@@ -525,6 +551,34 @@ export default function PetProfilePage() {
                 )}
               </form>
            </Card>
+
+           <AlertDialog>
+             <AlertDialogTrigger asChild>
+               <Button
+                 type="button"
+                 variant="outline"
+                 disabled={isLoggingOut}
+                 className="w-full h-10 rounded-lg font-bold text-xs border-destructive/30 text-destructive hover:bg-destructive/5 hover:text-destructive"
+               >
+                 {isLoggingOut ? <Loader2 className="mr-2 h-3.5 w-3.5 animate-spin" /> : <LogOut className="mr-2 h-3.5 w-3.5" />}
+                 Log Out
+               </Button>
+             </AlertDialogTrigger>
+             <AlertDialogContent>
+               <AlertDialogHeader>
+                 <AlertDialogTitle>Log out of PetMets?</AlertDialogTitle>
+                 <AlertDialogDescription>
+                   You'll need to sign in again to access your pet's profile, chats and bookings.
+                 </AlertDialogDescription>
+               </AlertDialogHeader>
+               <AlertDialogFooter>
+                 <AlertDialogCancel>Cancel</AlertDialogCancel>
+                 <AlertDialogAction onClick={handleLogout} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+                   Log Out
+                 </AlertDialogAction>
+               </AlertDialogFooter>
+             </AlertDialogContent>
+           </AlertDialog>
 
            <div className="p-5 rounded-xl bg-accent text-white shadow-md relative overflow-hidden group">
               <div className="relative z-10 space-y-2">
