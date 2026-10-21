@@ -3,7 +3,13 @@
 import { firebaseConfig } from '@/firebase/config';
 import { initializeApp, getApps, getApp, FirebaseApp } from 'firebase/app';
 import { getAuth } from 'firebase/auth';
-import { getFirestore } from 'firebase/firestore'
+import {
+  getFirestore,
+  initializeFirestore,
+  persistentLocalCache,
+  persistentMultipleTabManager,
+  type Firestore,
+} from 'firebase/firestore'
 
 // IMPORTANT: DO NOT MODIFY THIS FUNCTION
 export function initializeFirebase() {
@@ -36,8 +42,26 @@ export function getSdks(firebaseApp: FirebaseApp) {
   return {
     firebaseApp,
     auth: getAuth(firebaseApp),
-    firestore: getFirestore(firebaseApp)
+    firestore: getFirestoreWithCache(firebaseApp)
   };
+}
+
+/**
+ * Firestore with a persistent IndexedDB cache in the browser: repeat visits render
+ * instantly from local data, onSnapshot only syncs changes (fewer billed reads),
+ * and the app works offline. Falls back to the default in-memory cache on the
+ * server (no IndexedDB) or if Firestore was already initialized.
+ */
+function getFirestoreWithCache(firebaseApp: FirebaseApp): Firestore {
+  if (typeof window === 'undefined') return getFirestore(firebaseApp);
+  try {
+    return initializeFirestore(firebaseApp, {
+      localCache: persistentLocalCache({ tabManager: persistentMultipleTabManager() }),
+    });
+  } catch {
+    // initializeFirestore throws if already initialized (e.g. HMR / repeated getSdks calls).
+    return getFirestore(firebaseApp);
+  }
 }
 
 export * from './provider';

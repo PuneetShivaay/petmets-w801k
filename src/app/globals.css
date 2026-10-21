@@ -103,6 +103,19 @@
     @apply border-border;
   }
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground antialiased;
+    font-feature-settings: "kern", "liga", "calt";
+    text-rendering: optimizeLegibility;
+    /* Soft brand-tinted wash instead of a flat grey background. */
+    background-image:
+      radial-gradient(1200px 600px at 100% -10%, hsl(15 100% 59% / 0.06), transparent 60%),
+      radial-gradient(900px 500px at -10% 110%, hsl(174 34% 23% / 0.06), transparent 60%);
+    background-attachment: fixed;
+  }
+  h1, h2, h3, h4 {
+    @apply tracking-tight;
+  }
+  ::selection {
+    @apply bg-primary/20 text-foreground;
   }
 }

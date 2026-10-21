@@ -15,10 +15,10 @@ export default function ComingSoonPage() {
       </div>
       
       <div className="text-center space-y-4 max-w-lg">
-        <h1 className="text-3xl md:text-4xl font-bold font-headline tracking-tight text-slate-900">
+        <h1 className="text-3xl md:text-4xl font-bold font-headline tracking-tight text-foreground">
           Exciting Things Coming Soon!
         </h1>
-        <p className="text-sm md:text-base text-slate-500 leading-relaxed">
+        <p className="text-sm md:text-base text-muted-foreground leading-relaxed">
           We're currently building something amazing for this section. 
           Stay tuned as we continue to enhance your PetMets experience with new features and tools.
         </p>
@@ -27,7 +27,7 @@ export default function ComingSoonPage() {
       <Button 
         asChild
         size="lg"
-        className="rounded-xl px-8 h-12 font-bold shadow-md hover:scale-[1.02] transition-all active:scale-[0.98]"
+        className="rounded-card px-8 h-12 font-bold shadow-card hover:scale-[1.02] transition-all active:scale-[0.98]"
       >
         <Link href="/">
           <ArrowLeft className="mr-2 h-4 w-4" />

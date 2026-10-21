@@ -11,7 +11,6 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Skeleton } from '@/components/ui/skeleton';
 import { User, MessageSquare } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
-import { useLoading } from '@/contexts/loading-context';
 
 interface Chat {
   id: string;
@@ -30,7 +29,6 @@ interface UserProfile {
 
 export default function ChatsListPage() {
   const { user, isLoading: authIsLoading } = useAuth();
-  const { showLoading } = useLoading();
   const router = useRouter();
   const [chats, setChats] = useState<Chat[]>([]);
   const [isLoadingChats, setIsLoadingChats] = useState(true);
@@ -103,7 +101,6 @@ export default function ChatsListPage() {
   }, [user, authIsLoading, fetchUserProfiles]);
 
   const handleChatSelect = (chatId: string) => {
-    showLoading();
     router.push(`/chats/${chatId}`);
   };
   
@@ -121,7 +118,7 @@ export default function ChatsListPage() {
                   {[...Array(3)].map((_,i) => <Skeleton key={i} className="h-20 w-full" />)}
               </div>
           ) : chats.length > 0 ? (
-              <div className="divide-y divide-slate-100">
+              <div className="divide-y divide-border">
               {chats.map(chat => {
                   const otherUserId = getOtherParticipant(chat);
                   const profile = otherUserId ? userProfiles[otherUserId] : undefined;

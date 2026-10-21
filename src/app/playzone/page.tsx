@@ -3,6 +3,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import Image from "next/image";
 import { Waves, Sun } from "lucide-react";
 import placeholderImages from "@/app/lib/placeholder-images.json";
+import { cn } from "@/lib/utils";
+import { surfaceVariants } from "@/theme/variants";
 
 export default function PetPlayzonePage() {
   const playzoneFeatures = [
@@ -31,7 +33,7 @@ export default function PetPlayzonePage() {
       <p className="text-muted-foreground text-center">Our dedicated pet play area offers a spacious garden and a refreshing swimming pool for pure fun and freedom. Let your pets enjoy!</p>
       <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
         {playzoneFeatures.map((feature, index) => (
-          <Card key={index} className="overflow-hidden rounded-lg shadow-lg">
+          <Card key={index} className={cn(surfaceVariants({ variant: "card", padding: "none" }), "overflow-hidden")}>
             <div className="relative h-80 w-full">
               <Image 
                 src={feature.image} 

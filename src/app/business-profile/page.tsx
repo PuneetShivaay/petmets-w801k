@@ -256,10 +256,10 @@ export default function BusinessProfilePage() {
         </Card>
       ) : (
         <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
-          <Card className="md:col-span-1 shadow-lg h-fit">
+          <Card className="md:col-span-1 shadow-card h-fit">
             <CardHeader className="text-center">
               <div className="relative mx-auto w-32 h-32 mb-4 group">
-                <Avatar className="w-full h-full border-4 border-primary shadow-xl">
+                <Avatar className="w-full h-full border-4 border-primary shadow-card-hover">
                   <AvatarImage src={providerData?.image || "/images/logo.png"} className="object-cover" />
                   <AvatarFallback><Briefcase className="h-12 w-12" /></AvatarFallback>
                 </Avatar>
@@ -268,7 +268,7 @@ export default function BusinessProfilePage() {
                   type="button"
                   size="icon"
                   variant="outline"
-                  className="absolute bottom-0 right-0 h-8 w-8 rounded-full shadow-lg bg-background"
+                  className="absolute bottom-0 right-0 h-8 w-8 rounded-full shadow-card bg-background"
                   onClick={() => avatarInputRef.current?.click()}
                   disabled={isUploading}
                 >
@@ -278,7 +278,7 @@ export default function BusinessProfilePage() {
               <CardTitle className="text-xl font-headline">{providerData?.name || "Business Name"}</CardTitle>
               <Badge className="mt-2" variant="secondary">{providerData?.service || "Select Service"}</Badge>
               <div className="flex items-center justify-center gap-1 mt-4">
-                <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
+                <Star className="h-4 w-4 fill-rating text-rating" />
                 <span className="font-bold">{providerData?.rating?.toFixed(1) || "5.0"}</span>
               </div>
             </CardHeader>
@@ -295,7 +295,7 @@ export default function BusinessProfilePage() {
           </Card>
 
           <div className="md:col-span-2 space-y-6">
-            <Card className="shadow-lg">
+            <Card className="shadow-card">
               <form onSubmit={handleSubmit(onSubmit)}>
                 <CardHeader>
                   <CardTitle>Business Details</CardTitle>
@@ -363,7 +363,7 @@ export default function BusinessProfilePage() {
               </form>
             </Card>
 
-            <Card className="shadow-lg">
+            <Card className="shadow-card">
               <CardHeader>
                 <div className="flex items-center justify-between">
                   <div>

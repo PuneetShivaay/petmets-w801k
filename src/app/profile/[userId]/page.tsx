@@ -15,6 +15,8 @@ import { useAuth } from "@/contexts/auth-context";
 import { useLoading } from "@/contexts/loading-context";
 import { errorEmitter } from "@/firebase/error-emitter";
 import { FirestorePermissionError } from "@/firebase/errors";
+import { cn } from "@/lib/utils";
+import { buttonTone } from "@/theme/variants";
 
 interface PetData {
   name: string;
@@ -225,7 +227,7 @@ export default function UserProfilePage() {
       <main className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-8">
         {/* Pending Request Alert */}
         {incomingRequest && (
-          <Card className="bg-primary/5 border-primary/20 overflow-hidden shadow-md">
+          <Card className="bg-primary/5 border-primary/20 overflow-hidden shadow-card">
             <CardContent className="p-4 flex flex-col sm:flex-row items-center justify-between gap-4">
               <div className="flex items-center gap-3">
                 <div className="bg-primary/10 p-2 rounded-full">
@@ -239,7 +241,7 @@ export default function UserProfilePage() {
               <div className="flex items-center gap-2 w-full sm:w-auto">
                 <Button 
                   size="sm" 
-                  className="flex-1 sm:flex-none bg-green-600 hover:bg-green-700 text-white"
+                  className={cn("flex-1 sm:flex-none", buttonTone.positive)}
                   onClick={() => handleRequestResponse('accepted')}
                   disabled={isUpdatingRequest}
                 >
@@ -263,7 +265,7 @@ export default function UserProfilePage() {
 
         <div className="grid grid-cols-1 gap-8 md:grid-cols-2">
             {petData ? (
-                <Card className="shadow-lg">
+                <Card className="shadow-card">
                     <CardHeader>
                     <div className="flex items-center gap-4">
                         <Avatar className="h-20 w-20 border-2 border-primary">
@@ -296,12 +298,12 @@ export default function UserProfilePage() {
                     </CardContent>
                 </Card>
             ) : (
-            <Card className="shadow-lg flex items-center justify-center p-8">
+            <Card className="shadow-card flex items-center justify-center p-8">
                 <p className="text-muted-foreground">{ownerData.name} has not added a pet profile yet.</p>
             </Card>
             )}
 
-            <Card className="shadow-lg">
+            <Card className="shadow-card">
                 <CardHeader>
                     <div className="flex items-center gap-4">
                         <Avatar className="h-20 w-20 border-2 border-accent">
@@ -336,7 +338,7 @@ export default function UserProfilePage() {
       {incomingRequest && (
         <div className="fixed bottom-0 left-0 right-0 sm:hidden bg-background border-t p-4 flex gap-3 shadow-[0_-4px_10px_rgba(0,0,0,0.05)] z-20">
            <Button 
-            className="flex-1 bg-green-600 hover:bg-green-700 text-white"
+            className={cn("flex-1", buttonTone.positive)}
             onClick={() => handleRequestResponse('accepted')}
             disabled={isUpdatingRequest}
           >

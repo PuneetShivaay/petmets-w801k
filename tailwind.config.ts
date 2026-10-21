@@ -1,4 +1,5 @@
 import type {Config} from 'tailwindcss';
+import tokens from './src/theme/tokens';
 
 export default {
   darkMode: ['class'],
@@ -6,6 +7,8 @@ export default {
     './src/pages/**/*.{js,ts,jsx,tsx,mdx}',
     './src/components/**/*.{js,ts,jsx,tsx,mdx}',
     './src/app/**/*.{js,ts,jsx,tsx,mdx}',
+    // Design-system recipes live here; Tailwind must scan them or their classes are purged.
+    './src/theme/**/*.{js,ts,jsx,tsx}',
   ],
   theme: {
     extend: {
@@ -15,7 +18,15 @@ export default {
         headline: ['var(--font-pt-sans)', 'sans-serif'],
         code: ['monospace'],
       },
+      // Design tokens (src/theme/tokens.ts)
+      fontSize: tokens.fontSize as any,
+      boxShadow: tokens.boxShadow,
       colors: {
+        brand: tokens.colors.brand,
+        service: tokens.colors.service,
+        surface: tokens.colors.surface,
+        status: tokens.colors.status,
+        rating: tokens.colors.rating,
         background: 'hsl(var(--background))',
         foreground: 'hsl(var(--foreground))',
         card: {
@@ -71,6 +82,8 @@ export default {
         lg: 'var(--radius)',
         md: 'calc(var(--radius) - 2px)',
         sm: 'calc(var(--radius) - 4px)',
+        card: tokens.borderRadius.card,
+        pill: tokens.borderRadius.pill,
       },
       keyframes: {
         'accordion-down': {

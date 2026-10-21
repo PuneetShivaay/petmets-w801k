@@ -1,7 +1,11 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
-import { collection, getDocs, doc, setDoc, serverTimestamp, query, where, onSnapshot, writeBatch, getDoc } from "firebase/firestore";
+import { useState, useEffect, useCallback, useRef } from "react";
+import {
+  collection, getDocs, doc, setDoc, serverTimestamp, query, where, onSnapshot, writeBatch, getDoc,
+  orderBy, limit, startAfter, documentId,
+  type QueryConstraint, type QueryDocumentSnapshot,
+} from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { useAuth } from "@/contexts/auth-context";
 import { useToast } from "@/hooks/use-toast";
@@ -17,6 +21,12 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Heart, Search, Loader2, Check, Bell, X, Clock, Info, User } from "lucide-react";
+import { cn } from "@/lib/utils";
+import { buttonTone, layout, surfaceVariants } from "@/theme/variants";
+
+const PET_GRID = layout.cardGrid;
+/** Pets fetched per page (divisible by 2/4/5 grid columns → full rows). */
+const PETS_PAGE_SIZE = 20;
 
 interface Pet {
   id: string; 
@@ -44,6 +54,10 @@ export default function MatchPetPage() {
   const [allPets, setAllPets] = useState<Pet[]>([]);
   const [displayPets, setDisplayPets] = useState<Pet[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
+  // Pagination cursor kept in a ref so fetchPets always reads the latest value.
+  const lastPetDocRef = useRef<QueryDocumentSnapshot | null>(null);
+  const [hasMorePets, setHasMorePets] = useState(false);
   const [submitting, setSubmitting] = useState<string | null>(null);
   
   const [incomingRequests, setIncomingRequests] = useState<MatchRequest[]>([]);
@@ -55,15 +69,17 @@ export default function MatchPetPage() {
   
   const [searchTerm, setSearchTerm] = useState("");
 
-  const fetchPets = useCallback(async () => {
+  const fetchPets = useCallback(async (loadMore = false) => {
     if (!user) {
         setLoading(false);
         return;
     }
-    setLoading(true);
+    if (loadMore) setLoadingMore(true); else setLoading(true);
     try {
-      const petsCol = collection(db, "pets");
-      const querySnapshot = await getDocs(petsCol);
+      // Paged by document ID (always indexed, stable order) instead of reading the whole collection.
+      const constraints: QueryConstraint[] = [orderBy(documentId()), limit(PETS_PAGE_SIZE)];
+      if (loadMore && lastPetDocRef.current) constraints.splice(1, 0, startAfter(lastPetDocRef.current));
+      const querySnapshot = await getDocs(query(collection(db, "pets"), ...constraints));
 
       const petsList: Pet[] = querySnapshot.docs
         .map((petDoc) => {
@@ -81,7 +97,9 @@ export default function MatchPetPage() {
         })
         .filter(pet => pet.ownerId !== user.uid);
       
-      setAllPets(petsList);
+      setAllPets(prev => (loadMore ? [...prev, ...petsList] : petsList));
+      lastPetDocRef.current = querySnapshot.docs[querySnapshot.docs.length - 1] ?? null;
+      setHasMorePets(querySnapshot.docs.length === PETS_PAGE_SIZE);
 
     } catch (error) {
       console.error("Error fetching pets:", error);
@@ -92,6 +110,7 @@ export default function MatchPetPage() {
       });
     } finally {
       setLoading(false);
+      setLoadingMore(false);
     }
   }, [user, toast]);
 
@@ -350,7 +369,7 @@ export default function MatchPetPage() {
                           <Button 
                             size="sm" 
                             variant="default" 
-                            className="h-9 px-2 flex-1 bg-green-600 hover:bg-green-700 text-white border-none"
+                            className={cn("h-9 px-2 flex-1 border-none", buttonTone.positive)}
                             onClick={() => handleRequestResponse(req, 'accepted')}
                             disabled={isUpdatingRequest === req.id}
                           >
@@ -380,15 +399,15 @@ export default function MatchPetPage() {
       </div>
 
       {loading ? (
-        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-          {[...Array(3)].map((_, i) => (
-            <Card key={i} className="overflow-hidden rounded-lg shadow-lg">
-                <Skeleton className="h-60 w-full" />
-                <CardHeader><Skeleton className="h-7 w-1/2" /></CardHeader>
-                <CardContent>
-                    <Skeleton className="h-5 w-1/3 mb-4" />
-                    <Skeleton className="h-10 w-full" />
-                </CardContent>
+        <div className={PET_GRID}>
+          {[...Array(5)].map((_, i) => (
+            <Card key={i} className={cn(surfaceVariants({ variant: "card", padding: "none" }), "overflow-hidden")}>
+                <Skeleton className="aspect-[4/3] w-full rounded-none" />
+                <div className="space-y-2 p-3">
+                    <Skeleton className="h-4 w-2/3" />
+                    <Skeleton className="h-3 w-1/2" />
+                    <Skeleton className="h-9 w-full" />
+                </div>
             </Card>
           ))}
         </div>
@@ -403,38 +422,46 @@ export default function MatchPetPage() {
             </CardContent>
         </Card>
       ) : (
-        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+        <div className={PET_GRID}>
           {displayPets.map((pet) => {
             const buttonState = getButtonState(pet);
             return (
-                <Card key={pet.id} className="overflow-hidden rounded-lg shadow-lg">
-                <div className="relative h-60 w-full">
+                <Card key={pet.id} className={cn(surfaceVariants({ variant: "interactive", padding: "none" }), "flex flex-col overflow-hidden cursor-default")}>
+                <div className="relative aspect-[4/3] w-full overflow-hidden">
                     <Image 
                     src={pet.image} 
                     alt={pet.name} 
                     fill
-                    sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                    style={{ objectFit: 'cover' }}
+                    sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, (max-width: 1280px) 25vw, 20vw"
+                    className="object-cover transition-transform duration-500 group-hover:scale-105"
                     data-ai-hint={pet.dataAiHint}
                     />
                 </div>
-                <CardHeader>
-                    <CardTitle className="font-headline text-xl sm:text-2xl">{pet.name}</CardTitle>
-                </CardHeader>
-                <CardContent>
-                    <p className="text-muted-foreground">{pet.breed}</p>
+                <div className="flex flex-1 flex-col p-3">
+                    <h3 className="font-headline text-sm sm:text-base font-bold leading-tight truncate">{pet.name}</h3>
+                    <p className="text-xs text-muted-foreground truncate">{pet.breed}</p>
                     <Button 
-                        className="mt-4 w-full bg-accent text-accent-foreground hover:bg-accent/90"
+                        size="sm"
+                        className="mt-3 w-full bg-accent text-accent-foreground hover:bg-accent/90 text-xs"
                         onClick={() => handleMatchRequest(pet)}
                         disabled={buttonState.disabled}
                     >
-                        <buttonState.icon className={`mr-2 h-4 w-4 ${buttonState.className}`} />
+                        <buttonState.icon className={`mr-1 h-3.5 w-3.5 ${buttonState.className}`} />
                         {buttonState.text}
                     </Button>
-                </CardContent>
+                </div>
                 </Card>
             );
         })}
+        </div>
+      )}
+
+      {!loading && hasMorePets && (
+        <div className="flex justify-center pt-2">
+          <Button variant="outline" onClick={() => fetchPets(true)} disabled={loadingMore} className="min-w-40">
+            {loadingMore ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+            {loadingMore ? "Loading..." : "Load more pets"}
+          </Button>
         </div>
       )}
     </div>

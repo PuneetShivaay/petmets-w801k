@@ -4,24 +4,40 @@ PetMets is a Next.js (App Router) pet-services app backed entirely by Firebase (
 
 ## Architecture essentials
 - **App Router structure**: `src/app/<route>/page.tsx` maps directly to URLs. Dynamic routes exist for `chats/[chatId]`, `profile/[userId]`, `providers/[id]`.
-- **Server-first**: Components are Server Components by default. Add `"use client";` only when using hooks/state/handlers (forms, interactive UI).
+- **Server-first (in principle)**: Components are Server Components by default. Add `"use client";` only when using hooks/state/handlers. In practice almost all pages are client components reading Firestore in the browser — so pages can't export `metadata`; use the route's metadata-only `layout.tsx` instead (see SEO below).
 - **Firebase is the entire backend** — no custom API routes. All data access goes through `src/firebase/` and `src/lib/firebase.ts`.
-- **Auth guard pattern**: `src/components/layout/app-layout.tsx` wraps protected routes and redirects to `/login` if `AuthContext` (`src/contexts/auth-context.tsx`) has no user. Login/signup pages intentionally render outside this layout.
-- **Firestore structure** (see `ARCHITECTURE.md` §4 for full schema): `users/{userId}`, `users/{userId}/pets/main-pet` (single pet per user, fixed ID), `matchRequests/{requestId}`, `chats/{chatId}` where `chatId` = sorted concatenated UIDs (`uid1_uid2`), with `chats/{chatId}/messages/{messageId}` subcollection.
+- **Auth guard pattern**: `src/components/layout/app-layout.tsx` is a client-side guard: renders nothing until auth resolves, redirects to `/login` if `AuthContext` (`src/contexts/auth-context.tsx`) has no user. `AuthContext` also exposes `userRole` (`'owner' | 'provider'`, from `users/{uid}.role`). Login/signup render outside the main layout. New Google users pick a role in a dialog before their docs are created (`googleFlowActiveRef` in `src/app/login/page.tsx` blocks the guard mid-flow).
+- **Firestore structure** (see `ARCHITECTURE.md` §5.2): `users/{uid}` (incl. `role`), **`pets/{uid}`** (top-level, one pet per user, doc ID = owner UID — NOT `users/{uid}/pets/main-pet`), `service_providers/{id}` (`service` = `Walking|Grooming|Training|Boarding|Photography|Playzone`), `bookings`, `adoptionListings`, `matchRequests/{id}`, `chats/{chatId}` where `chatId` = sorted UIDs joined by `_`, with `chats/{chatId}/messages/{id}`.
 - **AI flows live in `src/ai/`**: Genkit is initialized in `src/ai/genkit.ts` and gracefully disables itself if `GOOGLE_API_KEY` is unset — check this guard before assuming AI features are active. Flows (e.g. `src/ai/flows/smart-tagging.ts`) use Zod schemas for structured Gemini output and are only invoked from the server via Next.js Server Actions (e.g. `src/app/records/actions.ts`), never called directly from client components, to keep the API key server-side.
 
 ## Firebase access patterns (non-obvious conventions)
 - `src/firebase/provider.tsx` / `client-provider.tsx` set up React context for Firebase SDK instances — use the provided hooks instead of re-initializing `getAuth()`/`getFirestore()` elsewhere.
 - `src/firebase/firestore/use-collection.tsx` and `use-doc.tsx` are custom hooks wrapping `onSnapshot` for real-time reads — prefer these over manual `onSnapshot` calls in components.
 - `src/firebase/non-blocking-updates.tsx` and `non-blocking-login.tsx` contain **fire-and-forget write helpers** (`setDocumentNonBlocking`, `addDocumentNonBlocking`, `updateDocumentNonBlocking`, `deleteDocumentNonBlocking` — don't `await` Firestore writes in the UI thread). On failure, they `errorEmitter.emit('permission-error', new FirestorePermissionError({ path, operation, requestResourceData }))` (`src/firebase/error-emitter.ts` / `errors.ts`), building an object that mirrors the Firestore security-rule `request` (`auth`, `method`, `path`, `resource.data`). `src/components/FirebaseErrorListener.tsx` is mounted globally, listens for this event, and **throws** the error so Next.js's error boundary/overlay shows the exact rule-denial context — don't inline try/catch + toast for permission failures; follow this emit-and-throw pattern instead.
-- `src/firebase/index.ts`'s `initializeFirebase()` is marked "DO NOT MODIFY" — it must call `initializeApp()` with zero args first (required for Firebase App Hosting to inject env config in production) and only falls back to the local `firebaseConfig` object on failure.
+- `src/firebase/index.ts`'s `initializeFirebase()` is marked "DO NOT MODIFY" — it must call `initializeApp()` with zero args first (required for Firebase App Hosting to inject env config in production) and only falls back to the local `firebaseConfig` object on failure. Firestore itself is created in `getSdks()` → `getFirestoreWithCache()` with a **persistent IndexedDB cache** (`persistentLocalCache` + `persistentMultipleTabManager`); never call `getFirestore()`/`initializeFirestore()` elsewhere — import `db` from `@/lib/firebase`.
+- **Don't read whole collections** that can grow (e.g. `pets`). Paginate with `orderBy(...) + limit(N) + startAfter(cursor)` and keep the cursor in a `useRef` (see `fetchPets` in `src/app/match/page.tsx`).
 - Firestore/Storage security rules are in `firestore.rules` and `storage.rules` at repo root — update these when adding new collections or storage paths (e.g. `users/{userId}/pets/main-pet/avatar.jpg`, `users/{userId}/owner/avatar.jpg`).
 
 ## UI conventions
-- UI primitives are ShadCN components in `src/components/ui/` — don't hand-roll buttons/dialogs/inputs; extend existing ShadCN components and Tailwind classes.
-- Forms always use **React Hook Form + Zod** via `zodResolver` (see any form in `src/components/features/` for the pattern: schema → `useForm` → `<Form>` wrapper from `src/components/ui/form.tsx`).
-- Global loading state (page transitions) goes through `src/contexts/loading-context.tsx` + `src/components/global-loader.tsx`, not local spinners.
+- **Centralized design system** (home page `src/app/page.tsx` is the visual reference; brand colors + PT Sans fixed; no dark mode). Full reference: `ARCHITECTURE.md` §4.
+  - `src/theme/tokens.ts` — raw values wired into `tailwind.config.ts`: `brand.*`, `service.*`, `status.*`, `surface.subtle`, `rating`; type scale `text-micro|overline|caption|label|label-lg` (min 10px); `rounded-card` (18px) / `rounded-pill`; `shadow-card` / `shadow-card-hover` / `shadow-glow`. Core theme colors (`primary` = orange FF642F, `accent` = dark teal 274E4A, `background`…) stay as CSS vars in `src/app/globals.css`.
+  - `src/theme/variants.ts` — named recipes: `text.*`, `layout.*` (incl. `layout.cardGrid` = 2→3→4→5 col grid), `surfaceVariants` (`card|interactive|inset|empty`), `promoVariants`, `pillButtonVariants`, `chipVariants`, `buttonTone.dark|positive`, `imageOverlayPill`, `softInput`, `featureBadgeVariants`, `serviceStyles`.
+  - `src/components/design/` — `PageContainer`, `PageHeader`, `SectionHeader`, `OverlineHeader`, `Surface`, `Chip`, `PillButton`, `InfoRow`, `EmptyState`, `FeatureBadge`, `PromoCard`, `ServiceTile`, `PageSkeleton`.
+  - In pages, don't use hardcoded hex colors, `slate-*`/`gray-*`/palette classes like `green-600`, arbitrary pixel font sizes, `rounded-[…]`, or `shadow-md/lg/xl` — use tokens/variants/design components. Add new tokens/variants instead of one-off classes.
+  - `tailwind.config.ts` `content` **must include `./src/theme/**`**, or classes used only in `variants.ts` get purged.
+  - `cn()` in `src/lib/utils.ts` uses `extendTailwindMerge` with the token keys — if you add a new token category (font size/radius/shadow), register it there too.
+- UI primitives are ShadCN components in `src/components/ui/` (`button`, `card`, `input` already restyled to tokens) — don't hand-roll buttons/dialogs/inputs.
+- Service listing pages (walkers, grooming, training, boarding, photography) are thin configs over `src/components/features/service-provider-listing.tsx` — change the shared component, not each page.
+- Forms always use **React Hook Form + Zod** via `zodResolver` (schema → `useForm` → `<Form>` wrapper from `src/components/ui/form.tsx`).
+- **Loading UX**: navigation must be instant — do **not** call `showLoading()` on link clicks/`router.push`. `NavigationProgressProvider` (`src/components/layout/navigation-progress.tsx`, mounted in root layout) shows a thin top progress bar on any internal link click and exposes `useNavigationProgress()` → `{ pendingHref, start }`; nav components highlight `pendingHref ?? pathname` optimistically. Call `start(href)` before programmatic `router.push`. Every route has a `loading.tsx` rendering `<PageSkeleton variant="grid|list|detail" />`; pages show their own data skeletons while fetching. `GlobalLoader` (`src/contexts/loading-context.tsx`) is only for blocking actions (logout, saving).
 - Nav items are centralized in `src/config/nav.ts` — add new routes there to appear in `bottom-nav.tsx`/sidebar.
+
+## SEO & performance
+- Site constants + route lists: `src/config/site.ts` (`SITE`, `PUBLIC_ROUTES`, `PRIVATE_ROUTES`). Production URL via `NEXT_PUBLIC_SITE_URL`.
+- Global metadata/viewport in `src/app/layout.tsx`; `robots.ts`, `sitemap.ts`, `manifest.ts` in `src/app/`.
+- **New route checklist:** add `page.tsx` + `loading.tsx` (`PageSkeleton`) + `layout.tsx` with `export const metadata = pageMetadata(title, description, path, { private?: true })` and `export default MetadataOnlyLayout` (from `@/lib/seo`); add the path to `PUBLIC_ROUTES` or `PRIVATE_ROUTES`; add to `src/config/nav.ts` if it needs a menu entry.
+- Every `next/image` with `fill` needs a `sizes` prop and a descriptive `alt`.
+- `next.config.ts` already enables AVIF/WebP, 7-day image cache and `optimizePackageImports` (`lucide-react`, `date-fns`, `recharts`).
 
 ## Developer workflows
 - `npm run dev` — Next.js dev server with Turbopack.
@@ -29,8 +45,12 @@ PetMets is a Next.js (App Router) pet-services app backed entirely by Firebase (
 - `npm run typecheck` — `tsc --noEmit`; run after larger refactors since there's no separate test suite configured.
 - `npm run build` / `npm run start` — production build/serve.
 - No unit/integration test runner is configured in this repo — validate changes via `typecheck`, `lint`, and manual flows through `npm run dev`.
+- `next.config.ts` has `ignoreBuildErrors: true`, so `build` won't catch type errors — always run `typecheck`. One pre-existing error is expected: `src/ai/genkit.ts(4,14) … no exported member 'Plugin'`.
+- Corporate networks may break `/_next/image` with `SELF_SIGNED_CERT_IN_CHAIN` (proxy issue, not code).
 
 ## When adding features
 1. Check `ARCHITECTURE.md` for whether the Firestore shape already supports it before inventing new fields/collections.
-2. New protected pages go under `src/app/` and rely on `AppLayout` for auth — don't duplicate redirect logic.
+2. New protected pages go under `src/app/` and rely on `AppLayout` for auth — don't duplicate redirect logic. Follow the new-route checklist above (`loading.tsx` + metadata `layout.tsx`).
 3. New AI capabilities: add a flow under `src/ai/flows/`, export via `src/ai/dev.ts`, and call only from a Server Action.
+4. After structural changes, update `ARCHITECTURE.md` (incl. §10 Changelog) and this file.
+5. Roadmap (not done yet — don't assume it exists): public pages viewable without login, server-side data fetching for public lists, full-text pet search. See `ARCHITECTURE.md` §9.
