@@ -28,7 +28,7 @@ PetMets is built using a modern, server-centric architecture with the Next.js Ap
 - **UI Components**: [ShadCN UI](https://ui.shadcn.com/) - A collection of beautifully designed, accessible, and reusable components.
 - **Styling**: [Tailwind CSS](https://tailwindcss.com/) - A utility-first CSS framework for rapid UI development.
 - **Backend & Database**: [Firebase](https://firebase.google.com/)
-  - **Authentication**: Secure email/password login and user management.
+  - **Authentication**: Email/password and Google Sign-In (new Google users choose Pet Owner or Service Provider).
   - **Firestore**: A NoSQL database for storing all application data (user profiles, pet data, chats, etc.).
   - **Storage**: Cloud storage for user-uploaded files like pet avatars and documents.
 - **Generative AI**: [Google AI & Genkit](https://firebase.google.com/docs/genkit) - Used for the "Smart Tagging" feature to analyze document descriptions and suggest relevant tags.
@@ -75,21 +75,59 @@ To get a local copy up and running, follow these simple steps.
 
 ## Project Structure
 
-The project follows the standard Next.js App Router structure.
+The project follows the standard Next.js App Router structure. **For full technical details (data model, design system, caching, SEO, conventions, changelog) see [`ARCHITECTURE.md`](./ARCHITECTURE.md).** AI coding assistants should also read [`.github/copilot-instructions.md`](./.github/copilot-instructions.md).
 
 ```
 .
 ├── src
-│   ├── app/                # Main application routes
-│   ├── components/         # Reusable UI components (ShadCN, custom)
-│   ├── contexts/           # React context providers (Auth, Loading)
-│   ├── hooks/              # Custom React hooks (useToast, useMobile)
-│   ├── lib/                # Utility functions and Firebase config
-│   ├── config/             # Navigation configuration
-│   └── ai/                 # Genkit flows and AI-related code
-│       ├── flows/
-│       └── genkit.ts
-├── public/                 # Static assets (images, fonts)
-├── ...                     # Configuration files (tailwind, next.js, etc.)
-└── README.md
+│   ├── app/                # Routes: page.tsx + loading.tsx (skeleton) + layout.tsx (SEO metadata)
+│   ├── components/
+│   │   ├── design/         # Design-system components (PageContainer, Surface, PromoCard, PageSkeleton…)
+│   │   ├── features/       # Business components (ServiceProviderListing, SmartTaggingForm)
+│   │   ├── layout/         # Auth guard, sidebar/header, bottom nav
+│   │   └── ui/             # ShadCN primitives
+│   ├── theme/              # tokens.ts (raw design values) + variants.ts (style recipes)
+│   ├── config/             # nav.ts (menu) + site.ts (SEO / route lists)
+│   ├── contexts/           # Auth (user + role), Loading
+│   ├── firebase/           # SDK init (persistent cache), hooks, error handling
+│   ├── hooks/              # useToast, useMobile
+│   ├── lib/                # firebase.ts, seo.ts, utils.ts (cn)
+│   └── ai/                 # Genkit flows
+├── public/                 # Static assets
+└── ...                     # Config files (tailwind, next.js, firebase rules)
 ```
+
+## Design & Styling
+
+All visual styling is centralized — to restyle the app, edit only:
+
+| File | Controls |
+|---|---|
+| `src/theme/tokens.ts` | Colors, font sizes, corner radius, shadows |
+| `src/theme/variants.ts` | Reusable style recipes (cards, buttons, chips, grids, text styles) |
+| `src/app/globals.css` | Core theme colors (primary orange, accent teal, background) |
+| `src/components/design/*` | Shared layout/card components |
+
+Pages should not contain hardcoded colors or pixel sizes. See `ARCHITECTURE.md` §4.
+
+## Performance & SEO Highlights
+
+- Firestore **persistent offline cache** (instant repeat visits, fewer reads).
+- **Instant navigation** with per-route skeleton screens (`loading.tsx`).
+- **Paginated** match feed ("Load more pets").
+- AVIF/WebP images with long cache, `sizes` on all responsive images.
+- Per-page titles/descriptions, Open Graph/Twitter cards, `robots.txt`, `sitemap.xml`, PWA manifest.
+
+### Production environment
+```env
+NEXT_PUBLIC_SITE_URL=https://app.petmets.in   # used for canonical URLs, sitemap, social previews
+```
+
+## Useful Scripts
+
+| Command | Purpose |
+|---|---|
+| `npm run dev` | Dev server (Turbopack) |
+| `npm run typecheck` | TypeScript check (builds ignore type errors — always run this) |
+| `npm run build` / `npm run start` | Production build / serve |
+| `npm run genkit:dev` | Genkit AI dev UI |

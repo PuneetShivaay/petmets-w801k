@@ -10,6 +10,8 @@ import { useLoading } from "@/contexts/loading-context";
 import { errorEmitter } from "@/firebase/error-emitter";
 import { FirestorePermissionError } from "@/firebase/errors";
 import { cn } from "@/lib/utils";
+import { Surface, FeatureBadge } from "@/components/design";
+import { surfaceVariants, imageOverlayPill, text } from "@/theme/variants";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -143,14 +145,14 @@ export default function ProviderDetailPage() {
 
   return (
     <div className="container max-w-6xl mx-auto pb-20 px-4 md:px-8">
-      <Button variant="ghost" onClick={() => router.back()} className="mb-8 hover:bg-white text-slate-500 font-bold">
+      <Button variant="ghost" onClick={() => router.back()} className="mb-8 hover:bg-card text-muted-foreground font-bold">
         <ArrowLeft className="mr-2 h-4 w-4" /> Back to Discover
       </Button>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 md:gap-12">
         {/* Left Column: Info and Gallery */}
         <div className="lg:col-span-7 space-y-8 md:space-y-12">
-          <section className="relative h-[25rem] md:h-[32rem] w-full rounded-[3rem] overflow-hidden shadow-2xl border-none">
+          <section className="relative h-[25rem] md:h-[32rem] w-full rounded-card overflow-hidden shadow-card-hover border-none">
             <Image 
               src={provider.image} 
               alt={provider.name} 
@@ -159,14 +161,14 @@ export default function ProviderDetailPage() {
               priority
             />
             <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
-            <Badge className="absolute top-8 right-8 text-sm font-bold py-2 px-6 shadow-2xl bg-white/90 backdrop-blur-md text-slate-900 border-none rounded-full" variant="secondary">
+            <span className={cn(imageOverlayPill, "absolute top-6 right-6 text-sm py-2 px-5")}>
               {provider.service} Specialist
-            </Badge>
+            </span>
             <div className="absolute bottom-8 left-8 text-white space-y-2">
                <h1 className="text-4xl md:text-5xl font-bold font-headline leading-tight">{provider.name}</h1>
                <div className="flex items-center gap-4 text-sm font-bold opacity-90">
                  <div className="flex items-center gap-1">
-                   <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
+                   <Star className="h-4 w-4 fill-rating text-rating" />
                    <span>{provider.rating} (5.0 Rating)</span>
                  </div>
                  <div className="flex items-center gap-1">
@@ -178,42 +180,35 @@ export default function ProviderDetailPage() {
           </section>
 
           <section className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-             {[
-               { label: 'Verified', icon: ShieldCheck, color: 'bg-green-50 text-green-600' },
-               { label: 'Top Rated', icon: Award, color: 'bg-orange-50 text-orange-600' },
-               { label: 'Fast Response', icon: Zap, color: 'bg-blue-50 text-blue-600' },
-             ].map((badge, i) => (
-               <div key={i} className={cn("p-4 rounded-3xl flex items-center gap-3", badge.color)}>
-                 <badge.icon className="h-5 w-5" />
-                 <span className="text-xs font-bold uppercase tracking-wider">{badge.label}</span>
-               </div>
-             ))}
+             <FeatureBadge tone="positive" className="p-4 justify-start gap-3 text-xs" icon={<ShieldCheck className="h-5 w-5" />}>Verified</FeatureBadge>
+             <FeatureBadge tone="warning" className="p-4 justify-start gap-3 text-xs" icon={<Award className="h-5 w-5" />}>Top Rated</FeatureBadge>
+             <FeatureBadge tone="info" className="p-4 justify-start gap-3 text-xs" icon={<Zap className="h-5 w-5" />}>Fast Response</FeatureBadge>
           </section>
 
           <section className="space-y-6">
             <div className="flex items-center justify-between">
-              <h3 className="text-2xl font-bold font-headline text-slate-900">About Our Services</h3>
-              <div className="h-px flex-1 mx-8 bg-slate-100 hidden sm:block" />
+              <h3 className="text-2xl font-bold font-headline text-foreground">About Our Services</h3>
+              <div className="h-px flex-1 mx-8 bg-border hidden sm:block" />
             </div>
-            <Card className="bg-white border-none shadow-sm rounded-[2rem]">
+            <Surface padding="none">
               <CardContent className="p-8">
-                <p className="text-slate-600 leading-relaxed italic text-lg whitespace-pre-wrap">
+                <p className="text-foreground/70 leading-relaxed italic text-lg whitespace-pre-wrap">
                   "{provider.bio}"
                 </p>
               </CardContent>
-            </Card>
+            </Surface>
           </section>
 
           {provider.gallery && provider.gallery.length > 0 && (
             <section className="space-y-6">
-              <h4 className="text-2xl font-bold font-headline flex items-center gap-3 text-slate-900">
+              <h4 className="text-2xl font-bold font-headline flex items-center gap-3 text-foreground">
                 <ImageIcon className="h-7 w-7 text-primary" />
                 Service Showcase
               </h4>
-              <ScrollArea className="w-full whitespace-nowrap rounded-[2rem] pb-4">
+              <ScrollArea className="w-full whitespace-nowrap rounded-card pb-4">
                 <div className="flex w-max space-x-6">
                   {provider.gallery.map((url, idx) => (
-                    <div key={idx} className="relative w-72 h-56 sm:w-96 sm:h-72 rounded-[2rem] overflow-hidden shadow-lg group">
+                    <div key={idx} className="relative w-72 h-56 sm:w-96 sm:h-72 rounded-card overflow-hidden shadow-card-hover group">
                       <Image src={url} alt={`Gallery ${idx}`} fill className="object-cover transition-transform duration-500 group-hover:scale-110" />
                     </div>
                   ))}
@@ -227,14 +222,14 @@ export default function ProviderDetailPage() {
         {/* Right Column: Redesigned Booking Ticket */}
         <div className="lg:col-span-5">
           <div className="sticky top-24 space-y-6">
-            <Card className="relative overflow-hidden rounded-[3rem] border-none shadow-2xl bg-white animate-in slide-in-from-right-8 duration-700">
+            <Card className={cn(surfaceVariants({ variant: 'card', padding: 'none' }), "relative shadow-card-hover animate-in slide-in-from-right-8 duration-700")}>
               <div className="absolute top-0 right-0 p-8 opacity-5">
                  <Ticket className="h-32 w-32 -rotate-12" />
               </div>
               
-              <CardHeader className="bg-slate-50/50 border-b border-dashed p-8">
+              <CardHeader className="bg-surface-subtle/50 border-b border-dashed p-6 md:p-8">
                 <div className="flex items-center gap-4">
-                  <div className="h-14 w-14 rounded-2xl bg-primary/10 flex items-center justify-center text-primary">
+                  <div className="h-14 w-14 rounded-card bg-primary/10 flex items-center justify-center text-primary">
                     <CalendarIcon className="h-7 w-7" />
                   </div>
                   <div>
@@ -244,30 +239,30 @@ export default function ProviderDetailPage() {
                 </div>
               </CardHeader>
               
-              <CardContent className="p-8 space-y-8">
+              <CardContent className="p-6 md:p-8 space-y-8">
                 <div className="space-y-4">
-                  <label className="text-xs font-bold uppercase tracking-widest text-slate-400">1. Preferred Date</label>
-                  <div className="flex justify-center bg-slate-50/50 rounded-3xl p-2 border border-slate-100">
+                  <label className={cn(text.fieldLabel, "text-xs")}>1. Preferred Date</label>
+                  <div className="flex justify-center bg-surface-subtle/50 rounded-card p-2 border border-border/60">
                     <Calendar
                       mode="single"
                       selected={selectedDate}
                       onSelect={setSelectedDate}
                       disabled={(date) => date < new Date()}
-                      className="rounded-3xl border-none"
+                      className="rounded-card border-none"
                     />
                   </div>
                 </div>
 
                 <div className="space-y-4">
-                  <label className="text-xs font-bold uppercase tracking-widest text-slate-400 flex items-center gap-2">
+                  <label className={cn(text.fieldLabel, "text-xs flex items-center gap-2")}>
                     <Clock className="h-4 w-4" />
                     2. Arrival Time
                   </label>
                   <Select value={selectedTime} onValueChange={setSelectedTime}>
-                    <SelectTrigger className="w-full h-14 rounded-2xl bg-slate-50/50 border-slate-100 font-bold text-slate-700">
+                    <SelectTrigger className="w-full h-12 rounded-card bg-surface-subtle/50 border-border/60 font-bold text-foreground">
                       <SelectValue placeholder="Choose a time" />
                     </SelectTrigger>
-                    <SelectContent className="rounded-2xl shadow-xl">
+                    <SelectContent className="rounded-card shadow-card-hover">
                       {TIME_SLOTS.map(slot => (
                         <SelectItem key={slot} value={slot} className="font-bold py-3">{slot}</SelectItem>
                       ))}
@@ -275,15 +270,15 @@ export default function ProviderDetailPage() {
                   </Select>
                 </div>
 
-                <div className="bg-primary/5 p-6 rounded-[2rem] border border-primary/10 space-y-3">
-                  <p className="text-[10px] text-primary font-bold uppercase tracking-[0.2em]">Summary</p>
+                <div className="bg-primary/5 p-5 rounded-card border border-primary/10 space-y-3">
+                  <p className="text-label text-primary font-bold uppercase tracking-[0.2em]">Summary</p>
                   <div className="flex items-start gap-3">
                     <CheckCircle2 className="h-5 w-5 text-primary mt-0.5" />
                     <div>
-                      <p className="text-sm font-bold text-slate-800 leading-snug">
+                      <p className="text-sm font-bold text-foreground leading-snug">
                         {provider.name}
                       </p>
-                      <p className="text-xs font-bold text-slate-500">
+                      <p className="text-xs font-bold text-muted-foreground">
                         {selectedDate ? format(selectedDate, 'EEEE, MMM do') : '...'} • {selectedTime}
                       </p>
                     </div>
@@ -291,20 +286,20 @@ export default function ProviderDetailPage() {
                 </div>
 
                 <Button 
-                  className="w-full h-16 text-lg font-bold shadow-xl rounded-2xl bg-primary hover:bg-primary/90 transition-all hover:scale-[1.02] active:scale-[0.98]" 
+                  className="w-full h-14 text-lg font-bold shadow-card-hover rounded-card bg-primary hover:bg-primary/90 transition-all hover:scale-[1.02] active:scale-[0.98]" 
                   onClick={handleBookSession}
                   disabled={isBooking || !selectedDate}
                 >
                   {isBooking ? <Loader2 className="mr-2 h-6 w-6 animate-spin" /> : "Confirm & Pay Later"}
                 </Button>
                 
-                <p className="text-center text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                <p className={cn(text.overline, "text-center text-label tracking-widest")}>
                   Secure Professional Care
                 </p>
               </CardContent>
             </Card>
 
-            <div className="bg-[#2D4A22] text-white p-8 rounded-[3rem] shadow-xl relative overflow-hidden group">
+            <Surface padding="none" className="bg-brand-moss text-white p-6 md:p-8 shadow-card-hover relative group">
                <div className="relative z-10 space-y-4">
                   <h4 className="text-xl font-bold font-headline">Safety First 🧡</h4>
                   <p className="text-xs opacity-80 leading-relaxed font-medium">
@@ -312,7 +307,7 @@ export default function ProviderDetailPage() {
                   </p>
                </div>
                <ShieldCheck className="absolute -bottom-4 -right-4 h-24 w-24 opacity-10 group-hover:scale-110 transition-transform" />
-            </div>
+            </Surface>
           </div>
         </div>
       </div>

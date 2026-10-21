@@ -10,7 +10,6 @@ import { ref as storageRef, uploadBytes, getDownloadURL } from "firebase/storage
 import { db, storage } from "@/lib/firebase";
 import { useAuth } from "@/contexts/auth-context";
 import { useToast } from "@/hooks/use-toast";
-import { useLoading } from "@/contexts/loading-context";
 
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -22,6 +21,8 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Heart, PlusCircle, Loader2, MapPin } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { cn } from "@/lib/utils";
+import { surfaceVariants } from "@/theme/variants";
 
 const adoptionListingSchema = z.object({
   name: z.string().min(2, "Pet name must be at least 2 characters."),
@@ -49,7 +50,6 @@ interface AdoptionListing {
 export default function AdoptionPage() {
   const { user, isLoading: isAuthLoading } = useAuth();
   const { toast } = useToast();
-  const { showLoading } = useLoading();
   const router = useRouter();
   const searchParams = useSearchParams();
 
@@ -95,7 +95,6 @@ export default function AdoptionPage() {
   };
 
   const handleLearnMore = (ownerId: string) => {
-    showLoading();
     router.push(`/profile/${ownerId}`);
   };
 
@@ -234,7 +233,7 @@ export default function AdoptionPage() {
       ) : (
         <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
           {listings.map((pet) => (
-            <Card key={pet.id} className="flex flex-col overflow-hidden rounded-lg shadow-lg">
+            <Card key={pet.id} className={cn(surfaceVariants({ variant: "card", padding: "none" }), "flex flex-col overflow-hidden")}>
               <div className="relative h-52 w-full">
                 <Image src={pet.image || "/images/logo.png"} alt={pet.name} fill sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw" style={{objectFit: 'cover'}} data-ai-hint={pet.dataAiHint} />
               </div>

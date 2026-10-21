@@ -17,6 +17,8 @@ import { CalendarPlus, History, ListChecks, Loader2, Trash2, CheckCircle2, Clock
 import Link from "next/link";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
+import { cn } from "@/lib/utils";
+import { chipVariants, bookingStatusTone, buttonTone, surfaceVariants } from "@/theme/variants";
 
 interface Booking {
   id: string;
@@ -107,13 +109,10 @@ export default function BookingManagementPage() {
   const pastBookings = bookings.filter(b => b.date < todayStr || b.status === 'completed' || b.status === 'cancelled');
 
   const getStatusBadge = (status: string) => {
-    switch (status) {
-      case 'pending': return <Badge variant="outline" className="bg-yellow-50 text-yellow-700 border-yellow-200">Pending</Badge>;
-      case 'accepted': return <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">Accepted</Badge>;
-      case 'completed': return <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">Completed</Badge>;
-      case 'cancelled': return <Badge variant="outline" className="bg-red-50 text-red-700 border-red-200">Cancelled</Badge>;
-      default: return <Badge variant="outline">{status}</Badge>;
-    }
+    const tone = bookingStatusTone[status as keyof typeof bookingStatusTone];
+    const label = status.charAt(0).toUpperCase() + status.slice(1);
+    if (!tone) return <Badge variant="outline">{status}</Badge>;
+    return <Badge variant="outline" className={cn(chipVariants({ tone }), "border-transparent px-2.5 py-0.5 text-xs normal-case")}>{label}</Badge>;
   };
 
   return (
@@ -151,7 +150,7 @@ export default function BookingManagementPage() {
             </TabsList>
             
             <TabsContent value="upcoming" className="mt-0">
-              <Card className="border-none shadow-md">
+              <Card className={surfaceVariants({ variant: 'card', padding: 'none' })}>
                 <CardHeader>
                   <CardTitle className="text-lg flex items-center gap-2">
                     <Clock className="h-5 w-5 text-primary" />
@@ -167,7 +166,7 @@ export default function BookingManagementPage() {
                   ) : upcomingBookings.length > 0 ? (
                     <ul className="space-y-4">
                       {upcomingBookings.map((booking) => (
-                        <li key={booking.id} className="rounded-xl border bg-card p-4 transition-all hover:shadow-md">
+                        <li key={booking.id} className="rounded-card border bg-card p-4 transition-all hover:shadow-card-hover">
                           <div className="flex flex-col sm:flex-row justify-between items-start gap-4">
                             <div className="space-y-1">
                               <div className="flex items-center gap-2">
@@ -192,7 +191,7 @@ export default function BookingManagementPage() {
                                 <>
                                   <Button 
                                     size="sm" 
-                                    className="bg-green-600 hover:bg-green-700 text-white flex-1 sm:flex-none"
+                                    className={cn(buttonTone.positive, "flex-1 sm:flex-none")}
                                     onClick={() => handleUpdateStatus(booking.id, 'accepted')}
                                     disabled={isUpdating === booking.id}
                                   >
@@ -238,7 +237,7 @@ export default function BookingManagementPage() {
                       ))}
                     </ul>
                   ) : (
-                    <div className="py-16 text-center text-muted-foreground bg-muted/20 rounded-xl border-2 border-dashed">
+                    <div className="py-16 text-center text-muted-foreground bg-muted/20 rounded-card border-2 border-dashed">
                        <CalendarPlus className="mx-auto h-12 w-12 opacity-20 mb-4" />
                        <p className="font-medium">No active appointments.</p>
                        <p className="text-xs mt-1">
@@ -251,7 +250,7 @@ export default function BookingManagementPage() {
             </TabsContent>
             
             <TabsContent value="past" className="mt-0">
-              <Card className="border-none shadow-md">
+              <Card className={surfaceVariants({ variant: 'card', padding: 'none' })}>
                 <CardHeader>
                   <CardTitle className="text-lg flex items-center gap-2">
                     <History className="h-5 w-5 text-primary" />
@@ -264,7 +263,7 @@ export default function BookingManagementPage() {
                 ) : pastBookings.length > 0 ? (
                     <ul className="space-y-4">
                       {pastBookings.map((booking) => (
-                        <li key={booking.id} className="rounded-xl border bg-muted/5 p-4 opacity-80">
+                        <li key={booking.id} className="rounded-card border bg-muted/5 p-4 opacity-80">
                           <div className="flex flex-col sm:flex-row justify-between items-start gap-4">
                             <div className="space-y-1">
                               <h3 className="font-semibold">{booking.serviceType}</h3>
@@ -290,7 +289,7 @@ export default function BookingManagementPage() {
                       ))}
                     </ul>
                   ) : (
-                     <div className="py-16 text-center text-muted-foreground bg-muted/20 rounded-xl border-2 border-dashed">
+                     <div className="py-16 text-center text-muted-foreground bg-muted/20 rounded-card border-2 border-dashed">
                         <History className="mx-auto h-12 w-12 opacity-20 mb-4" />
                         <p className="font-medium">No history records found.</p>
                      </div>
@@ -302,7 +301,7 @@ export default function BookingManagementPage() {
         </div>
 
         <div className="lg:col-span-1">
-          <Card className="shadow-lg border-primary/10 overflow-hidden">
+          <Card className="shadow-card-hover border-primary/10 overflow-hidden">
             <CardHeader className="bg-primary/5 border-b">
               <CardTitle className="text-lg flex items-center gap-2">
                 <CalendarPlus className="h-5 w-5 text-primary" />
@@ -323,7 +322,7 @@ export default function BookingManagementPage() {
                 <h4 className="text-sm font-bold uppercase tracking-wider text-muted-foreground">
                   {userRole === 'provider' ? 'My Daily Load' : "Today's Summary"}
                 </h4>
-                <div className="p-4 rounded-xl bg-muted/30 border border-muted flex items-center gap-3">
+                <div className="p-4 rounded-card bg-muted/30 border border-muted flex items-center gap-3">
                   <div className="h-10 w-10 rounded-full bg-primary/20 flex items-center justify-center text-primary font-bold">
                     {upcomingBookings.filter(b => b.date === todayStr).length}
                   </div>

@@ -298,7 +298,7 @@ export default function LoginPage() {
       <div className="mb-8">
         <AppLogo />
       </div>
-      <Card className="w-full max-w-md shadow-xl">
+      <Card className="w-full max-w-md shadow-card-hover">
         <CardHeader>
           <CardTitle className="font-headline text-center text-2xl sm:text-3xl">
             {isSignUp ? "Create Account" : "Welcome Back!"}

@@ -2,7 +2,12 @@
 import type {NextConfig} from 'next';
 
 const nextConfig: NextConfig = {
-  /* config options here */
+  poweredByHeader: false,
+  compress: true,
+  experimental: {
+    // Tree-shake icon/UI barrels so only used icons ship to the client.
+    optimizePackageImports: ['lucide-react', 'date-fns', 'recharts'],
+  },
   typescript: {
     ignoreBuildErrors: true,
   },
@@ -10,6 +15,8 @@ const nextConfig: NextConfig = {
     ignoreDuringBuilds: true,
   },
   images: {
+    formats: ['image/avif', 'image/webp'],
+    minimumCacheTTL: 60 * 60 * 24 * 7, // 7 days
     remotePatterns: [
       {
         protocol: 'https',
